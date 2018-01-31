@@ -1,0 +1,17 @@
+{
+  "name": "minato",
+  "version": "0.0.1",
+  "description": "",
+  "scripts": {
+    "prestart": "npm run compile",
+    "start": "node bin/app.js",
+    "compile": "tsc"
+  },
+  "dependencies": {
+    "ws": "^4.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^9.4.0",
+    "@types/ws": "^4.0.0"
+  }
+}

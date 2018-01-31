@@ -1,0 +1,8 @@
+{
+    "INTERNAL_PORT": 3002,
+    "EXTERNAL_PORT": 3002,
+    "HOST": "localhost",
+    "NAME": "minato",
+    "SSL": false,
+    "COOKIE_ENCRYPT_NAME": "smc"
+}

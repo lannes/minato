@@ -1,0 +1,16 @@
+{
+    "compilerOptions": {
+        "target": "es2016",
+        "module": "commonjs",
+        "sourceMap": false,
+        "outDir": "./bin",
+        "removeComments": true,
+        "lib": [
+            "es2017",
+            "dom"
+        ]
+    },
+    "exclude": [
+        "node_modules"
+    ]
+}

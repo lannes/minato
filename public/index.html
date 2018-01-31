@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <script src="https://webrtc.github.io/adapter/adapter-latest.js"></script>
+    <script src="webrtc.js"></script>
+    <script>
+        let webp2p = null;
+        const initp2p = () => {
+            const signalingServer = 'ws://45.76.221.12/minato';
+            //const signalingServer = 'ws://localhost:3002);
+
+            const configuration = {
+                'iceServers': [
+                    { 'urls': 'stun:stun.l.google.com:19302' }
+                    /*,
+                    { 'urls': 'stun:stun1.l.google.com:19302' },
+                    { 'urls': 'stun:stun2.l.google.com:19302' },
+                    { 'urls': 'stun:stun3.l.google.com:19302' },
+                    { 'urls': 'stun:stun4.l.google.com:19302' }
+                    */
+                ]
+            };
+
+            webp2p = new WebP2P(signalingServer, configuration);
+
+            webp2p.onopen = (id) => {
+                console.log('open connect to ' + id);
+            }
+
+            webp2p.onmessage = (id, message) => {
+                if (!message)
+                    return;
+
+                console.log('received from: ' + id + ' ' + message);
+                try {
+                    let data = JSON.parse(message);
+                    worker.postMessage({ 'cmd': 'p2p', 'id': id, 'msg': data });
+                } catch (e) {
+                    console.log(e);
+                }
+            }
+
+            webp2p.onclose = (id) => {
+                console.log('close connect with ' + id);
+            }
+        }
+
+        setTimeout(() => {
+            webp2p.sendAll('ALO');
+        }, 20000);
+        
+        const worker = new Worker('worker.js');
+
+        worker.onmessage = (event) => {
+            const data = event.data;
+            switch (data['cmd']) {
+                case 'init':
+                    initp2p();
+                    break;
+                case 'p2p':
+                    if (data['id'])
+                        webp2p.send(id, data['msg']);
+                    else
+                        webp2p.sendAll(data['msg']);
+                    break;
+            }
+        };
+
+        worker.onerror = (event) => {
+            console.log(event);
+        };
+
+        document.addEventListener('DOMContentLoaded', (event) => {
+            worker.postMessage({ 'cmd': 'init' });
+        });
+
+        window.onbeforeunload = () => {
+            if (webp2p)
+                webp2p.disconnect();
+        }
+    </script>
+</head>
+
+<body>
+</body>
+
+</html>
