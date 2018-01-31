@@ -67,7 +67,7 @@ http {
 
     server {
         listen       80;
-        root         /home/game/client;
+        root         /home/minato/client;
         index        index.html;
 
         location / {

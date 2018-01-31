@@ -8,20 +8,72 @@ const MessageType = {
 
 const responseChainMsg = () => ({
     'type': MessageType.RESPONSE_BLOCKCHAIN,
-    'data': JSON.stringify(getBlockchain())
+    'data': getBlockchain()
 });
 
 const responseLatestMsg = () => ({
     'type': MessageType.RESPONSE_BLOCKCHAIN,
-    'data': JSON.stringify([getLatestBlock()])
+    'data': [getLatestBlock()]
 });
 
 const responseTransactionPoolMsg = () => ({
     'type': MessageType.RESPONSE_TRANSACTION_POOL,
-    'data': JSON.stringify(getTransactionPool())
+    'data': getTransactionPool()
 });
 
-const initMessageHandler = (id, message) => {
+const queryChainLengthMsg = () => ({
+    'type': MessageType.QUERY_LATEST,
+    'data': null
+});
+
+const queryAllMsg = () => ({
+    'type': MessageType.QUERY_ALL,
+    'data': null
+});
+
+const queryTransactionPoolMsg = () => ({
+    'type': MessageType.QUERY_TRANSACTION_POOL,
+    'data': null
+});
+
+const broadcast = (message) => {
+    this.postMessage({ 'cmd': 'p2p', 'msg': message });
+};
+
+const handleBlockchainResponse = (receivedBlocks) => {
+    if (receivedBlocks.length === 0) {
+        console.log('received block chain size of 0');
+        return;
+    }
+
+    const latestBlockReceived = receivedBlocks[receivedBlocks.length - 1];
+    if (!isValidBlockStructure(latestBlockReceived)) {
+        console.log('block structuture not valid');
+        return;
+    }
+
+    const latestBlockHeld = getLatestBlock();
+    if (latestBlockReceived.index > latestBlockHeld.index) {
+        console.log('blockchain possibly behind. We got: '
+            + latestBlockHeld.index + ' Peer got: ' + latestBlockReceived.index);
+        if (latestBlockHeld.hash === latestBlockReceived.previousHash) {
+            if (addBlockToChain(latestBlockReceived)) {
+                broadcast(responseLatestMsg());
+            }
+        } else if (receivedBlocks.length === 1) {
+            console.log('We have to query the chain from our peer');
+            this.postMessage({ 'cmd': 'p2p', 'msg': queryAllMsg() });
+        } else {
+            console.log('Received blockchain is longer than current blockchain');
+            if (replaceChain(receivedBlocks))
+                broadcast(responseLatestMsg());
+        }
+    } else {
+        console.log('received blockchain is not longer than received blockchain. Do nothing');
+    }
+}
+
+const messageHandler = (id, message) => {
     switch (message['type']) {
         case MessageType.QUERY_LATEST:
             this.postMessage({ 'cmd': 'p2p', 'id': id, 'msg': responseLatestMsg() });
@@ -42,9 +94,9 @@ const initMessageHandler = (id, message) => {
             handleBlockchainResponse(receivedBlocks);
             break;
         case MessageType.RESPONSE_TRANSACTION_POOL:
-            const receivedTransactions = message.data;
+            const receivedTransactions = message['data'];
             if (receivedTransactions === null) {
-                console.log('invalid transaction received: %s', JSON.stringify(message.data));
+                console.log('invalid transaction received: %s', JSON.stringify(message['data']));
                 break;
             }
 
@@ -53,7 +105,7 @@ const initMessageHandler = (id, message) => {
                     handleReceivedTransaction(transaction);
                     // if no error is thrown, transaction was indeed added to the pool
                     // let's broadcast transaction pool
-                    broadCastTransactionPool();
+                    broadcast(responseTransactionPoolMsg());
                 } catch (e) {
                     console.log(e.message);
                 }

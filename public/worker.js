@@ -35,8 +35,7 @@ const mining = async () => {
     if (newBlock === null) {
         console.log('could not generate block');
     } else {
-        //broadcastLatest();
-        this.postMessage({ 'code': 1, 'msg': newBlock });
+        broadcast(responseLatestMsg());
     }
 };
 
@@ -51,9 +50,17 @@ self.onmessage = (event) => {
             });
             break;
         case 'p2p':
-            //data['msg'];
-            break;
-        default:
-            this.postMessage({ 'code': -100, 'msg': 'invalid command' });
+            switch (data['type']) {
+                case 'open':
+                    this.postMessage({ 'cmd': 'p2p', 'id': data['id'], 'msg': queryChainLengthMsg() });
+
+                    setTimeout(() => {
+                        broadcast(queryTransactionPoolMsg());
+                    }, 500);
+                    break;
+                case 'data':
+                    messageHandler(data['id'], data['msg']);
+                    break;
+            }
     }
 }
