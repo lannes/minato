@@ -40,7 +40,7 @@ const broadcast = (message) => {
     this.postMessage({ 'cmd': 'p2p', 'msg': message });
 };
 
-const handleBlockchainResponse = (receivedBlocks) => {
+const handleBlockchainResponse = async (receivedBlocks) => {
     if (receivedBlocks.length === 0) {
         console.log('received block chain size of 0');
         return;
@@ -52,20 +52,18 @@ const handleBlockchainResponse = (receivedBlocks) => {
         return;
     }
 
-    const latestBlockHeld = getLatestBlock();
-    if (latestBlockReceived.index > latestBlockHeld.index) {
-        console.log('blockchain possibly behind. We got: '
-            + latestBlockHeld.index + ' Peer got: ' + latestBlockReceived.index);
-        if (latestBlockHeld.hash === latestBlockReceived.previousHash) {
-            if (addBlockToChain(latestBlockReceived)) {
+    const latestBlock = getLatestBlock();
+    if (latestBlockReceived.index > latestBlock.index) {
+        console.log('current block: ' + latestBlock.index + ' receive: ' + latestBlockReceived.index);
+        if (latestBlock.hash === latestBlockReceived.previousHash) {
+            if (await addBlockToChain(latestBlockReceived)) {
                 broadcast(responseLatestMsg());
             }
         } else if (receivedBlocks.length === 1) {
-            console.log('We have to query the chain from our peer');
-            this.postMessage({ 'cmd': 'p2p', 'msg': queryAllMsg() });
+            broadcast(queryAllMsg());
         } else {
             console.log('Received blockchain is longer than current blockchain');
-            if (replaceChain(receivedBlocks))
+            if (await replaceChain(receivedBlocks))
                 broadcast(responseLatestMsg());
         }
     } else {
@@ -73,7 +71,7 @@ const handleBlockchainResponse = (receivedBlocks) => {
     }
 }
 
-const messageHandler = (id, message) => {
+const messageHandler = async (id, message) => {
     switch (message['type']) {
         case MessageType.QUERY_LATEST:
             this.postMessage({ 'cmd': 'p2p', 'id': id, 'msg': responseLatestMsg() });
@@ -91,7 +89,7 @@ const messageHandler = (id, message) => {
                 break;
             }
 
-            handleBlockchainResponse(receivedBlocks);
+            await handleBlockchainResponse(receivedBlocks);
             break;
         case MessageType.RESPONSE_TRANSACTION_POOL:
             const receivedTransactions = message['data'];
@@ -100,16 +98,17 @@ const messageHandler = (id, message) => {
                 break;
             }
 
-            receivedTransactions.forEach((transaction) => {
+            for (let i = 0; receivedTransactions.length; i++) {
+                let transaction = receivedTransactions[i];
                 try {
-                    handleReceivedTransaction(transaction);
+                    await handleReceivedTransaction(transaction);
                     // if no error is thrown, transaction was indeed added to the pool
                     // let's broadcast transaction pool
                     broadcast(responseTransactionPoolMsg());
                 } catch (e) {
                     console.log(e.message);
                 }
-            });
+            }
             break;
     }
 }

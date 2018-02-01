@@ -39,7 +39,7 @@ const mining = async () => {
     }
 };
 
-self.onmessage = (event) => {
+self.onmessage = async (event) => {
     const data = event.data;
     switch (data['cmd']) {
         case 'init':
@@ -57,9 +57,13 @@ self.onmessage = (event) => {
                     setTimeout(() => {
                         broadcast(queryTransactionPoolMsg());
                     }, 500);
+
+                    setTimeout(async () => {
+                        await mining();
+                    }, 5000);
                     break;
                 case 'data':
-                    messageHandler(data['id'], data['msg']);
+                    await messageHandler(data['id'], data['msg']);
                     break;
             }
     }

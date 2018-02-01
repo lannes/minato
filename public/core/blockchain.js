@@ -35,7 +35,7 @@ const getUnspentTxOuts = () => cloneDeep(unspentTxOuts);
 
 // and txPool should be only updated at the same time
 const setUnspentTxOuts = (newUnspentTxOut) => {
-    console.log('replacing unspentTxouts with: %s', newUnspentTxOut);
+    console.log('replacing unspentTxouts with: ' + JSON.stringify(newUnspentTxOut));
     unspentTxOuts = newUnspentTxOut;
 };
 
@@ -76,7 +76,7 @@ const generateRawNextBlock = async (blockData) => {
     const nextTimestamp = getCurrentTimestamp();
     const newBlock = await findBlock(nextIndex, previousBlock['hash'], nextTimestamp, blockData, difficulty);
 
-    if (addBlockToChain(newBlock)) {
+    if (await addBlockToChain(newBlock)) {
         return newBlock;
     } else {
         return null;
