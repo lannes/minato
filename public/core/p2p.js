@@ -98,13 +98,13 @@ const messageHandler = async (id, message) => {
                 break;
             }
 
-            for (let i = 0; receivedTransactions.length; i++) {
+            for (let i = 0; i < receivedTransactions.length; i++) {
                 let transaction = receivedTransactions[i];
                 try {
                     await handleReceivedTransaction(transaction);
                     // if no error is thrown, transaction was indeed added to the pool
                     // let's broadcast transaction pool
-                    broadcast(responseTransactionPoolMsg());
+                    //broadcast(responseTransactionPoolMsg());
                 } catch (e) {
                     console.log(e.message);
                 }

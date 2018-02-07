@@ -27,7 +27,7 @@ const init = async () => {
 
     await initBlockchain();
 
-    this.postMessage({ 'cmd': 'init', 'msg': 'success', 'public': Wallet.getPublicFromWallet() });
+    this.postMessage({ 'cmd': 'init', 'msg': Wallet.getPublicFromWallet() });
 };
 
 const mining = async () => {
@@ -37,6 +37,8 @@ const mining = async () => {
     } else {
         broadcast(responseLatestMsg());
     }
+
+    this.postMessage({ 'cmd': 'balance', 'msg': Wallet.getAccountBalance() });
 };
 
 self.onmessage = async (event) => {

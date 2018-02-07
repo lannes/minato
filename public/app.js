@@ -40,8 +40,11 @@ worker.onmessage = (event) => {
     const data = event.data;
     switch (data['cmd']) {
         case 'init':
-            $('#lblMyAddress').html(data['public']);
+            $('#lblMyAddress').html(data['msg']);
             initp2p();
+            break;
+        case 'balance':
+            $('#lblBalance').html(data['msg']);
             break;
         case 'p2p': {
             const id = data['id'];
