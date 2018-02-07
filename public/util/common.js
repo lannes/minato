@@ -2,6 +2,16 @@ const getCurrentTimestamp = () => Math.round(new Date().getTime() / 1000);
 
 const buf2hex = buf => buf.map(b => ('00' + b.toString(16)).slice(-2)).join('');
 
+const hex2buf = hex => {
+    let buf = new Uint8Array(hex.length / 2);
+
+    for (let i = 0; i < hex.length; i += 2) {
+        buf[i / 2] = parseInt(hex.substring(i, i + 2), 16);
+    }
+
+    return buf;
+};
+
 const toHexString = (byteArray) => {
     return Array.from(byteArray, (byte) => {
         return ('0' + (byte & 0xFF).toString(16)).slice(-2);

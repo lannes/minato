@@ -125,16 +125,19 @@ class Elliptic {
     }
 
     static async verify(publicKey, signature, data) {
+        let arrSignature = hex2buf(signature);
+        
+        let arrData = null;
         if (typeof (data) == 'string')
-            data = new TextEncoder('utf-8').encode(data);
+            arrData = new TextEncoder('utf-8').encode(data);
 
         const isvalid = await crypt.subtle.verify({
             name: 'ECDSA',
             hash: { name: 'SHA-256' },
         },
             publicKey,
-            signature, //ArrayBuffer of the signature
-            data //ArrayBuffer of the data
+            arrSignature, //ArrayBuffer of the signature
+            arrData //ArrayBuffer of the data
         );
 
         return isvalid;

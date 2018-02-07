@@ -127,10 +127,10 @@ class Wallet {
         };
         tx['id'] = await getTransactionId(tx);
 
-        tx['txIns'] = tx['txIns'].map(async (txIn, index) => {
+        tx['txIns'] = await Promise.all(tx['txIns'].map(async (txIn, index) => {
             txIn['signature'] = await signTxIn(tx, index, privateKey, unspentTxOuts);
             return txIn;
-        });
+        }));
 
         return tx;
     }

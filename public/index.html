@@ -34,11 +34,15 @@
         $(function () {
             start();
 
+            $('#btnMining').click(() => {
+                execute({ 'cmd': 'mining' });
+            });
+
             $('#btnSend').click(() => {
                 let address = $('#txtAddress').val();
                 let amount = $('#txtCoin').val();
 
-                execute({ 'cmd': 'sendTransaction', 'address': address, 'amount': amount });
+                execute({ 'cmd': 'sendTransaction', 'address': address, 'amount': parseInt(amount) });
             });
         });
 
@@ -52,15 +56,24 @@
 <body>
     <div class="container">
         <br>
-        <form class="form-horizontal">
+        <div class="form-horizontal">
             <div class="form-group">
-                <label for="txtMyAddress" class="control-label col-sm-7"></label>
+                <div class="form-group">
+                    <label class="control-label col-sm-2">Wallet</label>
+                    <label id="lblMyAddress" class="control-label col-sm-7"></label>
+                </div>
+                <div class="form-group">
+                    <label class="control-label col-sm-2"></label>
+                    <div class="col-sm-5">
+                        <button id="btnMining" class="btn btn-primary">Mining</button>
+                    </div>
+                </div>
             </div>
-        </form>
-        <form class="form-horizontal">
+        </div>
+        <div class="form-horizontal">
             <div class="form-group">
                 <div class="form-group required">
-                    <label for="txtAddress" class="control-label col-sm-2">Address</label>
+                    <label for="lblAddress" class="control-label col-sm-2">Address</label>
                     <div class="col-sm-5">
                         <input class="form-control" id="txtAddress" placeholder="Address" required="true">
                     </div>
@@ -78,7 +91,7 @@
                     </div>
                 </div>
             </div>
-        </form>
+        </div>
     </div>
 </body>
 

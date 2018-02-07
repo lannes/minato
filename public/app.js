@@ -40,6 +40,7 @@ worker.onmessage = (event) => {
     const data = event.data;
     switch (data['cmd']) {
         case 'init':
+            $('#lblMyAddress').html(data['public']);
             initp2p();
             break;
         case 'p2p': {

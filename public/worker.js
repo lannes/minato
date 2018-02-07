@@ -27,7 +27,7 @@ const init = async () => {
 
     await initBlockchain();
 
-    this.postMessage({ 'cmd': 'init', 'msg': 'success' });
+    this.postMessage({ 'cmd': 'init', 'msg': 'success', 'public': Wallet.getPublicFromWallet() });
 };
 
 const mining = async () => {
@@ -49,6 +49,11 @@ self.onmessage = async (event) => {
                 console.log(e);
             });
             break;
+        case 'mining':
+            (async () => {
+                await mining();
+            })();
+            break;
         case 'sendTransaction':
             await sendTransaction(data['address'], data['amount']);
             broadcast(responseTransactionPoolMsg());
@@ -61,10 +66,6 @@ self.onmessage = async (event) => {
                     setTimeout(() => {
                         broadcast(queryTransactionPoolMsg());
                     }, 500);
-
-                    setTimeout(async () => {
-                        await mining();
-                    }, 5000);
                     break;
                 case 'data':
                     await messageHandler(data['id'], data['msg']);

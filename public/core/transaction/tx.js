@@ -134,9 +134,10 @@ const validateTransaction = async (transaction, aUnspentTxOuts) => {
         return false;
     }
 
-    const hasValidTxIns = transaction['txIns']
-        .map(async (txIn) => await validateTxIn(txIn, transaction, aUnspentTxOuts))
-        .reduce((a, b) => a && b, true);
+    const tmp = await Promise.all(transaction['txIns'].map(
+        async (txIn) => await validateTxIn(txIn, transaction, aUnspentTxOuts)
+    ));
+    const hasValidTxIns = tmp.reduce((a, b) => a && b, true);
 
     if (!hasValidTxIns) {
         console.log('some of the txIns are invalid in tx: ' + transaction['id']);
@@ -228,8 +229,10 @@ const validateBlockTransactions = async (aTransactions, aUnspentTxOuts, blockInd
 
     // all but coinbase transactions
     const normalTransactions = aTransactions.slice(1);
-    return normalTransactions.map(async (tx) => await validateTransaction(tx, aUnspentTxOuts))
-        .reduce((a, b) => (a && b), true);
+    const tmp = await Promise.all(normalTransactions.map(
+        async (tx) => await validateTransaction(tx, aUnspentTxOuts)
+    ));
+    return tmp.reduce((a, b) => (a && b), true);
 };
 
 /**

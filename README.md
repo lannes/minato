@@ -31,32 +31,32 @@ sudo yum install epel-release
 
 sudo yum install nginx
 
-CentOS 7
 sudo systemctl start nginx
-CentOS 6
-chkconfig nginx on
 
 sudo firewall-cmd --permanent --zone=public --add-service=http 
 sudo firewall-cmd --permanent --zone=public --add-service=https
 sudo firewall-cmd --reload
-```
-```sh
-sudo service nginx stop 
-sudo service nginx start   
-sudo service nginx restart
-sudo /etc/init.d/nginx reload
+
+(
+    CentOS 6:
+
+    sudo service nginx stop 
+    sudo service nginx start  
+    sudo service nginx reload 
+    sudo service nginx restart
+
+    sudo iptables -I INPUT -p tcp -m tcp --dport 80 -j ACCEPT
+    sudo iptables -I INPUT -p tcp -m tcp --dport 443 -j ACCEPT
+
+    sudo service iptables save
+    sudo service iptables restart
+)
 ```
 * Test config
 ```sh
 sudo nginx -t
 ```
-## **5. OPEN PORT 80**
-```
-iptables -I INPUT 2 -m state --state NEW -m tcp -p tcp --dport 80 -j ACCEPT
-service iptables save
-service iptables restart
-```
-## **6. RUN APP**
+## **5. RUN APP**
 * Setup files
     * client: /home/minato/client
     * server: /home/minato/server
@@ -65,11 +65,11 @@ service iptables restart
 ```sh
 pm2 start ./bin/app.js -i max --name=blockchain
 
-pm2 start ./bin/app.js -i max --node-args="--nouse-idle-notification --expose-gc -–max-old-space-size=2048 --max-new-space-size=2048"  
+pm2 start ./bin/app.js -i max --name=blockchain --node-args="--nouse-idle-notification --expose-gc -–max-old-space-size=2048 --max-new-space-size=2048"  
 ```
 * Config
 ```sh
-/etc/nginx/nginx.conf
+sudo vi /etc/nginx/nginx.conf
 ```
 ```nginx
 http {
@@ -110,10 +110,11 @@ http {
     }
 }
 ```
-## **7. SETUP SSL**
+## **6. SETUP SSL**
 * GoDaddy
 
 * Let’s Encrypt
+https://www.digitalocean.com/community/tutorials/how-to-secure-nginx-with-let-s-encrypt-on-centos-7
 ```sh
 export LC_ALL=C
 
@@ -133,11 +134,18 @@ IMPORTANT NOTES:
    version of this certificate in the future, simply run certbot
    again. To non-interactively renew *all* of your certificates, run
    "certbot renew"
-
 ```
-* OPEN PORT 443
+* CERT RENEW
 ```sh
-sudo iptables -I INPUT -p tcp -m tcp --dport 443 -j ACCEPT
+01 1 * * 0 /usr/bin/certbot renew >> /var/log/ssl-renew.log 
+06 1 * * 0 /usr/bin/systemctl nginx reload
+
+(
+    CentOS 6:
+
+    01 1 * * 0 /usr/bin/certbot renew >> /var/log/ssl-renew.log
+    06 1 * * 0 /sbin/service nginx reload
+)
 ```
 * NGINX
 ```nginx
@@ -148,14 +156,14 @@ sudo iptables -I INPUT -p tcp -m tcp --dport 443 -j ACCEPT
         server_name localhost;
     
         location / {
-            return 307 http://minato.zone$request_uri;
+            return 307 https://minato.zone$request_uri;
         }
     }
 
     #The actual HTTPS server
     server {
         listen 443 ssl http2;
-        server_name  minato.zone; 
+        server_name minato.zone; 
 
         ssl_certificate /etc/letsencrypt/live/minato.zone/fullchain.pem;
         ssl_certificate_key /etc/letsencrypt/live/minato.zone/privkey.pem;
