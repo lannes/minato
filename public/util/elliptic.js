@@ -140,18 +140,3 @@ class Elliptic {
         return isvalid;
     }
 }
-
-/*
-(async () => {
-    const kp = await Elliptic.generateKeyPair();
-    const publicKeyHex = Elliptic.generatePublicKey(kp);
-    const privateKeyHex = Elliptic.generatePrivateKey(kp);
-
-    const p1k = await Elliptic.importPublicKey(publicKeyHex);
-    console.log(p1k);
-    const p2k = await Elliptic.importPrivateKey(publicKeyHex, privateKeyHex);
-    console.log(p2k);
-})().catch((e) => {
-    console.log(e);
-});
-*/

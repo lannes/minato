@@ -28,7 +28,7 @@ class WebP2P {
         }
 
         this.signalingChannel.onerror = (event) => {
-            console.log('error ' + event);
+            console.log('signalingChannel error: ' + event);
         }
 
         this.signalingChannel.onmessage = this._signaling.bind(this);
@@ -54,7 +54,7 @@ class WebP2P {
         }
     }
 
-    sendAll(msg) {
+    broadcast(msg) {
         for (let id in this.dataChannels) {
             this.send(id, msg);
         }
@@ -110,7 +110,7 @@ class WebP2P {
         let self = this;
         this.dataChannels[id].onopen = () => {
             self.onopen(id);
-            self.sendAll('p2p_open');
+            self.broadcast('p2p_open');
         };
 
         this.dataChannels[id].onmessage = (event) => {

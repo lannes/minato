@@ -39,6 +39,11 @@ class Wallet {
         return unspentTxOuts.filter((uTxO) => uTxO['address'] === ownerAddress);
     }
 
+    static getAccountBalance() {
+        const address = Wallet.getPublicFromWallet();
+        return Wallet.getBalance(address, getUnspentTxOuts());
+    }
+
     static getBalance(address, unspentTxOuts) {
         return Wallet.findUnspentTxOuts(address, unspentTxOuts)
             .map((uTxO) => uTxO['amount'])

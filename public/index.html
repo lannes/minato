@@ -3,73 +3,43 @@
 
 <head>
     <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <script src="jquery/jquery-3.1.1.min.js"></script>
+
+    <!-- Latest compiled and minified CSS -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u"
+        crossorigin="anonymous">
+
+    <!-- Optional theme -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap-theme.min.css" integrity="sha384-rHyoN1iRsVXV4nD0JutlnGaslCJuC7uwjduW9SVrLvRYooPp2bWYgmgJQIXwl/Sp"
+        crossorigin="anonymous">
+
+    <!-- Latest compiled and minified JavaScript -->
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa"
+        crossorigin="anonymous"></script>
+
+    <style type="text/css">
+        .form-group.required .control-label:after {
+            content: "*";
+            color: red;
+        }
+    </style>
+
     <script src="https://webrtc.github.io/adapter/adapter-latest.js"></script>
     <script src="webrtc.js"></script>
+    <script src="app.js"></script>
     <script>
-        let webp2p = null;
-        const initp2p = () => {
-            const signalingServer = 'ws://45.76.221.12/minato';
-            //const signalingServer = 'ws://localhost:3002);
+        $(function () {
+            start();
 
-            const configuration = {
-                'iceServers': [
-                    { 'urls': 'stun:stun.l.google.com:19302' }
-                ]
-            };
+            $('#btnSend').click(() => {
+                let address = $('#txtAddress').val();
+                let amount = $('#txtCoin').val();
 
-            webp2p = new WebP2P(signalingServer, configuration);
-
-            webp2p.onopen = (id) => {
-                console.log('open connect to ' + id);
-                worker.postMessage({ 'cmd': 'p2p', 'id': id, 'type': 'open' });
-            }
-
-            webp2p.onmessage = (id, message) => {
-                if (!message)
-                    return;
-
-                console.log('received from: ' + id + ' ' + message);
-                try {
-                    let data = JSON.parse(message);
-                    worker.postMessage({ 'cmd': 'p2p', 'id': id, 'type': 'data', 'msg': data });
-                } catch (e) {
-                    console.log(e);
-                }
-            }
-
-            webp2p.onclose = (id) => {
-                console.log('close connect with ' + id);
-            }
-        }
-
-        const worker = new Worker('worker.js');
-
-        worker.onmessage = (event) => {
-            const data = event.data;
-            switch (data['cmd']) {
-                case 'init':
-                    initp2p();
-                    break;
-                case 'p2p': {
-                    const id = data['id'];
-                    const msg = JSON.stringify(data['msg']);
-
-                    if (id) {
-                        webp2p.send(id, msg);
-                    } else {
-                        webp2p.sendAll(msg);
-                    }
-                }
-                    break;
-            }
-        };
-
-        worker.onerror = (event) => {
-            console.log(event);
-        };
-
-        document.addEventListener('DOMContentLoaded', (event) => {
-            worker.postMessage({ 'cmd': 'init' });
+                execute({ 'cmd': 'sendTransaction', 'address': address, 'amount': amount });
+            });
         });
 
         window.onbeforeunload = () => {
@@ -80,6 +50,36 @@
 </head>
 
 <body>
+    <div class="container">
+        <br>
+        <form class="form-horizontal">
+            <div class="form-group">
+                <label for="txtMyAddress" class="control-label col-sm-7"></label>
+            </div>
+        </form>
+        <form class="form-horizontal">
+            <div class="form-group">
+                <div class="form-group required">
+                    <label for="txtAddress" class="control-label col-sm-2">Address</label>
+                    <div class="col-sm-5">
+                        <input class="form-control" id="txtAddress" placeholder="Address" required="true">
+                    </div>
+                </div>
+                <div class="form-group required">
+                    <label for="txtCoin" class="control-label col-sm-2">Coin</label>
+                    <div class="col-sm-5">
+                        <input class="form-control" id="txtCoin" placeholder="Coin" required="true">
+                    </div>
+                </div>
+                <div class="form-group ">
+                    <label class="control-label col-sm-2"></label>
+                    <div class="col-sm-5">
+                        <button id="btnSend" class="btn btn-primary">Send</button>
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
 </body>
 
 </html>

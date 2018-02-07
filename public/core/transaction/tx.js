@@ -283,8 +283,8 @@ const updateUnspentTxOuts = (aTransactions, aUnspentTxOuts) => {
                 return {
                     'txOutId': t.id,
                     'txOutIndex': index,
-                    'address': txOut.address,
-                    'amount': txOut.amount
+                    'address': txOut['address'],
+                    'amount': txOut['amount']
                 };
             });
         })

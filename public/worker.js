@@ -49,10 +49,14 @@ self.onmessage = async (event) => {
                 console.log(e);
             });
             break;
+        case 'sendTransaction':
+            await sendTransaction(data['address'], data['amount']);
+            broadcast(responseTransactionPoolMsg());
+            break;
         case 'p2p':
             switch (data['type']) {
                 case 'open':
-                    this.postMessage({ 'cmd': 'p2p', 'id': data['id'], 'msg': queryChainLengthMsg() });
+                    this.postMessage({ 'cmd': 'p2p', 'id': data['id'], 'msg': queryLatestMsg() });
 
                     setTimeout(() => {
                         broadcast(queryTransactionPoolMsg());

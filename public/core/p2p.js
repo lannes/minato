@@ -6,14 +6,14 @@ const MessageType = {
     RESPONSE_TRANSACTION_POOL: 4
 };
 
-const responseChainMsg = () => ({
-    'type': MessageType.RESPONSE_BLOCKCHAIN,
-    'data': getBlockchain()
-});
-
 const responseLatestMsg = () => ({
     'type': MessageType.RESPONSE_BLOCKCHAIN,
     'data': [getLatestBlock()]
+});
+
+const responseAllMsg = () => ({
+    'type': MessageType.RESPONSE_BLOCKCHAIN,
+    'data': getBlockchain()
 });
 
 const responseTransactionPoolMsg = () => ({
@@ -21,7 +21,7 @@ const responseTransactionPoolMsg = () => ({
     'data': getTransactionPool()
 });
 
-const queryChainLengthMsg = () => ({
+const queryLatestMsg = () => ({
     'type': MessageType.QUERY_LATEST,
     'data': null
 });
@@ -41,10 +41,10 @@ const broadcast = (message) => {
 };
 
 const handleBlockchainResponse = async (receivedBlocks) => {
-    if (receivedBlocks.length === 0) {
-        console.log('received block chain size of 0');
+    console.log('received block chain size: ' + receivedBlocks.length);
+
+    if (receivedBlocks.length === 0)
         return;
-    }
 
     const latestBlockReceived = receivedBlocks[receivedBlocks.length - 1];
     if (!isValidBlockStructure(latestBlockReceived)) {
@@ -77,7 +77,7 @@ const messageHandler = async (id, message) => {
             this.postMessage({ 'cmd': 'p2p', 'id': id, 'msg': responseLatestMsg() });
             break;
         case MessageType.QUERY_ALL:
-            this.postMessage({ 'cmd': 'p2p', 'id': id, 'msg': responseChainMsg() });
+            this.postMessage({ 'cmd': 'p2p', 'id': id, 'msg': responseAllMsg() });
             break;
         case MessageType.QUERY_TRANSACTION_POOL:
             this.postMessage({ 'cmd': 'p2p', 'id': id, 'msg': responseTransactionPoolMsg() });

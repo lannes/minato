@@ -30,7 +30,7 @@ export class WebSocketServer {
 
         this.clients.set(id, ws);
 
-        ws.send(JSON.stringify(['id', id]));
+        this.send(id, ['id', id]);
     }
 
     private updateUserListOnClients = (): void => {
@@ -39,24 +39,32 @@ export class WebSocketServer {
             userList.push(id);
         });
 
-        this.broadcast(JSON.stringify(['clients', userList.length]));
+        this.broadcast(['clients', userList.length]);
     }
 
     private send = (id, message) => {
-        this.clients.get(id).send(message);
+        let msg = JSON.stringify(message);
+
+        let ws = this.clients.get(id);
+        if (ws.readyState === WebSocket.OPEN) {
+            ws.send(msg, (err: Error) => {
+                if (err)
+                    console.log(err);
+            });
+        }
     }
 
-    private broadcast = (message: string, exclude?: string) => {
-        var self = this;
+    private broadcast = (message, exclude?: string) => {
+        let self = this;
+        let msg = JSON.stringify(message);
+
         this.clients.forEach((websocket, id) => {
             if (id === exclude)
                 return;
 
             try {
                 if (websocket.readyState === WebSocket.OPEN) {
-                    let data = JSON.parse(message)[0];
-                    console.log(` -> ${id} ${data}`);
-                    websocket.send(message);
+                    websocket.send(msg);
                 }
             } catch (error) {
                 self.removeClient(id);
@@ -89,12 +97,12 @@ export class WebSocketServer {
             console.log(`connected ${ip} ${userAgent}`);
 
             let id = UUID.v4();
-            
+
             self.registerClient(id, ws);
 
             self.updateUserListOnClients();
 
-            self.broadcast(JSON.stringify(['initiator', id]), id);
+            self.broadcast(['initiator', id], id);
 
             ws['isAlive'] = true;
             ws.on('pong', () => {
@@ -112,8 +120,7 @@ export class WebSocketServer {
                         if (target == id)
                             return;
 
-                        let newMsg = JSON.stringify([type, id, data[2]]);
-                        self.send(target, newMsg);
+                        self.send(target, [type, id, data[2]]);
 
                         console.log(`${id} -> ${target} ${type}`);
                     }
@@ -122,13 +129,17 @@ export class WebSocketServer {
                 }
             });
 
-            ws.on('close', () => {
-                console.log('disconnected');
+            ws.on('close', (code, reason) => {
+                console.log('disconnected ' + reason);
 
                 let id = ws['id'];
 
                 self.removeClient(id);
                 self.updateUserListOnClients();
+            });
+
+            ws.on('error', (e) => {
+                console.log('error: ' + e.message);
             });
         });
 

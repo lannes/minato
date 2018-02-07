@@ -4,7 +4,7 @@ const genesisTransaction = {
     'txOuts': [{
         'address': '04bfcab8722991ae774db48f934ca79cfb7dd991229153b9f732ba5334aafcd8e7266e47076996b55a14bf9913ee3145ce0cfc1372ada8ada74bd287450313534a',
         'amount': 50
-    }],
+    }]
 };
 
 const genesisBlock = {
@@ -74,7 +74,7 @@ const generateRawNextBlock = async (blockData) => {
     const difficulty = getDifficulty(getBlockchain());
     const nextIndex = previousBlock['index'] + 1;
     const nextTimestamp = getCurrentTimestamp();
-    const newBlock = await findBlock(nextIndex, previousBlock['hash'], nextTimestamp, blockData, difficulty);
+    const newBlock = await mine(nextIndex, previousBlock['hash'], nextTimestamp, blockData, difficulty);
 
     if (await addBlockToChain(newBlock)) {
         return newBlock;
@@ -98,7 +98,7 @@ const generateNextBlock = async () => {
     return await generateRawNextBlock(blockData);
 };
 
-const findBlock = async (index, previousHash, timestamp, data, difficulty) => {
+const mine = async (index, previousHash, timestamp, data, difficulty) => {
     let nonce = 0;
     while (true) {
         const hash = await calculateHash(index, previousHash, timestamp, data, difficulty, nonce);
@@ -116,12 +116,7 @@ const findBlock = async (index, previousHash, timestamp, data, difficulty) => {
 
         nonce++;
     }
-}
-
-const getAccountBalance = () => {
-    const address = Wallet.getPublicFromWallet();
-    return Wallet.getBalance(address, getUnspentTxOuts());
-}
+};
 
 const sendTransaction = async (address, amount) => {
     const tx = await Wallet.createTransaction(
@@ -134,7 +129,7 @@ const sendTransaction = async (address, amount) => {
 
     await addToTransactionPool(tx, getUnspentTxOuts());
     return tx;
-}
+};
 
 const getAccumulatedDifficulty = (aBlockchain) => {
     return aBlockchain
@@ -144,19 +139,15 @@ const getAccumulatedDifficulty = (aBlockchain) => {
 }
 
 /*
-    Checks if the given blockchain is valid. Return the unspent txOuts if the chain is valid
+    Lấy danh sách các giao dịch chưa tiêu trong quá trình kiểm tra chuỗi khối
  */
 const isValidChain = async (blockchainToValidate) => {
-    console.log('isValidChain:');
+    console.log('valid blockchain:');
     console.log(JSON.stringify(blockchainToValidate));
 
     if (!isValidGenesis(blockchainToValidate[0]))
         return null;
 
-    /*
-    Validate each block in the chain. The block is valid if the block structure is valid
-      and the transaction are valid
-     */
     let aUnspentTxOuts = [];
 
     for (let i = 0; i < blockchainToValidate.length; i++) {
