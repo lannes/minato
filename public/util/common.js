@@ -87,4 +87,4 @@ const cloneDeep = (item) => {
     }
 
     return result;
-}
+};

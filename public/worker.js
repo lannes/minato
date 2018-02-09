@@ -11,8 +11,11 @@ importScripts(
     './core/transaction/txPool.js',
     './core/block.js',
     './core/blockchain.js',
+    './core/p2p.type.js',
     './core/p2p.js'
 );
+
+this.isMining = false;
 
 const init = async () => {
     console.log('MINATO VERSION 0.0.1');
@@ -41,7 +44,7 @@ const mining = async () => {
     this.postMessage({ 'cmd': 'balance', 'msg': Wallet.getAccountBalance() });
 };
 
-self.onmessage = async (event) => {
+this.onmessage = async (event) => {
     const data = event.data;
     switch (data['cmd']) {
         case 'init':
@@ -52,8 +55,17 @@ self.onmessage = async (event) => {
             });
             break;
         case 'mining':
+            //if (this.isMining) {
+            //    this.isMining = false;
+            //    return;
+            //}
+
+            this.isMining = true;
+
             (async () => {
+                //while (this.isMining) {
                 await mining();
+                //}
             })();
             break;
         case 'sendTransaction':
@@ -63,7 +75,7 @@ self.onmessage = async (event) => {
         case 'p2p':
             switch (data['type']) {
                 case 'open':
-                    this.postMessage({ 'cmd': 'p2p', 'id': data['id'], 'msg': queryLatestMsg() });
+                    this.postMessage({ 'cmd': 'p2p', 'msg': [data['id'], queryLatestMsg()] });
 
                     setTimeout(() => {
                         broadcast(queryTransactionPoolMsg());
@@ -73,5 +85,9 @@ self.onmessage = async (event) => {
                     await messageHandler(data['id'], data['msg']);
                     break;
             }
+            break;
+        default:
+            console.log(data);
+            break;
     }
 }

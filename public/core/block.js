@@ -53,7 +53,7 @@ const isValidNewBlock = async (newBlock, previousBlock) => {
     }
 
     if (previousBlock['index'] + 1 !== newBlock['index']) {
-        console.log('invalid index');
+        console.log('invalid index previous (%s) new (%s)', previousBlock['index'], newBlock['index']);
         return false;
     } else if (previousBlock['hash'] !== newBlock['previousHash']) {
         console.log('invalid previoushash');

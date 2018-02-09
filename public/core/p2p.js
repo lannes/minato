@@ -1,11 +1,3 @@
-const MessageType = {
-    QUERY_LATEST: 0,
-    QUERY_ALL: 1,
-    RESPONSE_BLOCKCHAIN: 2,
-    QUERY_TRANSACTION_POOL: 3,
-    RESPONSE_TRANSACTION_POOL: 4
-};
-
 const responseLatestMsg = () => ({
     'type': MessageType.RESPONSE_BLOCKCHAIN,
     'data': [getLatestBlock()]
@@ -37,7 +29,7 @@ const queryTransactionPoolMsg = () => ({
 });
 
 const broadcast = (message) => {
-    this.postMessage({ 'cmd': 'p2p', 'msg': message });
+    this.postMessage({ 'cmd': 'p2p', 'msg': [message] });
 };
 
 const handleBlockchainResponse = async (receivedBlocks) => {
@@ -74,13 +66,13 @@ const handleBlockchainResponse = async (receivedBlocks) => {
 const messageHandler = async (id, message) => {
     switch (message['type']) {
         case MessageType.QUERY_LATEST:
-            this.postMessage({ 'cmd': 'p2p', 'id': id, 'msg': responseLatestMsg() });
+            this.postMessage({ 'cmd': 'p2p', 'msg': [id, responseLatestMsg()] });
             break;
         case MessageType.QUERY_ALL:
-            this.postMessage({ 'cmd': 'p2p', 'id': id, 'msg': responseAllMsg() });
+            this.postMessage({ 'cmd': 'p2p', 'msg': [id, responseAllMsg()] });
             break;
         case MessageType.QUERY_TRANSACTION_POOL:
-            this.postMessage({ 'cmd': 'p2p', 'id': id, 'msg': responseTransactionPoolMsg() });
+            this.postMessage({ 'cmd': 'p2p', 'msg': [id, responseTransactionPoolMsg()] });
             break;
         case MessageType.RESPONSE_BLOCKCHAIN:
             const receivedBlocks = message['data'];

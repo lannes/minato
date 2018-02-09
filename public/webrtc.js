@@ -1,13 +1,12 @@
-// Signaling
-// - Session control messages
-// - Network configuration
-// - Media capabilities
 window.WebSocket = window.WebSocket || window.MozWebSocket;
+
+const CHUNK_SIZE = 16 * 1024;
 
 class WebP2P {
     constructor(signalingServer, cfgIceServers) {
         this.pcs = {};
         this.dataChannels = {};
+        this.chunks = {};
         this.timeouts = {};
         this.timeoutTime = 2 * 1000;
         this.id = '';
@@ -22,9 +21,6 @@ class WebP2P {
         let self = this;
         this.signalingChannel.onclose = (event) => {
             console.log('signalingChannel close');
-            for (let id in self.pcs) {
-                self._disconnect(id);
-            }
         }
 
         this.signalingChannel.onerror = (event) => {
@@ -40,11 +36,37 @@ class WebP2P {
         }
     }
 
+    broadcast(msg) {
+        for (let id in this.dataChannels) {
+            this.send(id, msg);
+        }
+    }
+
     send(id, msg) {
+        const nChunks = Math.floor(msg.length / CHUNK_SIZE);
+        const remainder = msg.length - (nChunks * CHUNK_SIZE);
+
+        this._sendChunk(id, new Uint8Array([msg.length & 0xFF, msg.length >> 8]));
+
+        for (let i = 0; i < nChunks; i++) {
+            const chunk = msg.substr(i * CHUNK_SIZE, CHUNK_SIZE);
+            if (!this._sendChunk(id, chunk))
+                return false;
+        }
+
+        if (remainder > 0) {
+            return this._sendChunk(id, msg.substr(nChunks * CHUNK_SIZE, remainder));
+        }
+
+        return true;
+    }
+
+    _sendChunk(id, msg) {
         if (this.dataChannels[id]) {
             if (this.dataChannels[id].readyState == 'open') {
                 try {
                     this.dataChannels[id].send(msg);
+                    return true;
                 } catch (e) {
                     console.log(e);
                 }
@@ -52,12 +74,8 @@ class WebP2P {
         } else {
             this._disconnect(id);
         }
-    }
 
-    broadcast(msg) {
-        for (let id in this.dataChannels) {
-            this.send(id, msg);
-        }
+        return false;
     }
 
     _signaling(event) {
@@ -115,15 +133,26 @@ class WebP2P {
 
         this.dataChannels[id].onmessage = (event) => {
             let data = event.data;
-            switch (data) {
-                case 'p2p_open':
-                    if (self.timeouts[id])
-                        clearTimeout(self.timeouts[id]);
-                    break;
-                case 'p2p_close':
-                    break;
-                default:
-                    self.onmessage(id, data);
+
+            if (typeof (data) === 'string') {
+                this.chunks[id].data += data;
+                if (this.chunks[id].data.length === this.chunks[id].size) {
+                    switch (this.chunks[id].data) {
+                        case 'p2p_open':
+                            if (self.timeouts[id])
+                                clearTimeout(self.timeouts[id]);
+                            break;
+                        case 'p2p_close':
+                            break;
+                        default:
+                            self.onmessage(id, this.chunks[id].data);
+                            break;
+                    }
+                }
+            } else {
+                const arr = new Uint8Array(data);
+                const size = (arr[1] << 8) | arr[0];
+                this.chunks[id] = { size: size, data: '' };
             }
         };
 

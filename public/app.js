@@ -1,7 +1,16 @@
+const formatNumber = (number) => {
+    let result = number.toFixed(0).replace(/./g, (c, i, a) => {
+        return i > 0 && c !== '.' && (a.length - i) % 3 === 0 ? ',' + c : c;
+    });
+
+    return result;
+};
+
 let webp2p = null;
 const initp2p = () => {
-    //const signalingServer = 'wss://www.minato.zone/minato';
-    const signalingServer = 'ws://localhost:3002';
+    let signalingServer = 'ws://localhost:3002';
+    if (location.host != 'localhost:3001')
+        signalingServer = 'wss://' + location.host + '/minato';
 
     const configuration = {
         'iceServers': [
@@ -17,9 +26,6 @@ const initp2p = () => {
     }
 
     webp2p.onmessage = (id, message) => {
-        if (!message)
-            return;
-
         console.log('received from: ' + id + ' ' + message);
         try {
             let data = JSON.parse(message);
@@ -43,17 +49,18 @@ worker.onmessage = (event) => {
             $('#lblMyAddress').html(data['msg']);
             initp2p();
             break;
-        case 'balance':
-            $('#lblBalance').html(data['msg']);
+        case 'balance': {
+            let balance = formatNumber(data['msg']);
+            $('#lblBalance').html(balance);
+        }
             break;
         case 'p2p': {
-            const id = data['id'];
-            const msg = JSON.stringify(data['msg']);
-
-            if (id) {
-                webp2p.send(id, msg);
+            if (data['msg'].length == 2) {
+                const msg = data['msg'][1];
+                webp2p.send(data['msg'][0], JSON.stringify(msg));
             } else {
-                webp2p.broadcast(msg);
+                const msg = data['msg'][0];
+                webp2p.broadcast(JSON.stringify(msg));
             }
         }
             break;
