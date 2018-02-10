@@ -2,6 +2,28 @@ window.WebSocket = window.WebSocket || window.MozWebSocket;
 
 const CHUNK_SIZE = 16 * 1024;
 
+const numberToByteArray = (number) => {
+    let bytes = [];
+
+    do {
+        bytes.push(number & 0xFF);
+        number >>= 8;
+    } while (number > 0);
+
+    return bytes;
+};
+
+const byteArrayToNumber = (bytes) => {
+    let number = 0;
+
+    for (let i = bytes.length - 1; i >= 0; i--) {
+        number <<= 8;
+        number |= bytes[i];
+    }
+
+    return number;
+};
+
 class WebP2P {
     constructor(signalingServer, cfgIceServers) {
         this.pcs = {};
@@ -43,22 +65,25 @@ class WebP2P {
     }
 
     send(id, msg) {
+        console.log('begin send ' + msg.length);
         const nChunks = Math.floor(msg.length / CHUNK_SIZE);
         const remainder = msg.length - (nChunks * CHUNK_SIZE);
 
-        this._sendChunk(id, new Uint8Array([msg.length & 0xFF, msg.length >> 8]));
+        let result = this._sendChunk(id, new Uint8Array(numberToByteArray(msg.length)));
 
         for (let i = 0; i < nChunks; i++) {
             const chunk = msg.substr(i * CHUNK_SIZE, CHUNK_SIZE);
-            if (!this._sendChunk(id, chunk))
-                return false;
+            result = this._sendChunk(id, chunk);
+            if (!result)
+                break;
         }
 
-        if (remainder > 0) {
-            return this._sendChunk(id, msg.substr(nChunks * CHUNK_SIZE, remainder));
+        if (result && remainder > 0) {
+            result = this._sendChunk(id, msg.substr(nChunks * CHUNK_SIZE, remainder));
         }
 
-        return true;
+        console.log('end send ' + msg.length);
+        return result;
     }
 
     _sendChunk(id, msg) {
@@ -150,8 +175,8 @@ class WebP2P {
                     }
                 }
             } else {
-                const arr = new Uint8Array(data);
-                const size = (arr[1] << 8) | arr[0];
+                const bytes = new Uint8Array(data);
+                const size = byteArrayToNumber(bytes);
                 this.chunks[id] = { size: size, data: '' };
             }
         };

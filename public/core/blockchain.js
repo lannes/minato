@@ -35,7 +35,6 @@ const getUnspentTxOuts = () => cloneDeep(unspentTxOuts);
 
 // and txPool should be only updated at the same time
 const setUnspentTxOuts = (newUnspentTxOut) => {
-    console.log('replacing unspentTxouts with: ' + JSON.stringify(newUnspentTxOut));
     unspentTxOuts = newUnspentTxOut;
 };
 
@@ -142,9 +141,6 @@ const getAccumulatedDifficulty = (aBlockchain) => {
     Lấy danh sách các giao dịch chưa tiêu trong quá trình kiểm tra chuỗi khối
  */
 const isValidChain = async (blockchainToValidate) => {
-    console.log('valid blockchain:');
-    console.log(JSON.stringify(blockchainToValidate));
-
     if (!isValidGenesis(blockchainToValidate[0]))
         return null;
 

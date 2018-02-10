@@ -46,7 +46,7 @@ const handleBlockchainResponse = async (receivedBlocks) => {
 
     const latestBlock = getLatestBlock();
     if (latestBlockReceived.index > latestBlock.index) {
-        console.log('current block: ' + latestBlock.index + ' receive: ' + latestBlockReceived.index);
+        console.log('current block: %s receive: %s', latestBlock.index, latestBlockReceived.index);
         if (latestBlock.hash === latestBlockReceived.previousHash) {
             if (await addBlockToChain(latestBlockReceived)) {
                 broadcast(responseLatestMsg());

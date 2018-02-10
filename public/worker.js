@@ -2,7 +2,7 @@ importScripts(
     './util/common.js',
     './util/db.js',
     './util/hash.js',
-    './util/elliptic.js'
+    './util/crypto.js'
 );
 
 importScripts(
@@ -55,17 +55,17 @@ this.onmessage = async (event) => {
             });
             break;
         case 'mining':
-            //if (this.isMining) {
-            //    this.isMining = false;
-            //    return;
-            //}
+            if (this.isMining) {
+                this.isMining = false;
+                return;
+            }
 
             this.isMining = true;
 
             (async () => {
-                //while (this.isMining) {
-                await mining();
-                //}
+                while (this.isMining) {
+                    await mining();
+                }
             })();
             break;
         case 'sendTransaction':
@@ -91,3 +91,4 @@ this.onmessage = async (event) => {
             break;
     }
 }
+

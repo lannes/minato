@@ -26,7 +26,7 @@ const initp2p = () => {
     }
 
     webp2p.onmessage = (id, message) => {
-        console.log('received from: ' + id + ' ' + message);
+        //console.log('received from: ' + id + ' ' + message);
         try {
             let data = JSON.parse(message);
             worker.postMessage({ 'cmd': 'p2p', 'id': id, 'type': 'data', 'msg': data });

@@ -40,7 +40,7 @@ const hasValidHash = async (block) => {
     }
 
     if (!hashMatchesDifficulty(block['hash'], block['difficulty'])) {
-        console.log('block difficulty not satisfied. Expected: ' + block['difficulty'] + 'got: ' + block['hash']);
+        console.log('block difficulty not satisfied. Expected: %s got: %s', block['difficulty'], block['hash']);
     }
 
     return true;
