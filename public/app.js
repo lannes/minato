@@ -63,6 +63,12 @@ worker.onmessage = (event) => {
                 $('#pgDownload').hide();
             }
             break;
+        case 'consensus':
+
+            break;
+        case 'block':
+            $('#lblBlock').text(data['msg']);
+            break;
         case 'balance': {
             let balance = formatNumber(data['msg']);
             $('#lblBalance').text(balance);

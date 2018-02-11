@@ -175,7 +175,7 @@ const addBlockToChain = async (newBlock) => {
             return true;
         }
     }
-    
+
     return false;
 }
 

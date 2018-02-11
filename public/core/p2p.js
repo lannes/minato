@@ -76,6 +76,7 @@ const messageHandler = async (id, message) => {
                 break;
 
             await handleBlockchainResponse(receivedBlocks);
+            this.postMessage({ 'cmd': 'block', 'msg': getLatestBlock()['index'] + 1 });
         }
             break;
         case MessageType.RESPONSE_BLOCKCHAIN: {
