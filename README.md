@@ -187,3 +187,48 @@ IMPORTANT NOTES:
         ...
     }
 ```
+## **7. WEBRTC**
+* Overview
+
+|          A            |    signaling    |          B              |
+|-----------------------|:---------------:|-------------------------|
+|creates peerconnection |                 |                         |
+|creates datachannel    |                 |                         |
+|creates offer          |                 |                         |
+|                       |---- offer ----> |                         |
+|                       |                 |creates peerconnection   |
+|                       |                 |creates datachannel      |
+|                       |                 |creates answer with offer|
+|                       |<---- answer ----|                         |
+|processing Answer      |                 |                         |
+|datachannel opens      |                 |datachannel opens        |
+
+* Detail
+
+|          A               |    signaling    |          B                 |
+|--------------------------|:---------------:|----------------------------|
+|create peerconnection     |                 |                            |
+|create datachannel        |                 |                            |
+|create offer              |                 |                            |
+|(callback) offer created  |                 |                            |
+|setLocalDescription(offer)|                 |                            |
+|                          |---- offer ----> |                            |
+|                          |                 |create peerconnection       |
+|                          |                 |create datachannel          |
+|                          |                 |setRemoteDescription(offer) |
+|                          |                 |create answer               |
+|                          |                 |(callback) answer created   |
+|                          |                 |setRemoteDescription(answer)|
+|                          |<---- answer ----|                            |
+|processing Answer         |                 |                            |
+|                          |                 |(event) onicecandidate      |
+|                          |<-ice candidate--|                            |
+|                          |<-ice candidate--|                            |
+|                          |<-ice candidate--|                            |
+|processIce                |                 |                            |
+|(event) onicecandidate    |                 |                            |
+|                          |--ice candidate->|                            |
+|                          |--ice candidate->|                            |
+|                          |--ice candidate->|                            |
+|                          |                 |processIce                  |
+|datachannel opens         |                 |datachannel opens           |

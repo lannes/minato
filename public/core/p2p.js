@@ -1,9 +1,9 @@
 const responseLatestMsg = () => ({
-    'type': MessageType.RESPONSE_BLOCKCHAIN,
+    'type': MessageType.RESPONSE_LATEST,
     'data': [getLatestBlock()]
 });
 
-const responseAllMsg = () => ({
+const responseBlockchainMsg = () => ({
     'type': MessageType.RESPONSE_BLOCKCHAIN,
     'data': getBlockchain()
 });
@@ -18,8 +18,8 @@ const queryLatestMsg = () => ({
     'data': null
 });
 
-const queryAllMsg = () => ({
-    'type': MessageType.QUERY_ALL,
+const queryBlockchainMsg = () => ({
+    'type': MessageType.QUERY_BLOCKCHAIN,
     'data': null
 });
 
@@ -33,8 +33,6 @@ const broadcast = (message) => {
 };
 
 const handleBlockchainResponse = async (receivedBlocks) => {
-    console.log('received block chain size: ' + receivedBlocks.length);
-
     if (receivedBlocks.length === 0)
         return;
 
@@ -50,10 +48,13 @@ const handleBlockchainResponse = async (receivedBlocks) => {
                 broadcast(responseLatestMsg());
             }
         } else if (receivedBlocks.length === 1) {
-            broadcast(queryAllMsg());
+            broadcast(queryBlockchainMsg());
+            this.postMessage({ 'cmd': 'download', 'msg': 0 });
         } else {
-            if (await replaceChain(receivedBlocks))
+            if (await consensus(receivedBlocks)) {
                 broadcast(responseLatestMsg());
+                this.postMessage({ 'cmd': 'download', 'msg': 1 });
+            }
         }
     }
 }
@@ -63,19 +64,27 @@ const messageHandler = async (id, message) => {
         case MessageType.QUERY_LATEST:
             this.postMessage({ 'cmd': 'p2p', 'msg': [id, responseLatestMsg()] });
             break;
-        case MessageType.QUERY_ALL:
-            this.postMessage({ 'cmd': 'p2p', 'msg': [id, responseAllMsg()] });
+        case MessageType.QUERY_BLOCKCHAIN:
+            this.postMessage({ 'cmd': 'p2p', 'msg': [id, responseBlockchainMsg()] });
             break;
         case MessageType.QUERY_TRANSACTION_POOL:
             this.postMessage({ 'cmd': 'p2p', 'msg': [id, responseTransactionPoolMsg()] });
             break;
-        case MessageType.RESPONSE_BLOCKCHAIN:
+        case MessageType.RESPONSE_LATEST: {
             const receivedBlocks = message['data'];
             if (receivedBlocks === null)
                 break;
 
             await handleBlockchainResponse(receivedBlocks);
-            this.postMessage({ 'cmd': 'balance', 'msg': Wallet.getAccountBalance() });
+        }
+            break;
+        case MessageType.RESPONSE_BLOCKCHAIN: {
+            const receivedBlocks = message['data'];
+            if (receivedBlocks === null)
+                break;
+
+            await handleBlockchainResponse(receivedBlocks);
+        }
             break;
         case MessageType.RESPONSE_TRANSACTION_POOL:
             const receivedTransactions = message['data'];

@@ -29,13 +29,23 @@
             content: "*";
             color: red;
         }
+
+        .modal-body .form-horizontal .col-sm-2,
+        .modal-body .form-horizontal .col-sm-10 {
+            width: 100%
+        }
+
+        .modal-body .form-horizontal .control-label {
+            text-align: left;
+        }
     </style>
 
-    <script src="https://webrtc.github.io/adapter/adapter-latest.js"></script>
-    <script src="webrtc.js"></script>
+    <script src="network.js"></script>
     <script src="app.js"></script>
     <script>
         $(function () {
+            $('#pgDownload').hide();
+
             start();
 
             $('#btnMining').click(() => {
@@ -47,6 +57,10 @@
                 let amount = $('#txtCoin').val();
 
                 execute({ 'cmd': 'sendTransaction', 'address': address, 'amount': parseInt(amount) });
+            });
+
+            $('#btnWallet').click(() => {
+                $('#dlgWallet').modal('show');
             });
         });
 
@@ -64,13 +78,13 @@
         <div class="form-horizontal">
             <div class="form-group">
                 <div class="form-group">
-                    <label class="control-label col-sm-2">Wallet:</label>
+                    <label class="control-label col-sm-2">ADDRESS:</label>
                     <div class="col-sm-7">
                         <label id="lblMyAddress" class="control-label left"></label>
                     </div>
                 </div>
                 <div class="form-group">
-                    <label class="control-label col-sm-2">Balance:</label>
+                    <label class="control-label col-sm-2">BALANCE:</label>
                     <div class="col-sm-5">
                         <label id="lblBalance" class="control-label left"></label>
                     </div>
@@ -82,36 +96,61 @@
                     </div>
                 </div>
                 <div class="form-group">
-                    <label class="control-label col-sm-2">Blocks:</label>
+                    <label class="control-label col-sm-2"></label>
+                    <div class="col-sm-5">
+                        <div class="progress" id="pgDownload">
+                            <div id="barDownload" class="progress-bar progress-bar-success progress-bar-striped active" role="progressbar" aria-valuemin="0" aria-valuemax="100">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="control-label col-sm-2">MINING ON BLOCK:</label>
                     <div class="col-sm-5">
                         <label id="lblBlocks" class="control-label left"></label>
                     </div>
                 </div>
                 <div class="form-group">
-                    <label class="control-label col-sm-2">Connections:</label>
+                    <label class="control-label col-sm-2">CONNECTED TO:</label>
                     <div class="col-sm-5">
                         <label id="lblConnections" class="control-label left">0</label>
                     </div>
                 </div>
-            </div>
-        </div>
-        <div class="form-horizontal">
-            <div class="form-group">
-                <div class="form-group required">
-                    <label for="txtAddress" class="control-label col-sm-2">Address</label>
-                    <div class="col-sm-5">
-                        <input class="form-control" id="txtAddress" placeholder="Address" required="true">
-                    </div>
-                </div>
-                <div class="form-group required">
-                    <label for="txtCoin" class="control-label col-sm-2">Amount</label>
-                    <div class="col-sm-5">
-                        <input class="form-control" id="txtCoin" placeholder="Coin" required="true">
-                    </div>
-                </div>
-                <div class="form-group ">
+                <div class="form-group">
                     <label class="control-label col-sm-2"></label>
                     <div class="col-sm-5">
+                        <button id="btnWallet" class="btn btn-primary">Wallet</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Modal -->
+        <div class="modal" id="dlgWallet" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="false">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <button type="button" class="close" data-dismiss="modal">&times;</button>
+                        <h4 class="modal-title" id="myModalLabel">Wallet</h4>
+                    </div>
+                    <div class="modal-body">
+                        <div class="form-horizontal">
+                            <div class="form-group required">
+                                <label class="control-label col-sm-2" for="txtAddress">Address</label>
+                                <div class="col-sm-10">
+                                    <input class="form-control" id="txtAddress" placeholder="Address" required="true">
+                                </div>
+                            </div>
+                            <div class="form-group required">
+                                <label class="control-label col-sm-2" for="txtCoin">Amount</label>
+                                <div class="col-sm-10">
+                                    <input class="form-control" id="txtCoin" placeholder="Coin" required="true">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button class="btn btn-default" data-dismiss="modal">Close</button>
                         <button id="btnSend" class="btn btn-primary">Send</button>
                     </div>
                 </div>

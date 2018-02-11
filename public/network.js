@@ -1,4 +1,5 @@
 window.WebSocket = window.WebSocket || window.MozWebSocket;
+window.RTCPeerConnection = window.RTCPeerConnection || window.mozRTCPeerConnection || window.webkitRTCPeerConnection;
 
 const CHUNK_SIZE = 16 * 1024;
 
@@ -35,15 +36,6 @@ class WebP2P {
         this.cfgIceServers = cfgIceServers;
 
         this.signalingChannel = new WebSocket(signalingServer);
-
-        this.signalingChannel.onopen = (event) => {
-
-        }
-
-        let self = this;
-        this.signalingChannel.onclose = (event) => {
-            console.log('signalingChannel close');
-        }
 
         this.signalingChannel.onerror = (event) => {
             console.log('signalingChannel error: ' + event);
@@ -150,7 +142,9 @@ class WebP2P {
         let self = this;
         this.dataChannels[id].onopen = () => {
             self.onopen(id);
-            self.broadcast('p2p_open');
+
+            if (self.timeouts[id])
+                clearTimeout(self.timeouts[id]);
         };
 
         this.dataChannels[id].onmessage = (event) => {
@@ -158,18 +152,12 @@ class WebP2P {
 
             if (typeof (data) === 'string') {
                 this.chunks[id].data += data;
+
+                const percent = (this.chunks[id].data.length * 100) / this.chunks[id].size;
+                self.onprogress(id, Math.floor(percent));
+
                 if (this.chunks[id].data.length === this.chunks[id].size) {
-                    switch (this.chunks[id].data) {
-                        case 'p2p_open':
-                            if (self.timeouts[id])
-                                clearTimeout(self.timeouts[id]);
-                            break;
-                        case 'p2p_close':
-                            break;
-                        default:
-                            self.onmessage(id, this.chunks[id].data);
-                            break;
-                    }
+                    self.onmessage(id, this.chunks[id].data);
                 }
             } else {
                 const bytes = new Uint8Array(data);

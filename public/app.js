@@ -25,7 +25,11 @@ const initp2p = () => {
         connections++;
         $('#lblConnections').text(connections);
         worker.postMessage({ 'cmd': 'p2p', 'id': id, 'type': 'open' });
-    }
+    };
+
+    webp2p.onprogress = (id, percent) => {
+        $('#barDownload').css('width', percent + '%').attr('aria-valuenow', percent).text(percent + '%');
+    };
 
     webp2p.onmessage = (id, message) => {
         //console.log('received from: ' + id + ' ' + message);
@@ -35,7 +39,7 @@ const initp2p = () => {
         } catch (e) {
             console.log(e);
         }
-    }
+    };
 
     webp2p.onclose = (id) => {
         connections--;
@@ -51,6 +55,13 @@ worker.onmessage = (event) => {
         case 'init':
             $('#lblMyAddress').text(data['msg']);
             initp2p();
+            break;
+        case 'download':
+            if (data['msg'] === 0) {
+                $('#pgDownload').show();
+            } else if (data['msg'] === 1) {
+                $('#pgDownload').hide();
+            }
             break;
         case 'balance': {
             let balance = formatNumber(data['msg']);

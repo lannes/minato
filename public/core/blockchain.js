@@ -175,23 +175,22 @@ const addBlockToChain = async (newBlock) => {
             return true;
         }
     }
+    
     return false;
 }
 
-const replaceChain = async (newBlocks) => {
+const consensus = async (newBlocks) => {
     const aUnspentTxOuts = await isValidChain(newBlocks);
     const validChain = aUnspentTxOuts !== null;
     if (validChain &&
         getAccumulatedDifficulty(newBlocks) > getAccumulatedDifficulty(getBlockchain())) {
-        console.log('Received blockchain is valid. Replacing current blockchain with received blockchain');
         blockchain = newBlocks;
         setUnspentTxOuts(aUnspentTxOuts);
         updateTransactionPool(unspentTxOuts);
         return true;
-    } else {
-        console.log('Received blockchain invalid');
-        return false;
     }
+
+    return false;
 }
 
 const handleReceivedTransaction = async (transaction) => {
