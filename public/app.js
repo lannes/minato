@@ -7,6 +7,7 @@ const formatNumber = (number) => {
 };
 
 let webp2p = null;
+let connections = 0;
 const initp2p = () => {
     let signalingServer = 'ws://localhost:3002';
     if (location.host != 'localhost:3001')
@@ -21,7 +22,8 @@ const initp2p = () => {
     webp2p = new WebP2P(signalingServer, configuration);
 
     webp2p.onopen = (id) => {
-        console.log('open connect to ' + id);
+        connections++;
+        $('#lblConnections').text(connections);
         worker.postMessage({ 'cmd': 'p2p', 'id': id, 'type': 'open' });
     }
 
@@ -36,7 +38,8 @@ const initp2p = () => {
     }
 
     webp2p.onclose = (id) => {
-        console.log('close connect with ' + id);
+        connections--;
+        $('#lblConnections').text(connections);
     }
 }
 
@@ -46,12 +49,12 @@ worker.onmessage = (event) => {
     const data = event.data;
     switch (data['cmd']) {
         case 'init':
-            $('#lblMyAddress').html(data['msg']);
+            $('#lblMyAddress').text(data['msg']);
             initp2p();
             break;
         case 'balance': {
             let balance = formatNumber(data['msg']);
-            $('#lblBalance').html(balance);
+            $('#lblBalance').text(balance);
         }
             break;
         case 'p2p': {

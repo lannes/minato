@@ -65,7 +65,6 @@ class WebP2P {
     }
 
     send(id, msg) {
-        console.log('begin send ' + msg.length);
         const nChunks = Math.floor(msg.length / CHUNK_SIZE);
         const remainder = msg.length - (nChunks * CHUNK_SIZE);
 
@@ -82,7 +81,6 @@ class WebP2P {
             result = this._sendChunk(id, msg.substr(nChunks * CHUNK_SIZE, remainder));
         }
 
-        console.log('end send ' + msg.length);
         return result;
     }
 
@@ -114,7 +112,6 @@ class WebP2P {
         switch (message[0]) {
             case 'id':
                 this.id = message[1];
-                console.log(this.id);
                 break;
             case 'clients':
                 break;
@@ -182,7 +179,6 @@ class WebP2P {
         };
 
         this.dataChannels[id].onclose = () => {
-            self.onclose(id);
         };
     }
 
@@ -195,6 +191,12 @@ class WebP2P {
             self.disconnect(id);
         }, this.timeoutTime);
         */
+
+        this.pcs[id].oniceconnectionstatechange = () => {
+            if (self.pcs[id].iceConnectionState == 'disconnected') {
+                self.onclose(id);
+            }
+        };
 
         this.pcs[id].onicecandidate = (event) => {
             if (event.candidate) {

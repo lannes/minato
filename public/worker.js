@@ -40,8 +40,6 @@ const mining = async () => {
     } else {
         broadcast(responseLatestMsg());
     }
-
-    this.postMessage({ 'cmd': 'balance', 'msg': Wallet.getAccountBalance() });
 };
 
 this.onmessage = async (event) => {

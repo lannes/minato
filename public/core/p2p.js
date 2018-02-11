@@ -40,26 +40,21 @@ const handleBlockchainResponse = async (receivedBlocks) => {
 
     const latestBlockReceived = receivedBlocks[receivedBlocks.length - 1];
     if (!isValidBlockStructure(latestBlockReceived)) {
-        console.log('block structuture not valid');
         return;
     }
 
     const latestBlock = getLatestBlock();
-    if (latestBlockReceived.index > latestBlock.index) {
-        console.log('current block: %s receive: %s', latestBlock.index, latestBlockReceived.index);
-        if (latestBlock.hash === latestBlockReceived.previousHash) {
+    if (latestBlockReceived['index'] > latestBlock['index']) {
+        if (latestBlock['hash'] === latestBlockReceived['previousHash']) {
             if (await addBlockToChain(latestBlockReceived)) {
                 broadcast(responseLatestMsg());
             }
         } else if (receivedBlocks.length === 1) {
             broadcast(queryAllMsg());
         } else {
-            console.log('Received blockchain is longer than current blockchain');
             if (await replaceChain(receivedBlocks))
                 broadcast(responseLatestMsg());
         }
-    } else {
-        console.log('received blockchain is not longer than received blockchain. Do nothing');
     }
 }
 
@@ -76,12 +71,11 @@ const messageHandler = async (id, message) => {
             break;
         case MessageType.RESPONSE_BLOCKCHAIN:
             const receivedBlocks = message['data'];
-            if (receivedBlocks === null) {
-                console.log('invalid blocks received: %s', JSON.stringify(message['data']));
+            if (receivedBlocks === null)
                 break;
-            }
 
             await handleBlockchainResponse(receivedBlocks);
+            this.postMessage({ 'cmd': 'balance', 'msg': Wallet.getAccountBalance() });
             break;
         case MessageType.RESPONSE_TRANSACTION_POOL:
             const receivedTransactions = message['data'];
