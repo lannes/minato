@@ -3,6 +3,6 @@
     "EXTERNAL_PORT": 3002,
     "HOST": "localhost",
     "NAME": "minato",
-    "SSL": false,
-    "COOKIE_ENCRYPT_NAME": "smc"
+    "SSL": true,
+    "COOKIE_ENCRYPT_NAME": "mnt"
 }

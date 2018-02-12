@@ -33,38 +33,68 @@ const init = async () => {
     this.postMessage({ 'cmd': 'init', 'msg': Wallet.getPublicFromWallet() });
 };
 
-const mining = async () => {
-    const newBlock = await generateNextBlock();
-    if (newBlock === null) {
-        console.log('could not generate block');
-    } else {
-        broadcast(responseLatestMsg());
+
+let workerPort = null;
+
+const generateNextBlock = async () => {
+    const address = Wallet.getPublicFromWallet();
+    const coinbaseTx = await getCoinbaseTransaction(address, getLatestBlock()['index'] + 1);
+    const blockData = [coinbaseTx].concat(getTransactionPool());
+
+    const previousBlock = getLatestBlock();
+
+    let block = {
+        'index': previousBlock['index'] + 1,
+        'hash': '',
+        'previousHash': previousBlock['hash'],
+        'timestamp': getCurrentTimestamp(),
+        'data': blockData,
+        'difficulty': getDifficulty(getBlockchain()),
+        'nonce': 0
+    };
+
+    return block;
+};
+
+const onMessageFromMiner = async (event) => {
+    const data = event.data;
+    switch (data['cmd']) {
+        case 'newblock': {
+            // generate Raw Next Block
+            let block = data['block'];
+            if (await addBlockToChain(block)) {
+                broadcast(responseLatestMsg());
+
+                const newBlock = await generateNextBlock();
+                workerPort.postMessage({ 'cmd': 'mine', 'block': newBlock });
+            }
+        }
+            break;
+        case 'mine': {
+            const newBlock = await generateNextBlock();
+            workerPort.postMessage({ 'cmd': 'mine', 'block': newBlock });
+        }
+            break;
+        default:
+            break;
     }
 };
 
 this.onmessage = async (event) => {
     const data = event.data;
     switch (data['cmd']) {
-        case 'init':
-            (async () => {
-                await init();
-            })().catch((e) => {
-                console.log(e);
-            });
+        case 'connect':
+            workerPort = event.ports[0];
+            workerPort.onmessage = onMessageFromMiner;
             break;
-        case 'mining':
-            if (this.isMining) {
-                this.isMining = false;
-                return;
-            }
-
-            this.isMining = true;
-
-            (async () => {
-                while (this.isMining) {
-                    await mining();
-                }
-            })();
+        case 'init':
+            await init();
+            break;
+        case 'mine': {
+            // worker to miner 
+            const newBlock = await generateNextBlock();
+            workerPort.postMessage({ 'cmd': 'mine', 'block': newBlock });
+        }
             break;
         case 'sendTransaction':
             await sendTransaction(data['address'], data['amount']);

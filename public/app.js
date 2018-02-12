@@ -48,6 +48,11 @@ const initp2p = () => {
 }
 
 const worker = new Worker('worker.js');
+const miner = new Worker('./core/miner.js');
+const channel = new MessageChannel();
+
+worker.postMessage({ 'cmd': 'connect', }, [channel.port1]);
+miner.postMessage({ 'cmd': 'connect', }, [channel.port2]);
 
 worker.onmessage = (event) => {
     const data = event.data;
@@ -58,8 +63,10 @@ worker.onmessage = (event) => {
             break;
         case 'download':
             if (data['msg'] === 0) {
+                worker.postMessage({ 'cmd': 'mining', 'msg': false });
                 $('#pgDownload').show();
             } else if (data['msg'] === 1) {
+                worker.postMessage({ 'cmd': 'mining', 'msg': true });
                 $('#pgDownload').hide();
             }
             break;

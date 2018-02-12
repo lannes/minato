@@ -68,53 +68,9 @@ const getAdjustedDifficulty = (latestBlock, aBlockchain) => {
     }
 }
 
-const generateRawNextBlock = async (blockData) => {
-    const previousBlock = getLatestBlock();
-    const difficulty = getDifficulty(getBlockchain());
-    const nextIndex = previousBlock['index'] + 1;
-    const nextTimestamp = getCurrentTimestamp();
-    const newBlock = await mine(nextIndex, previousBlock['hash'], nextTimestamp, blockData, difficulty);
-
-    if (await addBlockToChain(newBlock)) {
-        return newBlock;
-    } else {
-        return null;
-    }
-};
-
 // gets the unspent transaction outputs owned by the wallet
 const getMyUnspentTransactionOutputs = () => {
     return Wallet.findUnspentTxOuts(Wallet.getPublicFromWallet(), getUnspentTxOuts());
-};
-
-/**
- * Đào khối để xử lý các giao dịch chưa được xác thực và nhận thưởng coin
- */
-const generateNextBlock = async () => {
-    const address = Wallet.getPublicFromWallet();
-    const coinbaseTx = await getCoinbaseTransaction(address, getLatestBlock()['index'] + 1);
-    const blockData = [coinbaseTx].concat(getTransactionPool());
-    return await generateRawNextBlock(blockData);
-};
-
-const mine = async (index, previousHash, timestamp, data, difficulty) => {
-    let nonce = 0;
-    while (true) {
-        const hash = await calculateHash(index, previousHash, timestamp, data, difficulty, nonce);
-        if (hashMatchesDifficulty(hash, difficulty)) {
-            return {
-                'index': index,
-                'hash': hash,
-                'previousHash': previousHash,
-                'timestamp': timestamp,
-                'data': data,
-                'difficulty': difficulty,
-                'nonce': nonce
-            };
-        }
-
-        nonce++;
-    }
 };
 
 const sendTransaction = async (address, amount) => {
