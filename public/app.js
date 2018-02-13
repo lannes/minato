@@ -8,6 +8,7 @@ const formatNumber = (number) => {
 
 let webp2p = null;
 let connections = 0;
+
 const initp2p = () => {
     let signalingServer = 'ws://localhost:3002';
     if (location.host != 'localhost:3001')
@@ -24,7 +25,7 @@ const initp2p = () => {
     webp2p.onopen = (id) => {
         connections++;
         $('#lblConnections').text(connections);
-        worker.postMessage({ 'cmd': 'p2p', 'id': id, 'type': 'open' });
+        execute({ 'cmd': 'p2p', 'id': id, 'type': 'open' });
     };
 
     webp2p.onprogress = (id, percent) => {
@@ -35,7 +36,7 @@ const initp2p = () => {
         //console.log('received from: ' + id + ' ' + message);
         try {
             let data = JSON.parse(message);
-            worker.postMessage({ 'cmd': 'p2p', 'id': id, 'type': 'data', 'msg': data });
+            execute({ 'cmd': 'p2p', 'id': id, 'type': 'data', 'msg': data });
         } catch (e) {
             console.log(e);
         }
@@ -47,14 +48,14 @@ const initp2p = () => {
     }
 }
 
-const worker = new Worker('worker.js');
+const node = new Worker('./core/node.js');
 const miner = new Worker('./core/miner.js');
 const channel = new MessageChannel();
 
-worker.postMessage({ 'cmd': 'connect', }, [channel.port1]);
+node.postMessage({ 'cmd': 'connect', }, [channel.port1]);
 miner.postMessage({ 'cmd': 'connect', }, [channel.port2]);
 
-worker.onmessage = (event) => {
+node.onmessage = (event) => {
     const data = event.data;
     switch (data['cmd']) {
         case 'init':
@@ -62,11 +63,12 @@ worker.onmessage = (event) => {
             initp2p();
             break;
         case 'download':
-            if (data['msg'] === 0) {
-                worker.postMessage({ 'cmd': 'mining', 'msg': false });
+
+            if (data['msg']['state'] === 0) {
+                execute({ 'cmd': 'mining', 'msg': false });
                 $('#pgDownload').show();
-            } else if (data['msg'] === 1) {
-                worker.postMessage({ 'cmd': 'mining', 'msg': true });
+            } else if (data['msg']['state'] === 1) {
+                execute({ 'cmd': 'mining', 'msg': true });
                 $('#pgDownload').hide();
             }
             break;
@@ -84,6 +86,10 @@ worker.onmessage = (event) => {
         case 'p2p': {
             if (data['msg'].length == 2) {
                 const msg = data['msg'][1];
+
+                if (msg['type'] === 3)
+                    console.log('send blockchain');
+            
                 webp2p.send(data['msg'][0], JSON.stringify(msg));
             } else {
                 const msg = data['msg'][0];
@@ -94,14 +100,14 @@ worker.onmessage = (event) => {
     }
 };
 
-worker.onerror = (event) => {
+node.onerror = (event) => {
     console.log(event);
 };
 
 const start = () => {
-    worker.postMessage({ 'cmd': 'init' });
+    execute({ 'cmd': 'init' });
 };
 
 const execute = (cmd) => {
-    worker.postMessage(cmd);
+    node.postMessage(cmd);
 };

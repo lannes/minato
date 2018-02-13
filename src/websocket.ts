@@ -46,6 +46,9 @@ export class WebSocketServer {
         let msg = JSON.stringify(message);
 
         let ws = this.clients.get(id);
+        if (ws === undefined || ws === null)
+            return;
+
         if (ws.readyState === WebSocket.OPEN) {
             ws.send(msg, (err: Error) => {
                 if (err)

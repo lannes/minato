@@ -1,18 +1,17 @@
 importScripts(
-    './util/common.js',
-    './util/db.js',
-    './util/hash.js',
-    './util/crypto.js'
+    '../util/common.js',
+    '../util/db.js',
+    '../util/hash.js',
+    '../util/crypto.js'
 );
 
 importScripts(
-    './core/wallet.js',
-    './core/transaction/tx.js',
-    './core/transaction/txPool.js',
-    './core/block.js',
-    './core/blockchain.js',
-    './core/p2p.type.js',
-    './core/p2p.js'
+    './wallet.js',
+    './transaction/tx.js',
+    './transaction/txPool.js',
+    './block.js',
+    './blockchain.js',
+    './p2p.js'
 );
 
 this.isMining = false;
@@ -34,7 +33,7 @@ const init = async () => {
 };
 
 
-let workerPort = null;
+let nodePort = null;
 
 const generateNextBlock = async () => {
     const address = Wallet.getPublicFromWallet();
@@ -66,13 +65,13 @@ const onMessageFromMiner = async (event) => {
                 broadcast(responseLatestMsg());
 
                 const newBlock = await generateNextBlock();
-                workerPort.postMessage({ 'cmd': 'mine', 'block': newBlock });
+                nodePort.postMessage({ 'cmd': 'mine', 'block': newBlock });
             }
         }
             break;
         case 'mine': {
             const newBlock = await generateNextBlock();
-            workerPort.postMessage({ 'cmd': 'mine', 'block': newBlock });
+            nodePort.postMessage({ 'cmd': 'mine', 'block': newBlock });
         }
             break;
         default:
@@ -84,8 +83,8 @@ this.onmessage = async (event) => {
     const data = event.data;
     switch (data['cmd']) {
         case 'connect':
-            workerPort = event.ports[0];
-            workerPort.onmessage = onMessageFromMiner;
+            nodePort = event.ports[0];
+            nodePort.onmessage = onMessageFromMiner;
             break;
         case 'init':
             await init();
@@ -93,7 +92,7 @@ this.onmessage = async (event) => {
         case 'mine': {
             // worker to miner 
             const newBlock = await generateNextBlock();
-            workerPort.postMessage({ 'cmd': 'mine', 'block': newBlock });
+            nodePort.postMessage({ 'cmd': 'mine', 'block': newBlock });
         }
             break;
         case 'sendTransaction':
@@ -119,4 +118,9 @@ this.onmessage = async (event) => {
             break;
     }
 }
+
+//let WebSocket = this.WebSocket || this.MozWebSocket;
+//let RTCPeerConnection = this.RTCPeerConnection || this.mozRTCPeerConnection || this.webkitRTCPeerConnection;
+
+//let iiii = 0;
 

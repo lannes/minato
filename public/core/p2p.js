@@ -1,6 +1,15 @@
+const MessageType = {
+    QUERY_LATEST: 0,
+    QUERY_BLOCKCHAIN: 1,
+    RESPONSE_LATEST: 2,
+    RESPONSE_BLOCKCHAIN: 3,
+    QUERY_TRANSACTION_POOL: 4,
+    RESPONSE_TRANSACTION_POOL: 5
+};
+
 const responseLatestMsg = () => ({
     'type': MessageType.RESPONSE_LATEST,
-    'data': [getLatestBlock()]
+    'data': getLatestBlock()
 });
 
 const responseBlockchainMsg = () => ({
@@ -32,32 +41,7 @@ const broadcast = (message) => {
     this.postMessage({ 'cmd': 'p2p', 'msg': [message] });
 };
 
-const handleBlockchainResponse = async (receivedBlocks) => {
-    if (receivedBlocks.length === 0)
-        return;
-
-    const latestBlockReceived = receivedBlocks[receivedBlocks.length - 1];
-    if (!isValidBlockStructure(latestBlockReceived)) {
-        return;
-    }
-
-    const latestBlock = getLatestBlock();
-    if (latestBlockReceived['index'] > latestBlock['index']) {
-        if (latestBlock['hash'] === latestBlockReceived['previousHash']) {
-            if (await addBlockToChain(latestBlockReceived)) {
-                broadcast(responseLatestMsg());
-            }
-        } else if (receivedBlocks.length === 1) {
-            broadcast(queryBlockchainMsg());
-            this.postMessage({ 'cmd': 'download', 'msg': 0 });
-        } else {
-            if (await consensus(receivedBlocks)) {
-                broadcast(responseLatestMsg());
-                this.postMessage({ 'cmd': 'download', 'msg': 1 });
-            }
-        }
-    }
-}
+let state = MessageType.QUERY_LATEST;
 
 const messageHandler = async (id, message) => {
     switch (message['type']) {
@@ -71,12 +55,31 @@ const messageHandler = async (id, message) => {
             this.postMessage({ 'cmd': 'p2p', 'msg': [id, responseTransactionPoolMsg()] });
             break;
         case MessageType.RESPONSE_LATEST: {
-            const receivedBlocks = message['data'];
-            if (receivedBlocks === null)
+            if (state == MessageType.QUERY_BLOCKCHAIN)
+                return;
+
+            const latestBlockReceived = message['data'];
+            if (latestBlockReceived === null)
                 break;
 
-            await handleBlockchainResponse(receivedBlocks);
-            this.postMessage({ 'cmd': 'block', 'msg': getLatestBlock()['index'] + 1 });
+            if (!isValidBlockStructure(latestBlockReceived)) {
+                return;
+            }
+
+            const latestBlock = getLatestBlock();
+            if (latestBlockReceived['index'] > latestBlock['index']) {
+                if (latestBlock['hash'] === latestBlockReceived['previousHash']) {
+                    if (await addBlockToChain(latestBlockReceived)) {
+                        broadcast(responseLatestMsg());
+                    }
+                } else {
+                    state = MessageType.QUERY_BLOCKCHAIN;                    
+                    broadcast(queryBlockchainMsg());
+                    this.postMessage({ 'cmd': 'download', 'msg': { 'id': id, 'state': 0 } });
+                }
+
+                this.postMessage({ 'cmd': 'block', 'msg': getLatestBlock()['index'] + 1 });
+            }
         }
             break;
         case MessageType.RESPONSE_BLOCKCHAIN: {
@@ -84,7 +87,22 @@ const messageHandler = async (id, message) => {
             if (receivedBlocks === null)
                 break;
 
-            await handleBlockchainResponse(receivedBlocks);
+            if (receivedBlocks.length === 0)
+                return;
+
+            const latestBlock = getLatestBlock();
+            const latestBlockReceived = receivedBlocks[receivedBlocks.length - 1];
+
+            if (latestBlockReceived['index'] > latestBlock['index']) {
+                if (await consensus(receivedBlocks)) {
+                    broadcast(responseLatestMsg());
+                }
+
+                state = MessageType.QUERY_LATEST;
+                
+                this.postMessage({ 'cmd': 'download', 'msg': { 'id': id, 'state': 1 } });
+                this.postMessage({ 'cmd': 'block', 'msg': getLatestBlock()['index'] + 1 });
+            }
         }
             break;
         case MessageType.RESPONSE_TRANSACTION_POOL:
