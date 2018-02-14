@@ -63,9 +63,8 @@ sudo nginx -t
 
 * Run app
 ```sh
-pm2 start ./bin/app.js -i max --name=blockchain
-
-pm2 start ./bin/app.js -i max --name=blockchain --node-args="--nouse-idle-notification --expose-gc -–max-old-space-size=2048 --max-new-space-size=2048"  
+pm2 start ./bin/app.js --name blockchain
+pm2 start ./bin/app.js --name blockchain --node-args="--nouse-idle-notification --expose-gc -–max-old-space-size=2048 --max-new-space-size=2048"  
 ```
 * Config
 ```sh

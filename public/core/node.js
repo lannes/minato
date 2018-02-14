@@ -14,7 +14,6 @@ importScripts(
     './p2p.js'
 );
 
-this.isMining = false;
 
 const init = async () => {
     console.log('MINATO VERSION 0.0.1');
@@ -31,7 +30,6 @@ const init = async () => {
 
     this.postMessage({ 'cmd': 'init', 'msg': Wallet.getPublicFromWallet() });
 };
-
 
 let nodePort = null;
 
@@ -79,6 +77,7 @@ const onMessageFromMiner = async (event) => {
     }
 };
 
+
 this.onmessage = async (event) => {
     const data = event.data;
     switch (data['cmd']) {
@@ -118,9 +117,4 @@ this.onmessage = async (event) => {
             break;
     }
 }
-
-//let WebSocket = this.WebSocket || this.MozWebSocket;
-//let RTCPeerConnection = this.RTCPeerConnection || this.mozRTCPeerConnection || this.webkitRTCPeerConnection;
-
-//let iiii = 0;
 

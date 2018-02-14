@@ -29,6 +29,7 @@ class WebP2P {
     constructor(signalingServer, cfgIceServers) {
         this.pcs = {};
         this.dataChannels = {};
+        this.channelCount = 0;
         this.chunks = {};
         this.timeouts = {};
         this.timeoutTime = 2 * 1000;
@@ -139,9 +140,11 @@ class WebP2P {
     }
 
     _setupDataChannel(id) {
+        this.channelCount++;
+
         let self = this;
         this.dataChannels[id].onopen = () => {
-            self.onopen(id);
+            self.onopen(id, this.channelCount);
 
             if (self.timeouts[id])
                 clearTimeout(self.timeouts[id]);
@@ -182,7 +185,8 @@ class WebP2P {
 
         this.pcs[id].oniceconnectionstatechange = () => {
             if (self.pcs[id].iceConnectionState == 'disconnected') {
-                self.onclose(id);
+                self._disconnect(id);
+                self.onclose(id, self.channelCount);
             }
         };
 
@@ -235,6 +239,8 @@ class WebP2P {
     }
 
     _disconnect(id) {
+        this.channelCount--;
+
         if (this.dataChannels[id])
             this.dataChannels[id].close();
         delete this.dataChannels[id];

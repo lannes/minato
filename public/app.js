@@ -7,7 +7,6 @@ const formatNumber = (number) => {
 };
 
 let webp2p = null;
-let connections = 0;
 
 const initp2p = () => {
     let signalingServer = 'ws://localhost:3002';
@@ -22,8 +21,7 @@ const initp2p = () => {
 
     webp2p = new WebP2P(signalingServer, configuration);
 
-    webp2p.onopen = (id) => {
-        connections++;
+    webp2p.onopen = (id, connections) => {
         $('#lblConnections').text(connections);
         execute({ 'cmd': 'p2p', 'id': id, 'type': 'open' });
     };
@@ -42,8 +40,7 @@ const initp2p = () => {
         }
     };
 
-    webp2p.onclose = (id) => {
-        connections--;
+    webp2p.onclose = (id, connections) => {
         $('#lblConnections').text(connections);
     }
 }
@@ -89,7 +86,7 @@ node.onmessage = (event) => {
 
                 if (msg['type'] === 3)
                     console.log('send blockchain');
-            
+
                 webp2p.send(data['msg'][0], JSON.stringify(msg));
             } else {
                 const msg = data['msg'][0];

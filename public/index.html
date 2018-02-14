@@ -2,8 +2,8 @@
 <html lang="en">
 
 <head>
+    <title>Bootstrap Example</title>
     <meta charset="utf-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
     <script src="jquery/jquery-3.1.1.min.js"></script>
@@ -21,8 +21,8 @@
         crossorigin="anonymous"></script>
 
     <style type="text/css">
-        .control-label .left {
-            text-align: left !important;
+        .text-center {
+            text-align: center;
         }
 
         .form-group.required .control-label:after {
@@ -74,6 +74,7 @@
 
 <body>
     <div class="container">
+        <h2>TESTNET</h2>
         <br>
         <div class="form-horizontal">
             <div class="form-group">
@@ -84,78 +85,94 @@
                     </div>
                 </div>
                 <div class="form-group">
-                    <label class="control-label col-sm-2">BALANCE:</label>
-                    <div class="col-sm-5">
-                        <label id="lblBalance" class="control-label left"></label>
-                    </div>
-                </div>
-                <div class="form-group">
-                    <label class="control-label col-sm-2"></label>
-                    <div class="col-sm-5">
-                        <button id="btnMining" class="btn btn-primary">Mining</button>
-                    </div>
-                </div>
-                <div class="form-group">
-                    <label class="control-label col-sm-2"></label>
-                    <div class="col-sm-5">
+                    <div class="col-sm-12">
                         <div class="progress" id="pgDownload">
-                            <div id="barDownload" class="progress-bar progress-bar-success progress-bar-striped active" role="progressbar" aria-valuemin="0" aria-valuemax="100">
+                            <div id="barDownload" class="progress-bar progress-bar-success progress-bar-striped active" role="progressbar" aria-valuemin="0"
+                                aria-valuemax="100">
                             </div>
                         </div>
                     </div>
                 </div>
-                <div class="form-group">
-                    <label class="control-label col-sm-2">MINING ON BLOCK:</label>
-                    <div class="col-sm-5">
-                        <label id="lblBlock" class="control-label left"></label>
-                    </div>
+            </div>
+        </div>
+        <div class="container text-center">
+            <div class="row">
+                <div class="col-md-3">
+                    <label class="control-label">CONNECTED TO</label>
                 </div>
-                <div class="form-group">
-                    <label class="control-label col-sm-2">CONNECTED TO:</label>
-                    <div class="col-sm-5">
-                        <label id="lblConnections" class="control-label left">0</label>
-                    </div>
+                <div class="col-md-3">
+                    <label class="control-label">MINING ON BLOCK</label>
                 </div>
-                <div class="form-group">
-                    <label class="control-label col-sm-2"></label>
-                    <div class="col-sm-5">
-                        <button id="btnWallet" class="btn btn-primary">Wallet</button>
-                    </div>
+                <div class="col-md-3">
+                    <label class="control-label">MY HASHRATE</label>
+                </div>
+                <div class="col-md-3">
+                    <button id="btnWallet" class="btn btn-primary">Wallet</button>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-3">
+                    <h1>
+                        <label id="lblConnections" class="control-label">0</label>
+                    </h1>
+                </div>
+                <div class="col-md-3">
+                    <h1>
+                        <label id="lblBlock" class="control-label">0</label>
+                    </h1>
+                </div>
+                <div class="col-md-3">
+                    <h1>
+                        <label id="lblMyHashrate" class="control-label">0</label>
+                    </h1>
+                </div>
+                <div class="col-md-3">
+                    <h1>
+                        <label id="lblBalance" class="control-label">0</label>
+                    </h1>
                 </div>
             </div>
         </div>
 
-        <!-- Modal -->
-        <div class="modal" id="dlgWallet" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="false">
-            <div class="modal-dialog">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <button type="button" class="close" data-dismiss="modal">&times;</button>
-                        <h4 class="modal-title" id="myModalLabel">Wallet</h4>
-                    </div>
-                    <div class="modal-body">
-                        <div class="form-horizontal">
-                            <div class="form-group required">
-                                <label class="control-label col-sm-2" for="txtAddress">Address</label>
-                                <div class="col-sm-10">
-                                    <input class="form-control" id="txtAddress" placeholder="Address" required="true">
-                                </div>
+        <div class="form-group">
+            <label class="control-label col-sm-2"></label>
+            <div class="col-sm-5">
+                <button id="btnMining" class="btn btn-primary">Pause Mining</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal -->
+    <div class="modal" id="dlgWallet" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="false">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal">&times;</button>
+                    <h4 class="modal-title" id="myModalLabel">Wallet</h4>
+                </div>
+                <div class="modal-body">
+                    <div class="form-horizontal">
+                        <div class="form-group required">
+                            <label class="control-label col-sm-2" for="txtAddress">Address</label>
+                            <div class="col-sm-10">
+                                <input class="form-control" id="txtAddress" placeholder="Address" required="true">
                             </div>
-                            <div class="form-group required">
-                                <label class="control-label col-sm-2" for="txtCoin">Amount</label>
-                                <div class="col-sm-10">
-                                    <input class="form-control" id="txtCoin" placeholder="Coin" required="true">
-                                </div>
+                        </div>
+                        <div class="form-group required">
+                            <label class="control-label col-sm-2" for="txtCoin">Amount</label>
+                            <div class="col-sm-10">
+                                <input class="form-control" id="txtCoin" placeholder="Coin" required="true">
                             </div>
                         </div>
                     </div>
-                    <div class="modal-footer">
-                        <button class="btn btn-default" data-dismiss="modal">Close</button>
-                        <button id="btnSend" class="btn btn-primary">Send</button>
-                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-default" data-dismiss="modal">Close</button>
+                    <button id="btnSend" class="btn btn-primary">Send</button>
                 </div>
             </div>
         </div>
+    </div>
     </div>
 </body>
 

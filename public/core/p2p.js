@@ -43,6 +43,40 @@ const broadcast = (message) => {
 
 let state = MessageType.QUERY_LATEST;
 
+checkReceivedBlocks = async (id, receivedBlocks) => {
+    if (receivedBlocks.length === 0) {
+        return;
+    }
+
+    const latestBlockReceived = receivedBlocks[receivedBlocks.length - 1];
+    if (!isValidBlockStructure(latestBlockReceived)) {
+        return;
+    }
+
+    const latestBlockHeld = getLatestBlock();
+    if (latestBlockReceived['index'] > latestBlockHeld['index']) {
+        if (latestBlockHeld['hash'] === latestBlockReceived['previousHash']) {
+            if (await addBlockToChain(latestBlockReceived)) {
+                broadcast(responseLatestMsg());
+            }
+        } else if (receivedBlocks.length === 1) {
+            state = MessageType.QUERY_BLOCKCHAIN;
+            broadcast(queryBlockchainMsg());
+
+            this.postMessage({ 'cmd': 'download', 'msg': { 'id': id, 'state': 0 } });
+        } else {
+            if (await consensus(receivedBlocks)) {
+                broadcast(responseLatestMsg());
+            }
+
+            state = MessageType.QUERY_LATEST;
+            this.postMessage({ 'cmd': 'download', 'msg': { 'id': id, 'state': 1 } });
+        }
+    }
+
+    this.postMessage({ 'cmd': 'block', 'msg': getLatestBlock()['index'] + 1 });
+}
+
 const messageHandler = async (id, message) => {
     switch (message['type']) {
         case MessageType.QUERY_LATEST:
@@ -55,31 +89,11 @@ const messageHandler = async (id, message) => {
             this.postMessage({ 'cmd': 'p2p', 'msg': [id, responseTransactionPoolMsg()] });
             break;
         case MessageType.RESPONSE_LATEST: {
-            if (state == MessageType.QUERY_BLOCKCHAIN)
-                return;
-
             const latestBlockReceived = message['data'];
             if (latestBlockReceived === null)
                 break;
 
-            if (!isValidBlockStructure(latestBlockReceived)) {
-                return;
-            }
-
-            const latestBlock = getLatestBlock();
-            if (latestBlockReceived['index'] > latestBlock['index']) {
-                if (latestBlock['hash'] === latestBlockReceived['previousHash']) {
-                    if (await addBlockToChain(latestBlockReceived)) {
-                        broadcast(responseLatestMsg());
-                    }
-                } else {
-                    state = MessageType.QUERY_BLOCKCHAIN;                    
-                    broadcast(queryBlockchainMsg());
-                    this.postMessage({ 'cmd': 'download', 'msg': { 'id': id, 'state': 0 } });
-                }
-
-                this.postMessage({ 'cmd': 'block', 'msg': getLatestBlock()['index'] + 1 });
-            }
+            await checkReceivedBlocks(id, [latestBlockReceived]);
         }
             break;
         case MessageType.RESPONSE_BLOCKCHAIN: {
@@ -87,22 +101,7 @@ const messageHandler = async (id, message) => {
             if (receivedBlocks === null)
                 break;
 
-            if (receivedBlocks.length === 0)
-                return;
-
-            const latestBlock = getLatestBlock();
-            const latestBlockReceived = receivedBlocks[receivedBlocks.length - 1];
-
-            if (latestBlockReceived['index'] > latestBlock['index']) {
-                if (await consensus(receivedBlocks)) {
-                    broadcast(responseLatestMsg());
-                }
-
-                state = MessageType.QUERY_LATEST;
-                
-                this.postMessage({ 'cmd': 'download', 'msg': { 'id': id, 'state': 1 } });
-                this.postMessage({ 'cmd': 'block', 'msg': getLatestBlock()['index'] + 1 });
-            }
+            await checkReceivedBlocks(id, receivedBlocks);
         }
             break;
         case MessageType.RESPONSE_TRANSACTION_POOL:
