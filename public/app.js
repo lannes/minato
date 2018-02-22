@@ -46,7 +46,7 @@ const initp2p = () => {
 }
 
 const node = new Worker('./core/node.js');
-const miner = new Worker('./core/miner.js');
+const miner = new Worker('./core/miner/minerWorker.js');
 const channel = new MessageChannel();
 
 node.postMessage({ 'cmd': 'connect', }, [channel.port1]);
@@ -71,6 +71,9 @@ node.onmessage = (event) => {
             break;
         case 'consensus':
 
+            break;
+        case 'hashrate':
+            $('#lblMyHashrate').text(data['msg']);
             break;
         case 'block':
             $('#lblBlock').text(data['msg']);

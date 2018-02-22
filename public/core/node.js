@@ -58,25 +58,27 @@ const onMessageFromMiner = async (event) => {
     switch (data['cmd']) {
         case 'newblock': {
             // generate Raw Next Block
-            let block = data['block'];
+            let block = data['msg'];
             if (await addBlockToChain(block)) {
                 broadcast(responseLatestMsg());
 
                 const newBlock = await generateNextBlock();
-                nodePort.postMessage({ 'cmd': 'mine', 'block': newBlock });
+                nodePort.postMessage({ 'cmd': 'mine', 'msg': newBlock });
             }
         }
             break;
         case 'mine': {
             const newBlock = await generateNextBlock();
-            nodePort.postMessage({ 'cmd': 'mine', 'block': newBlock });
+            nodePort.postMessage({ 'cmd': 'mine', 'msg': newBlock });
         }
+            break;
+        case 'hashrate':
+            this.postMessage(data);
             break;
         default:
             break;
     }
 };
-
 
 this.onmessage = async (event) => {
     const data = event.data;
@@ -91,7 +93,7 @@ this.onmessage = async (event) => {
         case 'mine': {
             // worker to miner 
             const newBlock = await generateNextBlock();
-            nodePort.postMessage({ 'cmd': 'mine', 'block': newBlock });
+            nodePort.postMessage({ 'cmd': 'mine', 'msg': newBlock });
         }
             break;
         case 'sendTransaction':
@@ -118,3 +120,6 @@ this.onmessage = async (event) => {
     }
 }
 
+this.onerror = (e) => {
+    console.log(e.message + " (" + e.filename + ":" + e.lineno + ")");
+}

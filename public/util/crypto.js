@@ -3,45 +3,17 @@
 var crypt = this.crypto || this.msCrypto;
 
 class Elliptic {
-    static base64ToHex(base64) {
-        const data = atob((base64 + '===='.substr(base64.length % 4))
-            .replace(/\-/g, '+')
-            .replace(/\_/g, '/'));
-
-        let result = '';
-        for (let i = 0; i < data.length; i++) {
-            let hex = data.charCodeAt(i).toString(16);
-            result += (hex.length == 2 ? hex : '0' + hex);
-        }
-
-        return result;
-    }
-
-    static hexToBase64(hex) {
-        let raw = '';
-        for (let i = 0; i < hex.length; i += 2) {
-            raw += String.fromCharCode(parseInt(hex[i] + hex[i + 1], 16));
-        }
-
-        return btoa(raw).replace(/\+/g, '-')
-            .replace(/\//g, '_')
-            .replace(/=/g, '');
-    }
-
     static generatePublicKey(keyPair) {
-        const x = Elliptic.base64ToHex(keyPair.x);
-        const y = Elliptic.base64ToHex(keyPair.y);
-
-        return '04' + x + y;
+        return keyPair.x + keyPair.y;
     }
 
     static generatePrivateKey(keyPair) {
-        return Elliptic.base64ToHex(keyPair.d);
+        return keyPair.d;
     }
 
-    static async importPublicKey(publicKeyHex) {
-        const x = Elliptic.hexToBase64(publicKeyHex.substring(2, 66));
-        const y = Elliptic.hexToBase64(publicKeyHex.substring(66));
+    static async importPublicKey(publicData) {
+        const x = publicData.substring(0, (publicData.length / 2));
+        const y = publicData.substring(publicData.length / 2);
 
         const publicKey = await crypt.subtle.importKey(
             'jwk',
@@ -62,11 +34,11 @@ class Elliptic {
 
         return publicKey;
     }
-
-    static async importPrivateKey(publicKeyHex, privateKeyHex) {
-        const x = Elliptic.hexToBase64(publicKeyHex.substring(2, 66));
-        const y = Elliptic.hexToBase64(publicKeyHex.substring(66));
-        const d = Elliptic.hexToBase64(privateKeyHex);
+    
+    static async importPrivateKey(publicData, privateData) {
+        const x = publicData.substring(0, (publicData.length / 2));
+        const y = publicData.substring(publicData.length / 2);
+        const d = privateData;
 
         const privateKey = await crypt.subtle.importKey(
             'jwk',
@@ -126,7 +98,7 @@ class Elliptic {
 
     static async verify(publicKey, signature, data) {
         let arrSignature = hex2buf(signature);
-        
+
         let arrData = null;
         if (typeof (data) == 'string')
             arrData = new TextEncoder('utf-8').encode(data);

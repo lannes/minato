@@ -30,7 +30,32 @@ const hexToBinary = (s) => {
     }
 
     return ret;
-}
+};
+
+const base64ToHex = (base64) => {
+    const data = atob((base64 + '===='.substr(base64.length % 4))
+        .replace(/\-/g, '+')
+        .replace(/\_/g, '/'));
+
+    let result = '';
+    for (let i = 0; i < data.length; i++) {
+        let hex = data.charCodeAt(i).toString(16);
+        result += (hex.length == 2 ? hex : '0' + hex);
+    }
+
+    return result;
+};
+
+const hexToBase64 = (hex) => {
+    let raw = '';
+    for (let i = 0; i < hex.length; i += 2) {
+        raw += String.fromCharCode(parseInt(hex[i] + hex[i + 1], 16));
+    }
+
+    return btoa(raw).replace(/\+/g, '-')
+        .replace(/\//g, '_')
+        .replace(/=/g, '');
+};
 
 const cloneDeep = (item) => {
     if (!item) { return item; } // null, undefined values check
