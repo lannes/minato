@@ -5,29 +5,25 @@ class Miner extends Observable {
         this.rounds = 256;
         this.wait = 100;
         this.enabled = false;
-        this.lastHashrate = 0;
+
+        this.hashCount = 0;
+        this.hashrate = 0;
+
+        this.init();
     }
 
-    _hashMatchesDifficulty(hash, difficulty) {
-        const hashInBinary = hexToBinary(hash);
-        const requiredPrefix = '0'.repeat(difficulty);
-        return hashInBinary.startsWith(requiredPrefix);
+    init() {
+        this.lastHashrate = Date.now();
+        this.hashrateId = setInterval(() => this._updateHashrate(), 1000);
     }
 
     async start(block) {
-        this.block = block;
         if (!this.enabled) {
             this.enabled = true;
         } else {
         }
 
-        this.hashCount = 0;
-        this.hashrate = 0;
-        this.totalElapsed = 0;
-        this.totalHashCount = 0;
-
-        this.lastHashrate = Date.now();
-        this.hashrateId = setInterval(() => this._updateHashrate(), 1000);
+        this.block = block;
 
         await this._mineBlock(0);
     }
@@ -38,16 +34,18 @@ class Miner extends Observable {
 
     _updateHashrate() {
         const elapsed = (Date.now() - this.lastHashrate) / 1000;
-        const hashCount = this.hashCount;
 
-        this.hashCount = 0;
-        this.lastHashrate = Date.now();
-
-        this.totalElapsed += elapsed;
-        this.totalHashCount += hashCount;
-
-        this.hashrate = Math.round(this.totalHashCount / this.totalElapsed);
+        this.hashrate = Math.round(this.hashCount / elapsed);
         this.notify('hashrate', this.hashrate);
+
+        this.lastHashrate = Date.now();
+        this.hashCount = 0;
+    }
+
+    _isProofOfWork(hash, difficulty) {
+        const hashInBinary = hexToBinary(hash);
+        const requiredPrefix = '0'.repeat(difficulty);
+        return hashInBinary.startsWith(requiredPrefix);
     }
 
     async _mineBlock(startNonce) {
@@ -63,7 +61,9 @@ class Miner extends Observable {
                 nonce
             );
 
-            if (this._hashMatchesDifficulty(hash, this.block['difficulty'])) {
+            this.hashCount++;
+
+            if (this._isProofOfWork(hash, this.block['difficulty'])) {
                 this.block['hash'] = hash;
                 this.block['nonce'] = nonce;
                 break;
@@ -74,8 +74,6 @@ class Miner extends Observable {
             else
                 break;
         }
-
-        this.hashCount += this.rounds;
 
         if (this.enabled) {
             if (this.block['nonce'] !== 0) {
