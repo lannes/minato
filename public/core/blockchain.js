@@ -119,7 +119,7 @@ const isValidChain = async (blockchainToValidate) => {
 }
 
 const addBlockToChain = async (newBlock) => {
-    if (isValidNewBlock(newBlock, getLatestBlock())) {
+    if (await isValidNewBlock(newBlock, getLatestBlock())) {
         const retVal = await processTransactions(newBlock['data'], getUnspentTxOuts(), newBlock['index']);
         if (retVal === null) {
             console.log('block is not valid in terms of transactions');
@@ -135,7 +135,7 @@ const addBlockToChain = async (newBlock) => {
     return false;
 }
 
-const consensus = async (newBlocks) => {
+const replaceChain = async (newBlocks) => {
     const aUnspentTxOuts = await isValidChain(newBlocks);
     const validChain = aUnspentTxOuts !== null;
     if (validChain &&

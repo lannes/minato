@@ -28,6 +28,7 @@ class Wallet {
             public: publicKey
         });
 
+        minato.address = publicKey;
         minato.privateKey = await Elliptic.importPrivateKey(publicKey, privateKey);
     }
 

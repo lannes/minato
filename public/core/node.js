@@ -2,7 +2,8 @@ importScripts(
     '../util/common.js',
     '../util/db.js',
     '../util/hash.js',
-    '../util/crypto.js'
+    '../util/crypto.js',
+    '../util/observable.js'
 );
 
 importScripts(
@@ -11,9 +12,30 @@ importScripts(
     './transaction/txPool.js',
     './block.js',
     './blockchain.js',
-    './p2p.js'
+    './consensus.js'
 );
 
+let nodePort = null;
+let consensus = new Consensus();
+
+consensus.on('download', async (data) => {
+    if (data['state'] === 1) {
+        const newBlock = await generateNextBlock();
+        nodePort.postMessage({ 'cmd': 'mine', 'msg': newBlock });
+    } else {
+        nodePort.postMessage({ 'cmd': 'pause' });
+    }
+
+    self.postMessage({ 'cmd': 'download', 'msg': data });
+});
+
+const broadcast = (message) => {
+    this.postMessage({ 'cmd': 'p2p', 'msg': [message] });
+};
+
+consensus.on('block', (block) => this.postMessage({ 'cmd': 'block', 'msg': block }));
+consensus.on('p2p', (data) => this.postMessage({ 'cmd': 'p2p', 'msg': data }));
+consensus.on('broadcast', (data) => broadcast(data));
 
 const init = async () => {
     console.log('MINATO VERSION 0.0.1');
@@ -30,8 +52,6 @@ const init = async () => {
 
     this.postMessage({ 'cmd': 'init', 'msg': Wallet.getPublicFromWallet() });
 };
-
-let nodePort = null;
 
 const generateNextBlock = async () => {
     const address = Wallet.getPublicFromWallet();
@@ -56,18 +76,13 @@ const generateNextBlock = async () => {
 const onMessageFromMiner = async (event) => {
     const data = event.data;
     switch (data['cmd']) {
-        case 'newblock': {
+        case 'block': {
             // generate Raw Next Block
             let block = data['msg'];
             if (await addBlockToChain(block)) {
                 broadcast(responseLatestMsg());
-
-                const newBlock = await generateNextBlock();
-                nodePort.postMessage({ 'cmd': 'mine', 'msg': newBlock });
             }
-        }
-            break;
-        case 'mine': {
+
             const newBlock = await generateNextBlock();
             nodePort.postMessage({ 'cmd': 'mine', 'msg': newBlock });
         }
@@ -90,11 +105,9 @@ this.onmessage = async (event) => {
         case 'init':
             await init();
             break;
-        case 'mine': {
-            // worker to miner 
-            const newBlock = await generateNextBlock();
-            nodePort.postMessage({ 'cmd': 'mine', 'msg': newBlock });
-        }
+        case 'mine':
+        case 'pause':
+            nodePort.postMessage(data);
             break;
         case 'sendTransaction':
             await sendTransaction(data['address'], data['amount']);
@@ -110,7 +123,7 @@ this.onmessage = async (event) => {
                     }, 500);
                     break;
                 case 'data':
-                    await messageHandler(data['id'], data['msg']);
+                    await consensus.messageHandler(data['id'], data['msg']);
                     break;
             }
             break;

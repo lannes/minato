@@ -184,6 +184,11 @@ class WebP2P {
         */
 
         this.pcs[id].oniceconnectionstatechange = () => {
+            if (!self.pcs[id]) {
+                console.log('undefined ' + id);
+                return;
+            }
+
             if (self.pcs[id].iceConnectionState == 'disconnected') {
                 self._disconnect(id);
                 self.onclose(id, self.channelCount);

@@ -56,24 +56,23 @@ node.onmessage = (event) => {
     const data = event.data;
     switch (data['cmd']) {
         case 'init':
-            $('#lblMyAddress').text(data['msg']);
+            $('#lblAccount').text(data['msg']);
             initp2p();
             break;
         case 'download':
-
             if (data['msg']['state'] === 0) {
-                execute({ 'cmd': 'mining', 'msg': false });
                 $('#pgDownload').show();
             } else if (data['msg']['state'] === 1) {
-                execute({ 'cmd': 'mining', 'msg': true });
                 $('#pgDownload').hide();
             }
             break;
         case 'consensus':
 
             break;
-        case 'hashrate':
-            $('#lblMyHashrate').text(data['msg']);
+        case 'hashrate': {
+            const hashrate = data['msg'] + ' H/s';
+            $('#lblMyHashrate').text(hashrate);
+        }
             break;
         case 'block':
             $('#lblBlock').text(data['msg']);

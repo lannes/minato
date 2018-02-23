@@ -37,6 +37,7 @@ class Miner extends Observable {
 
         this.hashrate = Math.round(this.hashCount / elapsed);
         this.notify('hashrate', this.hashrate);
+        console.log('hashrate ' + this.hashrate + ' ' + this.hashCount + '/' + elapsed + ' ' + this.enabled);
 
         this.lastHashrate = Date.now();
         this.hashCount = 0;
@@ -48,9 +49,13 @@ class Miner extends Observable {
         return hashInBinary.startsWith(requiredPrefix);
     }
 
+    _wait(ms) {
+        return new Promise(resolve => setTimeout(resolve, ms));
+    }
+
     async _mineBlock(startNonce) {
         let nonce = startNonce;
-
+        console.log('nonce ' + nonce);
         while (this.enabled) {
             const hash = await sha256(
                 this.block['index'] +
@@ -77,10 +82,12 @@ class Miner extends Observable {
 
         if (this.enabled) {
             if (this.block['nonce'] !== 0) {
-                this.notify('newblock', this.block);
+                this.notify('block', this.block);
             } else {
                 startNonce += this.rounds;
-                setTimeout(async () => await this._mineBlock(startNonce), this.wait);
+
+                await this._wait(this.wait);
+                await this._mineBlock(startNonce);
             }
         }
     }

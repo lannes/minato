@@ -12,17 +12,22 @@ let minerPort = null;
 let miner = new Miner();
 
 miner.on('hashrate', (hashrate) => minerPort.postMessage({ 'cmd': 'hashrate', 'msg': hashrate }));
-miner.on('newblock', (block) => minerPort.postMessage({ 'cmd': 'newblock', 'msg': block }));
+miner.on('block', (block) => minerPort.postMessage({ 'cmd': 'block', 'msg': block }));
 
-const onMessageFromCore = async (event) => {
+const onMessageFromNode = async (event) => {
     const data = event.data;
     switch (data['cmd']) {
         case 'mine': {
+            console.log('mine');
+            miner.stop();
+
             let block = data['msg'];
             await miner.start(block);
         }
             break;
-        default:
+        case 'pause':
+            console.log('pause');
+            miner.stop();
             break;
     }
 };
@@ -32,7 +37,7 @@ this.onmessage = async (event) => {
     switch (data['cmd']) {
         case 'connect':
             minerPort = event.ports[0];
-            minerPort.onmessage = onMessageFromCore;
+            minerPort.onmessage = onMessageFromNode;
             break;
         default:
             break;

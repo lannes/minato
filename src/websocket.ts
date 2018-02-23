@@ -133,7 +133,7 @@ export class WebSocketServer {
             });
 
             ws.on('close', (code, reason) => {
-                console.log('disconnected ' + reason);
+                console.log(`disconnected [${ws['id']}] ${reason}`);
 
                 let id = ws['id'];
 
