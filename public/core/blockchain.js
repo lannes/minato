@@ -102,9 +102,9 @@ const isValidChain = async (blockchainToValidate) => {
 
     let aUnspentTxOuts = [];
 
-    for (let i = 0; i < blockchainToValidate.length; i++) {
+    for (let i = 1; i < blockchainToValidate.length; i++) {
         const currentBlock = blockchainToValidate[i];
-        if (i !== 0 && !(await isValidNewBlock(blockchainToValidate[i], blockchainToValidate[i - 1]))) {
+        if (!(await isValidNewBlock(blockchainToValidate[i], blockchainToValidate[i - 1]))) {
             return null;
         }
 
@@ -119,20 +119,22 @@ const isValidChain = async (blockchainToValidate) => {
 }
 
 const addBlockToChain = async (newBlock) => {
-    if (await isValidNewBlock(newBlock, getLatestBlock())) {
-        const retVal = await processTransactions(newBlock['data'], getUnspentTxOuts(), newBlock['index']);
-        if (retVal === null) {
-            console.log('block is not valid in terms of transactions');
-            return false;
-        } else {
-            blockchain.push(newBlock);
-            setUnspentTxOuts(retVal);
-            updateTransactionPool(unspentTxOuts);
-            return true;
-        }
+    let isValid = await isValidNewBlock(newBlock, getLatestBlock());
+    if (!isValid) {
+        console.log(blockchain.length);
+        return false;
     }
 
-    return false;
+    const retVal = await processTransactions(newBlock['data'], getUnspentTxOuts(), newBlock['index']);
+    if (retVal === null) {
+        console.log('invalid transactions in blockchain');
+        return false;
+    }
+
+    blockchain.push(newBlock);
+    setUnspentTxOuts(retVal);
+    updateTransactionPool(unspentTxOuts);
+    return true;
 }
 
 const replaceChain = async (newBlocks) => {

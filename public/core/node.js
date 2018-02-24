@@ -18,7 +18,7 @@ importScripts(
 let nodePort = null;
 let consensus = new Consensus();
 
-consensus.on('download', async (data) => {
+let id = consensus.on('download', async (data) => {
     if (data['state'] === 1) {
         const newBlock = await generateNextBlock();
         nodePort.postMessage({ 'cmd': 'mine', 'msg': newBlock });
@@ -58,12 +58,12 @@ const generateNextBlock = async () => {
     const coinbaseTx = await getCoinbaseTransaction(address, getLatestBlock()['index'] + 1);
     const blockData = [coinbaseTx].concat(getTransactionPool());
 
-    const previousBlock = getLatestBlock();
+    const latestBlock = getLatestBlock();
 
     let block = {
-        'index': previousBlock['index'] + 1,
+        'index': latestBlock['index'] + 1,
         'hash': '',
-        'previousHash': previousBlock['hash'],
+        'previousHash': latestBlock['hash'],
         'timestamp': getCurrentTimestamp(),
         'data': blockData,
         'difficulty': getDifficulty(getBlockchain()),
@@ -79,6 +79,7 @@ const onMessageFromMiner = async (event) => {
         case 'block': {
             // generate Raw Next Block
             let block = data['msg'];
+
             if (await addBlockToChain(block)) {
                 broadcast(responseLatestMsg());
             }

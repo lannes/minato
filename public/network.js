@@ -185,7 +185,6 @@ class WebP2P {
 
         this.pcs[id].oniceconnectionstatechange = () => {
             if (!self.pcs[id]) {
-                console.log('undefined ' + id);
                 return;
             }
 

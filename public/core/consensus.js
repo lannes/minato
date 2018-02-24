@@ -37,6 +37,11 @@ const queryTransactionPoolMsg = () => ({
     'data': null
 });
 
+const State = {
+    NORMAL: 0,
+    DOWNLOAD_BLOCKCHAIN: 1
+};
+
 class Consensus extends Observable {
     constructor() {
         super();
@@ -123,24 +128,23 @@ class Consensus extends Observable {
                 await this.checkReceivedBlocks(id, receivedBlocks);
             }
                 break;
-            case MessageType.RESPONSE_TRANSACTION_POOL:
+            case MessageType.RESPONSE_TRANSACTION_POOL: {
                 const receivedTransactions = message['data'];
                 if (receivedTransactions === null) {
                     console.log('invalid transaction received: %s', JSON.stringify(message['data']));
-                    break;
+                    return;
                 }
 
                 for (let i = 0; i < receivedTransactions.length; i++) {
                     let transaction = receivedTransactions[i];
                     try {
                         await handleReceivedTransaction(transaction);
-                        // if no error is thrown, transaction was indeed added to the pool
-                        // let's broadcast transaction pool
-                        //broadcast(responseTransactionPoolMsg());
+                        //this.notify('broadcast', responseTransactionPoolMsg());
                     } catch (e) {
                         console.log(e.message);
                     }
                 }
+            }
                 break;
         }
     }

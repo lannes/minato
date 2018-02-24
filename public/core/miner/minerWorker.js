@@ -18,15 +18,11 @@ const onMessageFromNode = async (event) => {
     const data = event.data;
     switch (data['cmd']) {
         case 'mine': {
-            console.log('mine');
-            miner.stop();
-
             let block = data['msg'];
             await miner.start(block);
         }
             break;
         case 'pause':
-            console.log('pause');
             miner.stop();
             break;
     }

@@ -41,6 +41,7 @@ const hasValidHash = async (block) => {
 
     if (!hashMatchesDifficulty(block['hash'], block['difficulty'])) {
         console.log('block difficulty not satisfied. Expected: %s got: %s', block['difficulty'], block['hash']);
+        return false;
     }
 
     return true;
@@ -52,16 +53,22 @@ const isValidNewBlock = async (newBlock, previousBlock) => {
         return false;
     }
 
-    if (previousBlock['index'] + 1 !== newBlock['index']) {
-        console.log('invalid index previous (%s) new (%s)', previousBlock['index'], newBlock['index']);
+    if (previousBlock['index'] !== (newBlock['index'] - 1)) {
+        console.log('invalid index previous (%d) new (%d)', previousBlock['index'], newBlock['index']);
         return false;
-    } else if (previousBlock['hash'] !== newBlock['previousHash']) {
+    }
+
+    if (previousBlock['hash'] !== newBlock['previousHash']) {
         console.log('invalid previoushash');
         return false;
-    } else if (!isValidTimestamp(newBlock, previousBlock)) {
+    }
+
+    if (!isValidTimestamp(newBlock, previousBlock)) {
         console.log('invalid timestamp');
         return false;
-    } else if (!(await hasValidHash(newBlock))) {
+    }
+
+    if (!(await hasValidHash(newBlock))) {
         return false;
     }
 
