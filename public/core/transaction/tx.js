@@ -58,18 +58,24 @@ const isValidTxInStructure = (txIn) => {
     if (txIn == null) {
         console.log('txIn is null');
         return false;
-    } else if (typeof txIn['signature'] !== 'string') {
+    }
+
+    if (typeof txIn['signature'] !== 'string') {
         console.log('invalid signature type in txIn');
         return false;
-    } else if (typeof txIn['txOutId'] !== 'string') {
+    }
+
+    if (typeof txIn['txOutId'] !== 'string') {
         console.log('invalid txOutId type in txIn');
         return false;
-    } else if (typeof txIn['txOutIndex'] !== 'number') {
+    }
+
+    if (typeof txIn['txOutIndex'] !== 'number') {
         console.log('invalid txOutIndex type in txIn');
         return false;
-    } else {
-        return true;
     }
+
+    return true;
 }
 
 const validateTxIn = async (txIn, transaction, aUnspentTxOuts) => {
@@ -124,7 +130,6 @@ const isValidTransactionStructure = (transaction) => {
 }
 
 const validateTransaction = async (transaction, aUnspentTxOuts) => {
-
     if (!isValidTransactionStructure(transaction)) {
         return false;
     }

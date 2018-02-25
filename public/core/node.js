@@ -18,12 +18,23 @@ importScripts(
 let nodePort = null;
 let consensus = new Consensus();
 
-let id = consensus.on('download', async (data) => {
-    if (data['state'] === 1) {
-        const newBlock = await generateNextBlock();
-        nodePort.postMessage({ 'cmd': 'mine', 'msg': newBlock });
-    } else {
-        nodePort.postMessage({ 'cmd': 'pause' });
+const id = consensus.on('sync', async (data) => {
+    switch (data['state']) {
+        case 0: // download blockchain started 
+            nodePort.postMessage({ 'cmd': 'pause' });
+            break;
+        case 1: // download blockchain finished
+            break;
+        case 2: // consensus finished
+            break;
+        case 3: // download transaction started
+            break;
+        case 4: // download transaction finished
+            break;
+        case 5: // synchronize completed
+            const newBlock = await generateNextBlock();
+            nodePort.postMessage({ 'cmd': 'mine', 'msg': newBlock });
+            break;
     }
 
     self.postMessage({ 'cmd': 'download', 'msg': data });
@@ -77,12 +88,9 @@ const onMessageFromMiner = async (event) => {
     const data = event.data;
     switch (data['cmd']) {
         case 'block': {
-            // generate Raw Next Block
             let block = data['msg'];
 
-            if (await addBlockToChain(block)) {
-                broadcast(responseLatestMsg());
-            }
+            await consensus.addBlock(block);
 
             const newBlock = await generateNextBlock();
             nodePort.postMessage({ 'cmd': 'mine', 'msg': newBlock });
@@ -111,17 +119,12 @@ this.onmessage = async (event) => {
             nodePort.postMessage(data);
             break;
         case 'sendTransaction':
-            await sendTransaction(data['address'], data['amount']);
-            broadcast(responseTransactionPoolMsg());
+            await consensus.transfer(data['address'], data['amount']);
             break;
         case 'p2p':
             switch (data['type']) {
                 case 'open':
-                    this.postMessage({ 'cmd': 'p2p', 'msg': [data['id'], queryLatestMsg()] });
-
-                    setTimeout(() => {
-                        broadcast(queryTransactionPoolMsg());
-                    }, 500);
+                    consensus.start(data['id']);
                     break;
                 case 'data':
                     await consensus.messageHandler(data['id'], data['msg']);

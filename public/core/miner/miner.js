@@ -82,6 +82,7 @@ class Miner extends Observable {
         if (this.enabled) {
             if (this.block['nonce'] !== 0) {
                 this.enabled = false;
+                
                 this.notify('block', this.block);
             } else {
                 startNonce += this.rounds;

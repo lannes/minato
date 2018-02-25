@@ -1,17 +1,17 @@
 const genesisTransaction = {
-    'id': 'e655f6a5f26dc9b4cac6e46f52336428287759cf81ef5ff10854f69d68f43fa3',
+    'id': 'cb5619df923aed543813092583db69c59880c3d416c0ef6076fa88a304e328e8',
     'txIns': [{ 'signature': '', 'txOutId': '', 'txOutIndex': 0 }],
     'txOuts': [{
-        'address': '04bfcab8722991ae774db48f934ca79cfb7dd991229153b9f732ba5334aafcd8e7266e47076996b55a14bf9913ee3145ce0cfc1372ada8ada74bd287450313534a',
+        'address': 'Gt5TMnHCvW6XoRzdgVOwkjUzkMBsx0KOMmkxCBvXP34vLsFjg98YBuV9sXbsDkPLSrSpBMMIWXJq1YsNt8FHbc',
         'amount': 50
     }]
 };
 
 const genesisBlock = {
     'index': 0,
-    'hash': '91a73664bc84c0baa1fc75ea6e4aa6d1d20c5df664c724e3159aefc2e1186627',
+    'hash': '395d5a3abf873ba57506c0986f1f2c62b8d7abea99a012d906dab0be203a686b',
     'previousHash': '',
-    'timestamp': 1465154705,
+    'timestamp': 1519493046,
     'data': [genesisTransaction],
     'difficulty': 0,
     'nonce': 0
@@ -96,18 +96,19 @@ const getAccumulatedDifficulty = (aBlockchain) => {
 /*
     Lấy danh sách các giao dịch chưa tiêu trong quá trình kiểm tra chuỗi khối
  */
-const isValidChain = async (blockchainToValidate) => {
-    if (!isValidGenesis(blockchainToValidate[0]))
+const isValidChain = async (blocks) => {
+    if (!isValidGenesis(blocks[0]))
         return null;
 
     let aUnspentTxOuts = [];
 
-    for (let i = 1; i < blockchainToValidate.length; i++) {
-        const currentBlock = blockchainToValidate[i];
-        if (!(await isValidNewBlock(blockchainToValidate[i], blockchainToValidate[i - 1]))) {
+    for (let i = 1; i < blocks.length; i++) {
+        if (!(await isValidNewBlock(blocks[i], blocks[i - 1]))) {
+            console.log('invalid block in blockchain');
             return null;
         }
 
+        const currentBlock = blocks[i];
         aUnspentTxOuts = await processTransactions(currentBlock['data'], aUnspentTxOuts, currentBlock['index']);
         if (aUnspentTxOuts === null) {
             console.log('invalid transactions in blockchain');
@@ -121,7 +122,6 @@ const isValidChain = async (blockchainToValidate) => {
 const addBlockToChain = async (newBlock) => {
     let isValid = await isValidNewBlock(newBlock, getLatestBlock());
     if (!isValid) {
-        console.log(blockchain.length);
         return false;
     }
 
@@ -149,8 +149,4 @@ const replaceChain = async (newBlocks) => {
     }
 
     return false;
-}
-
-const handleReceivedTransaction = async (transaction) => {
-    await addToTransactionPool(transaction, getUnspentTxOuts());
 }

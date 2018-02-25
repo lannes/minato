@@ -45,6 +45,10 @@ const initp2p = () => {
     }
 }
 
+if (typeof (Worker) === 'undefined') {
+    alert('No Web Worker support');
+}
+
 const node = new Worker('./core/node.js');
 const miner = new Worker('./core/miner/minerWorker.js');
 const channel = new MessageChannel();
@@ -62,7 +66,9 @@ node.onmessage = (event) => {
         case 'download':
             if (data['msg']['state'] === 0) {
                 $('#pgDownload').show();
-            } else if (data['msg']['state'] === 1) {
+            }
+
+            if (data['msg']['state'] === 5) {
                 $('#pgDownload').hide();
             }
             break;
