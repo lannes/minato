@@ -20,33 +20,31 @@ let consensus = new Consensus();
 
 const id = consensus.on('sync', async (data) => {
     switch (data['state']) {
-        case 0: // download blockchain started 
+        case SyncType.DOWNLOAD_BLOCKCHAIN_STARTED:
             nodePort.postMessage({ 'cmd': 'pause' });
             break;
-        case 1: // download blockchain finished
+        case SyncType.DOWNLOAD_BLOCKCHAIN_FINISHED:
             break;
-        case 2: // consensus finished
+        case SyncType.CONSENSUS_FINISHED:
             break;
-        case 3: // download transaction started
+        case SyncType.DOWNLOAD_TRANSACTION_STARTED:
             break;
-        case 4: // download transaction finished
+        case SyncType.DOWNLOAD_BLOCKCHAIN_FINISHED:
             break;
-        case 5: // synchronize completed
+        case SyncType.SYNCHRONIZE_COMPLETED: {
             const newBlock = await generateNextBlock();
             nodePort.postMessage({ 'cmd': 'mine', 'msg': newBlock });
+        }
             break;
     }
 
-    self.postMessage({ 'cmd': 'download', 'msg': data });
+    self.postMessage({ 'cmd': 'sync', 'msg': data });
 });
 
-const broadcast = (message) => {
-    this.postMessage({ 'cmd': 'p2p', 'msg': [message] });
-};
-
+consensus.on('balance', (balance) => this.postMessage({ 'cmd': 'balance', 'msg': Wallet.getAccountBalance() }));
 consensus.on('block', (block) => this.postMessage({ 'cmd': 'block', 'msg': block }));
-consensus.on('p2p', (data) => this.postMessage({ 'cmd': 'p2p', 'msg': data }));
-consensus.on('broadcast', (data) => broadcast(data));
+consensus.on('send', (data) => this.postMessage({ 'cmd': 'network', 'msg': data }));
+consensus.on('broadcast', (data) => this.postMessage({ 'cmd': 'network', 'msg': [0, data] }));
 
 const init = async () => {
     console.log('MINATO VERSION 0.0.1');
@@ -121,7 +119,7 @@ this.onmessage = async (event) => {
         case 'sendTransaction':
             await consensus.transfer(data['address'], data['amount']);
             break;
-        case 'p2p':
+        case 'network':
             switch (data['type']) {
                 case 'open':
                     consensus.start(data['id']);
@@ -130,6 +128,9 @@ this.onmessage = async (event) => {
                     await consensus.messageHandler(data['id'], data['msg']);
                     break;
             }
+            break;
+        case 'stop':
+            this.close();
             break;
         default:
             console.log(data);

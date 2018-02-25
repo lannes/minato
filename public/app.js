@@ -1,4 +1,4 @@
-const formatNumber = (number) => {
+const formatBalance = (number) => {
     let result = number.toFixed(0).replace(/./g, (c, i, a) => {
         return i > 0 && c !== '.' && (a.length - i) % 3 === 0 ? ',' + c : c;
     });
@@ -23,7 +23,7 @@ const initp2p = () => {
 
     webp2p.onopen = (id, connections) => {
         $('#lblConnections').text(connections);
-        execute({ 'cmd': 'p2p', 'id': id, 'type': 'open' });
+        execute({ 'cmd': 'network', 'id': id, 'type': 'open' });
     };
 
     webp2p.onprogress = (id, percent) => {
@@ -34,7 +34,7 @@ const initp2p = () => {
         //console.log('received from: ' + id + ' ' + message);
         try {
             let data = JSON.parse(message);
-            execute({ 'cmd': 'p2p', 'id': id, 'type': 'data', 'msg': data });
+            execute({ 'cmd': 'network', 'id': id, 'type': 'data', 'msg': data });
         } catch (e) {
             console.log(e);
         }
@@ -45,7 +45,7 @@ const initp2p = () => {
     }
 }
 
-if (typeof (Worker) === 'undefined') {
+if (typeof (window.Worker) === 'undefined') {
     alert('No Web Worker support');
 }
 
@@ -63,7 +63,7 @@ node.onmessage = (event) => {
             $('#lblAccount').text(data['msg']);
             initp2p();
             break;
-        case 'download':
+        case 'sync':
             if (data['msg']['state'] === 0) {
                 $('#pgDownload').show();
             }
@@ -71,9 +71,6 @@ node.onmessage = (event) => {
             if (data['msg']['state'] === 5) {
                 $('#pgDownload').hide();
             }
-            break;
-        case 'consensus':
-
             break;
         case 'hashrate': {
             const hashrate = data['msg'] + ' H/s';
@@ -84,22 +81,21 @@ node.onmessage = (event) => {
             $('#lblBlock').text(data['msg']);
             break;
         case 'balance': {
-            let balance = formatNumber(data['msg']);
+            let balance = formatBalance(data['msg']);
             $('#lblBalance').text(balance);
+            $('#lblAmount').text(balance);
         }
             break;
-        case 'p2p': {
-            if (data['msg'].length == 2) {
-                const msg = data['msg'][1];
+        case 'network': {
+            if (data['msg'].length !== 2)
+                return;
 
-                if (msg['type'] === 3)
-                    console.log('send blockchain');
-
-                webp2p.send(data['msg'][0], JSON.stringify(msg));
-            } else {
-                const msg = data['msg'][0];
+            const id = data['msg'][0];
+            const msg = data['msg'][1];
+            if (id === 0)
                 webp2p.broadcast(JSON.stringify(msg));
-            }
+            else
+                webp2p.send(id, JSON.stringify(msg));
         }
             break;
     }
