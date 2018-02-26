@@ -34,15 +34,33 @@ class WebP2P {
         this.timeouts = {};
         this.timeoutTime = 2 * 1000;
         this.id = '';
+        this.signalingServer = signalingServer;
         this.cfgIceServers = cfgIceServers;
 
-        this.signalingChannel = new WebSocket(signalingServer);
+        this._start();
+    }
+
+    _start() {
+        this.signalingChannel = new WebSocket(this.signalingServer);
+
+        let self = this;
+        this.signalingChannel.onclose = (event) => {
+            self._reconnectSignalingChannel();
+        }
 
         this.signalingChannel.onerror = (event) => {
             console.log('signalingChannel error: ' + event);
         }
 
         this.signalingChannel.onmessage = this._signaling.bind(this);
+    }
+
+    _reconnectSignalingChannel() {
+        let self = this;
+        setTimeout(() => {
+            console.log('SignalingChannel: reconnecting...');
+            self._start();
+        }, 5000);
     }
 
     disconnect() {
