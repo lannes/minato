@@ -3,7 +3,8 @@ importScripts(
     '../util/db.js',
     '../util/hash.js',
     '../util/crypto.js',
-    '../util/observable.js'
+    '../util/observable.js',
+    '../util/scheduler.js'
 );
 
 importScripts(
@@ -18,9 +19,21 @@ importScripts(
 let nodePort = null;
 let consensus = new Consensus();
 
-const id = consensus.on('sync', async (data) => {
+let scheduler = new SchedulerAsync();
+
+const mine = (block) => {
+    scheduler.addJob(async () => {
+        if (block)
+            await consensus.addBlock(block);
+
+        const newBlock = await generateNextBlock();
+        nodePort.postMessage({ 'cmd': 'mine', 'msg': newBlock });
+    });
+};
+
+consensus.on('sync', async (data) => {
     switch (data['state']) {
-        case SyncType.DOWNLOAD_BLOCKCHAIN_STARTED:
+        case SyncType.SYNCHRONIZE_STARTED:
             nodePort.postMessage({ 'cmd': 'pause' });
             break;
         case SyncType.DOWNLOAD_BLOCKCHAIN_FINISHED:
@@ -31,10 +44,8 @@ const id = consensus.on('sync', async (data) => {
             break;
         case SyncType.DOWNLOAD_BLOCKCHAIN_FINISHED:
             break;
-        case SyncType.SYNCHRONIZE_COMPLETED: {
-            const newBlock = await generateNextBlock();
-            nodePort.postMessage({ 'cmd': 'mine', 'msg': newBlock });
-        }
+        case SyncType.SYNCHRONIZE_COMPLETED:
+            mine(data['block']);
             break;
     }
 
@@ -42,7 +53,7 @@ const id = consensus.on('sync', async (data) => {
 });
 
 consensus.on('balance', (balance) => this.postMessage({ 'cmd': 'balance', 'msg': Wallet.getAccountBalance() }));
-consensus.on('block', (block) => this.postMessage({ 'cmd': 'block', 'msg': block }));
+consensus.on('height', (height) => this.postMessage({ 'cmd': 'height', 'msg': height }));
 consensus.on('send', (data) => this.postMessage({ 'cmd': 'network', 'msg': data }));
 consensus.on('broadcast', (data) => this.postMessage({ 'cmd': 'network', 'msg': [0, data] }));
 
@@ -60,6 +71,8 @@ const init = async () => {
     await initBlockchain();
 
     this.postMessage({ 'cmd': 'init', 'msg': Wallet.getPublicFromWallet() });
+
+    scheduler.start();
 };
 
 const generateNextBlock = async () => {
@@ -85,14 +98,8 @@ const generateNextBlock = async () => {
 const onMessageFromMiner = async (event) => {
     const data = event.data;
     switch (data['cmd']) {
-        case 'block': {
-            let block = data['msg'];
-
-            await consensus.addBlock(block);
-
-            const newBlock = await generateNextBlock();
-            nodePort.postMessage({ 'cmd': 'mine', 'msg': newBlock });
-        }
+        case 'block':
+            mine(data['msg']);
             break;
         case 'hashrate':
             this.postMessage(data);
@@ -125,7 +132,7 @@ this.onmessage = async (event) => {
                     consensus.start(data['id']);
                     break;
                 case 'data':
-                    await consensus.messageHandler(data['id'], data['msg']);
+                    await consensus.process(data['id'], data['msg']);
                     break;
             }
             break;

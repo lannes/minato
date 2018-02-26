@@ -77,7 +77,7 @@ node.onmessage = (event) => {
             $('#lblMyHashrate').text(hashrate);
         }
             break;
-        case 'block':
+        case 'height':
             $('#lblBlock').text(data['msg']);
             break;
         case 'balance': {

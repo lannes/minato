@@ -8,7 +8,7 @@ const MessageType = {
 };
 
 const SyncType = {
-    DOWNLOAD_BLOCKCHAIN_STARTED: 0,
+    SYNCHRONIZE_STARTED: 0,
     DOWNLOAD_BLOCKCHAIN_FINISHED: 1,
     CONSENSUS_FINISHED: 2,
     DOWNLOAD_TRANSACTION_STARTED: 3,
@@ -19,57 +19,31 @@ const SyncType = {
 class Consensus extends Observable {
     constructor() {
         super();
-        this.state = 1;
+        this.isSync = true;
     }
 
     _responseLatestMsg() {
-        return {
-            'type': MessageType.RESPONSE_LATEST,
-            'data': getLatestBlock()
-        };
+        return [MessageType.RESPONSE_LATEST, getLatestBlock()];
     }
 
     _responseBlockchainMsg() {
-        return {
-            'type': MessageType.RESPONSE_BLOCKCHAIN,
-            'data': getBlockchain()
-        };
+        return [MessageType.RESPONSE_BLOCKCHAIN, getBlockchain()];
     }
 
     _responseTransactionPoolMsg() {
-        return {
-            'type': MessageType.RESPONSE_TRANSACTION_POOL,
-            'data': getTransactionPool()
-        };
+        return [MessageType.RESPONSE_TRANSACTION_POOL, getTransactionPool()];
     }
 
     _queryLatestMsg() {
-        return {
-            'type': MessageType.QUERY_LATEST,
-            'data': null
-        }
+        return [MessageType.QUERY_LATEST, null];
     }
 
     _queryBlockchainMsg() {
-        return {
-            'type': MessageType.QUERY_BLOCKCHAIN,
-            'data': null
-        };
+        return [MessageType.QUERY_BLOCKCHAIN, null];
     }
 
     _queryTransactionPoolMsg() {
-        return {
-            'type': MessageType.QUERY_TRANSACTION_POOL,
-            'data': null
-        };
-    }
-
-    async addBlock(block) {
-        let result = await addBlockToChain(block);
-        if (result)
-            this.notify('broadcast', this._responseLatestMsg());
-
-        return result;
+        return [MessageType.QUERY_TRANSACTION_POOL, null];
     }
 
     async _addBlockchain(blocks) {
@@ -80,53 +54,57 @@ class Consensus extends Observable {
         return result;
     }
 
+    async addBlock(block) {
+        let result = await addBlockToChain(block);
+        if (result)
+            this.notify('broadcast', this._responseLatestMsg());
+
+        return result;
+    }
+
     async _checkReceivedBlocks(id, blocks) {
         if (blocks.length === 0) {
-            if (this.state === 1) {
-                this.notify('sync', { 'id': id, 'state': SyncType.SYNCHRONIZE_COMPLETED });
-                this.state = 0;
+            if (this.isSync) {
+                this.notify('sync', { 'id': id, 'state': SyncType.SYNCHRONIZE_COMPLETED, 'block': null });
+                this.isSync = false;
             }
             return;
         }
 
         const latestBlockReceived = blocks[blocks.length - 1];
         if (!isValidBlockStructure(latestBlockReceived)) {
-            if (this.state === 1) {
-                this.notify('sync', { 'id': id, 'state': SyncType.SYNCHRONIZE_COMPLETED });
-                this.state = 0;
+            if (this.isSync) {
+                this.notify('sync', { 'id': id, 'state': SyncType.SYNCHRONIZE_COMPLETED, 'block': null });
+                this.isSync = false;
             }
             return;
         }
 
         const latestBlock = getLatestBlock();
         if (latestBlockReceived['index'] <= latestBlock['index']) {
-            if (this.state === 1) {
-                this.notify('sync', { 'id': id, 'state': SyncType.SYNCHRONIZE_COMPLETED });
-                this.state = 0;
+            if (this.isSync) {
+                this.notify('sync', { 'id': id, 'state': SyncType.SYNCHRONIZE_COMPLETED, 'block': null });
+                this.isSync = false;
             }
 
             if (latestBlockReceived['index'] == latestBlock['index'])
                 this.notify('balance', Wallet.getAccountBalance());
 
-            this.notify('block', getLatestBlock()['index'] + 1);
+            this.notify('height', getLatestBlock()['index'] + 1);
             return;
         }
 
         if (latestBlock['hash'] === latestBlockReceived['previousHash']) {
-            let result = await this.addBlock(latestBlockReceived);
-
-            if (this.state === 1) {
-                this.notify('sync', { 'id': id, 'state': SyncType.SYNCHRONIZE_COMPLETED });
-                this.state = 0;
+            if (this.isSync) {
+                this.notify('sync', { 'id': id, 'state': SyncType.SYNCHRONIZE_COMPLETED, 'block': latestBlockReceived });
+                this.isSync = false;
             }
         } else if (blocks.length === 1) {
             this.notify('broadcast', this._queryBlockchainMsg());
 
-            this.state = 1;
-            this.notify('sync', { 'id': id, 'state': SyncType.DOWNLOAD_BLOCKCHAIN_STARTED });
+            this.isSync = true;
+            this.notify('sync', { 'id': id, 'state': SyncType.SYNCHRONIZE_STARTED });
         } else {
-            this.state = 0;
-
             this.notify('sync', { 'id': id, 'state': SyncType.DOWNLOAD_BLOCKCHAIN_FINISHED });
 
             if (await this._addBlockchain(blocks))
@@ -137,11 +115,11 @@ class Consensus extends Observable {
             this.notify('broadcast', this._queryTransactionPoolMsg());
         }
 
-        this.notify('block', getLatestBlock()['index'] + 1);
+        this.notify('height', getLatestBlock()['index'] + 1);
     }
 
-    async messageHandler(id, message) {
-        switch (message['type']) {
+    async process(id, message) {
+        switch (message[0]) {
             case MessageType.QUERY_LATEST:
                 this.notify('send', [id, this._responseLatestMsg()]);
                 break;
@@ -152,7 +130,7 @@ class Consensus extends Observable {
                 this.notify('send', [id, this._responseTransactionPoolMsg()]);
                 break;
             case MessageType.RESPONSE_LATEST: {
-                const block = message['data'];
+                const block = message[1];
                 if (block === null)
                     break;
 
@@ -160,7 +138,7 @@ class Consensus extends Observable {
             }
                 break;
             case MessageType.RESPONSE_BLOCKCHAIN: {
-                const blocks = message['data'];
+                const blocks = message[1];
                 if (blocks === null)
                     break;
 
@@ -168,11 +146,12 @@ class Consensus extends Observable {
             }
                 break;
             case MessageType.RESPONSE_TRANSACTION_POOL: {
+                this.isSync = false;
                 this.notify('sync', { 'id': id, 'state': SyncType.DOWNLOAD_TRANSACTION_FINISHED });
 
-                const receivedTransactions = message['data'];
+                const receivedTransactions = message[1];
                 if (receivedTransactions === null) {
-                    console.log('invalid transaction received: %s', JSON.stringify(message['data']));
+                    console.log('invalid transaction received: %s', JSON.stringify(message[1]));
                     return;
                 }
 
@@ -186,7 +165,7 @@ class Consensus extends Observable {
                     }
                 }
 
-                this.notify('sync', { 'id': id, 'state': SyncType.SYNCHRONIZE_COMPLETED });
+                this.notify('sync', { 'id': id, 'state': SyncType.SYNCHRONIZE_COMPLETED, 'block': null });
             }
                 break;
         }

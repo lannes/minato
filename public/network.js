@@ -184,9 +184,8 @@ class WebP2P {
         */
 
         this.pcs[id].oniceconnectionstatechange = () => {
-            if (!self.pcs[id]) {
+            if (!self.pcs[id])
                 return;
-            }
 
             if (self.pcs[id].iceConnectionState == 'disconnected') {
                 self._disconnect(id);
