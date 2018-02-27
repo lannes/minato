@@ -37,17 +37,18 @@ class WebP2P {
         this.signalingServer = signalingServer;
         this.cfgIceServers = cfgIceServers;
 
-        this._start();
+        this._start(true);
     }
 
-    _start() {
-        this.signalingChannel = new WebSocket(this.signalingServer);
+    _start(first) {
+        if (first)
+            this.signalingChannel = new WebSocket(this.signalingServer);
+        else
+            this.signalingChannel = new WebSocket(this.signalingServer + '?id=' + this.id);
 
         let self = this;
 
         this.signalingChannel.onopen = (event) => {
-            if (self.id != '')
-                self.signalingChannel.send(JSON.stringify(['id', self.id]));
         };
 
         this.signalingChannel.onclose = (event) => {
@@ -65,7 +66,8 @@ class WebP2P {
         let self = this;
         setTimeout(() => {
             console.log('SignalingChannel: reconnecting...');
-            self._start();
+            self.channelCount = 0;
+            self._start(false);
         }, 5000);
     }
 
@@ -201,7 +203,7 @@ class WebP2P {
         if (this.pcs[id]) {
             delete this.pcs[id].pc;
             this.pcs[id].pc = new RTCPeerConnection(this.cfgIceServers);
-            this.pcs[id].retry = this.pcs[id].retry + 1;
+            this.pcs[id].retry++;
         } else {
             this.pcs[id] = {
                 pc: new RTCPeerConnection(this.cfgIceServers),

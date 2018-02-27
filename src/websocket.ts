@@ -99,7 +99,13 @@ export class WebSocketServer {
             let userAgent = req.headers['user-agent'];
             console.log(`connected ${ip} ${userAgent}`);
 
-            let id = UUID.v4();
+            let id = <string>location.query['id'];
+            if (id) {
+                console.log(`reconnected [${id}]`);
+            } else {
+                id = UUID.v4();
+                console.log(`connected [${id}]`);
+            }
 
             self.registerClient(id, ws);
 
