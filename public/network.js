@@ -25,6 +25,8 @@ const byteArrayToNumber = (bytes) => {
     return number;
 };
 
+const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
+
 class WebP2P {
     constructor(signalingServer, cfgIceServers) {
         this.pcs = {};
@@ -34,6 +36,7 @@ class WebP2P {
         this.timeouts = {};
         this.timeoutTime = 2 * 1000;
         this.id = '';
+        this.intervalId = null;
         this.signalingServer = signalingServer;
         this.cfgIceServers = cfgIceServers;
 
@@ -41,14 +44,19 @@ class WebP2P {
     }
 
     _start(first) {
-        if (first)
-            this.signalingChannel = new WebSocket(this.signalingServer);
-        else
-            this.signalingChannel = new WebSocket(this.signalingServer + '?id=' + this.id);
+        let url = this.signalingServer;
+        if (this.id != '' && !first)
+            url += '?id=' + this.id;
+
+        this.signalingChannel = new WebSocket(url);
 
         let self = this;
 
         this.signalingChannel.onopen = (event) => {
+            if (self.intervalId) {
+                clearInterval(self.intervalId);
+                self.intervalId = null;
+            }
         };
 
         this.signalingChannel.onclose = (event) => {
@@ -64,9 +72,11 @@ class WebP2P {
 
     _reconnectSignalingChannel() {
         let self = this;
-        setTimeout(() => {
+        if (this.intervalId)
+            return;
+
+        this.intervalId = setInterval(() => {
             console.log('SignalingChannel: reconnecting...');
-            self.channelCount = 0;
             self._start(false);
         }, 5000);
     }
@@ -81,6 +91,15 @@ class WebP2P {
         for (let id in this.dataChannels) {
             this.send(id, msg);
         }
+    }
+
+    _channelCount() {
+        let count = 0;
+        for (let id in this.dataChannels) {
+            count++;
+        }
+
+        return count;
     }
 
     send(id, msg) {
@@ -105,7 +124,7 @@ class WebP2P {
 
     _sendChunk(id, msg) {
         if (this.dataChannels[id]) {
-            if (this.dataChannels[id].readyState == 'open') {
+            if (this.dataChannels[id].readyState === 'open') {
                 try {
                     this.dataChannels[id].send(msg);
                     return true;
@@ -137,7 +156,10 @@ class WebP2P {
                 break;
             case 'initiator': {
                 const id = message[1];
-                this._createOffer(id);
+                if (!this.pcs[id] ||
+                    (this.pcs[id] && this.pcs[id].pc && this.pcs[id].pc.iceConnectionState === 'disconnected')) {
+                    this._createOffer(id);
+                }
             }
                 break;
             case 'sdp': {
@@ -219,16 +241,17 @@ class WebP2P {
         }, this.timeoutTime);
         */
 
-        this.pcs[id].pc.oniceconnectionstatechange = () => {
+        let pc = this.pcs[id].pc;
+        pc.oniceconnectionstatechange = () => {
             if (!self.pcs[id])
                 return;
 
-            console.log(self.pcs[id].pc.iceConnectionState + ' ' + id);
+            console.log(pc.iceConnectionState + ' ' + id);
 
-            if (self.pcs[id].pc.iceConnectionState == 'connected') {
+            if (pc.iceConnectionState === 'connected') {
             }
 
-            if (self.pcs[id].pc.iceConnectionState == 'failed') {
+            if (pc.iceConnectionState === 'failed') {
                 const creator = self.pcs[id].creator;
 
                 if (creator) {
@@ -239,14 +262,14 @@ class WebP2P {
                         self._disconnect(id);
                     }
                 }
-            } else if (self.pcs[id].pc.iceConnectionState == 'disconnected') {
+            } else if (pc.iceConnectionState === 'disconnected') {
                 self.channelCount--;
                 self._disconnect(id);
                 self.onclose(id, self.channelCount);
             }
         };
 
-        this.pcs[id].pc.onicecandidate = (event) => {
+        pc.onicecandidate = (event) => {
             if (event.candidate) {
                 self.signalingChannel.send(JSON.stringify(['candidate', id, event.candidate]));
             }
@@ -267,28 +290,30 @@ class WebP2P {
         this._initPeerConnection(id, true);
 
         let self = this;
-        this.pcs[id].pc.onnegotiationneeded = () => {
-            self.pcs[id].pc.createOffer().then((offer) => {
-                return self.pcs[id].pc.setLocalDescription(offer);
+        let pc = this.pcs[id].pc;
+        pc.onnegotiationneeded = () => {
+            pc.createOffer().then((offer) => {
+                return pc.setLocalDescription(offer);
             }).then(() => {
-                self.signalingChannel.send(JSON.stringify(['sdp', id, self.pcs[id].pc.localDescription]));
+                self.signalingChannel.send(JSON.stringify(['sdp', id, pc.localDescription]));
             }).catch((e) => {
                 console.log(e);
             });
         };
 
-        this.dataChannels[id] = this.pcs[id].pc.createDataChannel('minato_' + id);
+        this.dataChannels[id] = pc.createDataChannel(id);
         this._setupDataChannel(id);
     }
 
     _createAnswer(id, sdp) {
         let self = this;
-        this.pcs[id].pc.setRemoteDescription(new RTCSessionDescription(sdp)).then(() => {
-            return self.pcs[id].pc.createAnswer();
+        let pc = this.pcs[id].pc;
+        pc.setRemoteDescription(new RTCSessionDescription(sdp)).then(() => {
+            return pc.createAnswer();
         }).then((answer) => {
-            return self.pcs[id].pc.setLocalDescription(answer);
+            return pc.setLocalDescription(answer);
         }).then(() => {
-            self.signalingChannel.send(JSON.stringify(['sdp', id, self.pcs[id].pc.localDescription]));
+            self.signalingChannel.send(JSON.stringify(['sdp', id, pc.localDescription]));
         }).catch((e) => {
             console.log(e);
         });
