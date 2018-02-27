@@ -44,13 +44,19 @@ class WebP2P {
         this.signalingChannel = new WebSocket(this.signalingServer);
 
         let self = this;
+
+        this.signalingChannel.onopen = (event) => {
+            if (self.id != '')
+                self.signalingChannel.send(JSON.stringify(['id', self.id]));
+        };
+
         this.signalingChannel.onclose = (event) => {
             self._reconnectSignalingChannel();
-        }
+        };
 
         this.signalingChannel.onerror = (event) => {
             console.log('signalingChannel error: ' + event);
-        }
+        };
 
         this.signalingChannel.onmessage = this._signaling.bind(this);
     }
@@ -123,6 +129,7 @@ class WebP2P {
         switch (message[0]) {
             case 'id':
                 this.id = message[1];
+                console.log(this.id);
                 break;
             case 'clients':
                 break;
@@ -132,37 +139,36 @@ class WebP2P {
             }
                 break;
             case 'sdp': {
-                let id = message[1];
-                let sdp = message[2];
+                const id = message[1];
+                const sdp = message[2];
 
                 if (sdp.type === 'offer') {
                     this._receiveOffer(id);
                     this._createAnswer(id, sdp);
                 } else if (sdp.type === 'answer') {
                     if (this.pcs[id])
-                        this.pcs[id].setRemoteDescription(new RTCSessionDescription(sdp)).catch((e) => {
+                        this.pcs[id].pc.setRemoteDescription(new RTCSessionDescription(sdp)).catch((e) => {
                             console.log(e);
                         });
                 }
             }
                 break;
             case 'candidate': {
-                let id = message[1];
-                let candidate = message[2];
+                const id = message[1];
+                const candidate = message[2];
 
-                if (this.pcs[id])
-                    this.pcs[id].addIceCandidate(new RTCIceCandidate(candidate)).catch(e => console.log(e));
+                if (this.pcs[id].pc)
+                    this.pcs[id].pc.addIceCandidate(new RTCIceCandidate(candidate)).catch(e => console.log(e));
             }
                 break;
         }
     }
 
     _setupDataChannel(id) {
-        this.channelCount++;
-
         let self = this;
         this.dataChannels[id].onopen = () => {
-            self.onopen(id, this.channelCount);
+            self.channelCount++;
+            self.onopen(id, self.channelCount);
 
             if (self.timeouts[id])
                 clearTimeout(self.timeouts[id]);
@@ -172,18 +178,18 @@ class WebP2P {
             let data = event.data;
 
             if (typeof (data) === 'string') {
-                this.chunks[id].data += data;
+                self.chunks[id].data += data;
 
-                const percent = (this.chunks[id].data.length * 100) / this.chunks[id].size;
+                const percent = (self.chunks[id].data.length * 100) / self.chunks[id].size;
                 self.onprogress(id, Math.floor(percent));
 
-                if (this.chunks[id].data.length === this.chunks[id].size) {
-                    self.onmessage(id, this.chunks[id].data);
+                if (self.chunks[id].data.length === self.chunks[id].size) {
+                    self.onmessage(id, self.chunks[id].data);
                 }
             } else {
                 const bytes = new Uint8Array(data);
                 const size = byteArrayToNumber(bytes);
-                this.chunks[id] = { size: size, data: '' };
+                self.chunks[id] = { size: size, data: '' };
             }
         };
 
@@ -191,8 +197,18 @@ class WebP2P {
         };
     }
 
-    _initPeerConnection(id) {
-        this.pcs[id] = new RTCPeerConnection(this.cfgIceServers);
+    _initPeerConnection(id, creator) {
+        if (this.pcs[id]) {
+            delete this.pcs[id].pc;
+            this.pcs[id].pc = new RTCPeerConnection(this.cfgIceServers);
+            this.pcs[id].retry = this.pcs[id].retry + 1;
+        } else {
+            this.pcs[id] = {
+                pc: new RTCPeerConnection(this.cfgIceServers),
+                creator: creator,
+                retry: 0
+            };
+        }
 
         let self = this;
         /*
@@ -201,17 +217,34 @@ class WebP2P {
         }, this.timeoutTime);
         */
 
-        this.pcs[id].oniceconnectionstatechange = () => {
+        this.pcs[id].pc.oniceconnectionstatechange = () => {
             if (!self.pcs[id])
                 return;
 
-            if (self.pcs[id].iceConnectionState == 'disconnected') {
+            console.log(self.pcs[id].pc.iceConnectionState + ' ' + id);
+
+            if (self.pcs[id].pc.iceConnectionState == 'connected') {
+            }
+
+            if (self.pcs[id].pc.iceConnectionState == 'failed') {
+                const creator = self.pcs[id].creator;
+
+                if (creator) {
+                    if (self.pcs[id].retry < 2) {
+                        self._createOffer(id);
+                    } else {
+                        console.log('failed %d times', self.pcs[id].retry);
+                        self._disconnect(id);
+                    }
+                }
+            } else if (self.pcs[id].pc.iceConnectionState == 'disconnected') {
+                self.channelCount--;
                 self._disconnect(id);
                 self.onclose(id, self.channelCount);
             }
         };
 
-        this.pcs[id].onicecandidate = (event) => {
+        this.pcs[id].pc.onicecandidate = (event) => {
             if (event.candidate) {
                 self.signalingChannel.send(JSON.stringify(['candidate', id, event.candidate]));
             }
@@ -219,55 +252,53 @@ class WebP2P {
     }
 
     _receiveOffer(id) {
-        this._initPeerConnection(id);
+        this._initPeerConnection(id, false);
 
         let self = this;
-        this.pcs[id].ondatachannel = (event) => {
+        this.pcs[id].pc.ondatachannel = (event) => {
             self.dataChannels[id] = event.channel;
             self._setupDataChannel(id);
         };
     }
 
     _createOffer(id) {
-        this._initPeerConnection(id);
+        this._initPeerConnection(id, true);
 
         let self = this;
-        this.pcs[id].onnegotiationneeded = () => {
-            self.pcs[id].createOffer().then((offer) => {
-                return self.pcs[id].setLocalDescription(offer);
+        this.pcs[id].pc.onnegotiationneeded = () => {
+            self.pcs[id].pc.createOffer().then((offer) => {
+                return self.pcs[id].pc.setLocalDescription(offer);
             }).then(() => {
-                self.signalingChannel.send(JSON.stringify(['sdp', id, self.pcs[id].localDescription]));
+                self.signalingChannel.send(JSON.stringify(['sdp', id, self.pcs[id].pc.localDescription]));
             }).catch((e) => {
                 console.log(e);
             });
         };
 
-        this.dataChannels[id] = this.pcs[id].createDataChannel('minato_' + id);
+        this.dataChannels[id] = this.pcs[id].pc.createDataChannel('minato_' + id);
         this._setupDataChannel(id);
     }
 
     _createAnswer(id, sdp) {
         let self = this;
-        this.pcs[id].setRemoteDescription(new RTCSessionDescription(sdp)).then(() => {
-            return self.pcs[id].createAnswer();
+        this.pcs[id].pc.setRemoteDescription(new RTCSessionDescription(sdp)).then(() => {
+            return self.pcs[id].pc.createAnswer();
         }).then((answer) => {
-            return self.pcs[id].setLocalDescription(answer);
+            return self.pcs[id].pc.setLocalDescription(answer);
         }).then(() => {
-            self.signalingChannel.send(JSON.stringify(['sdp', id, self.pcs[id].localDescription]));
+            self.signalingChannel.send(JSON.stringify(['sdp', id, self.pcs[id].pc.localDescription]));
         }).catch((e) => {
             console.log(e);
         });
     }
 
     _disconnect(id) {
-        this.channelCount--;
-
         if (this.dataChannels[id])
             this.dataChannels[id].close();
         delete this.dataChannels[id];
 
-        if (this.pcs[id])
-            this.pcs[id].close();
+        if (this.pcs[id].pc)
+            this.pcs[id].pc.close();
         delete this.pcs[id];
     }
 }

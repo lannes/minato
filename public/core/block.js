@@ -49,22 +49,18 @@ const hasValidHash = async (block) => {
 
 const isValidNewBlock = async (newBlock, previousBlock) => {
     if (!isValidBlockStructure(newBlock)) {
-        console.log('invalid block structure: %s', JSON.stringify(newBlock));
         return false;
     }
 
     if (previousBlock['index'] !== (newBlock['index'] - 1)) {
-        console.log('invalid index previous (%d) new (%d)', previousBlock['index'], newBlock['index']);
         return false;
     }
 
     if (previousBlock['hash'] !== newBlock['previousHash']) {
-        console.log('invalid previoushash');
         return false;
     }
 
     if (!isValidTimestamp(newBlock, previousBlock)) {
-        console.log('invalid timestamp');
         return false;
     }
 

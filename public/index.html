@@ -47,20 +47,22 @@
     <script src="network.js"></script>
     <script src="app.js"></script>
     <script>
+        let app = new App();
+
         $(function () {
             $('#pgDownload').hide();
 
-            start();
+            app.start();
 
             $('#btnMining').click(() => {
-                execute({ 'cmd': 'pause' });
+                app.execute({ 'cmd': 'pause' });
             });
 
             $('#btnSend').click(() => {
                 let address = $('#txtAddress').val();
                 let amount = $('#txtCoin').val();
 
-                execute({ 'cmd': 'sendTransaction', 'address': address, 'amount': parseInt(amount) });
+                app.execute({ 'cmd': 'sendTransaction', 'address': address, 'amount': parseInt(amount) });
             });
 
             $('#btnWallet').click(() => {
@@ -69,9 +71,7 @@
         });
 
         window.onbeforeunload = () => {
-            if (webp2p) {
-                webp2p.disconnect();
-            }
+            app.stop();
         }
     </script>
 </head>
