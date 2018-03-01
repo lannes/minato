@@ -13,6 +13,7 @@ if (typeof (window.Worker) === 'undefined') {
 class App {
     constructor() {
         this.webp2p = null;
+        this.webrtc = null;
 
         this.node = new Worker('./core/node.js');
         this.miner = new Worker('./core/miner/minerWorker.js');
@@ -97,7 +98,13 @@ class App {
             ]
         };
 
+        //this.webrtc = new WebRTC(signalingServer, configuration);
+
         this.webp2p = new WebP2P(signalingServer, configuration);
+
+        this.webp2p.onconnect = (id) => {
+            $('#id').text('id: ' + id);
+        }
 
         this.webp2p.onopen = (id, connections) => {
             $('#lblConnections').text(connections);
@@ -121,5 +128,6 @@ class App {
         this.webp2p.onclose = (id, connections) => {
             $('#lblConnections').text(connections);
         }
+        /**/
     }
 }

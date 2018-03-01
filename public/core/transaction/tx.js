@@ -21,15 +21,8 @@ const findUnspentTxOut = (transactionId, index, aUnspentTxOuts) => {
 }
 
 const isValidAddress = (address) => {
-    if (address.length !== 130) {
-        console.log(address);
+    if (address.length !== 86) {
         console.log('invalid public key length');
-        return false;
-    } else if (address.match('^[a-fA-F0-9]+$') === null) {
-        console.log('public key must contain only hex characters');
-        return false;
-    } else if (!address.startsWith('04')) {
-        console.log('public key must start with 04');
         return false;
     }
 

@@ -34,7 +34,6 @@ const addToTransactionPool = async (tx, unspentTxOuts) => {
         throw Error('Trying to add invalid tx to pool');
     }
 
-    console.log('adding to txPool: %s', JSON.stringify(tx));
     transactionPool.push(tx);
 }
 

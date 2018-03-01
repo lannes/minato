@@ -138,6 +138,7 @@ class WebP2P {
         switch (message[0]) {
             case 'id':
                 this.id = message[1];
+                this.onconnect(this.id);
                 console.log(this.id);
                 break;
             case 'clients':
@@ -175,6 +176,8 @@ class WebP2P {
 
     _setupDataChannel(id) {
         this.dataChannels[id].onopen = () => {
+            console.log('dataChannel open [%s]', id);
+
             this.channelCount++;
             this.onopen(id, this.channelCount);
 
@@ -202,6 +205,7 @@ class WebP2P {
         };
 
         this.dataChannels[id].onclose = () => {
+            console.log('dataChannel close [%s]', id);
         };
     }
 
@@ -307,6 +311,9 @@ class WebP2P {
         if (this.dataChannels[id])
             this.dataChannels[id].close();
         delete this.dataChannels[id];
+
+        if (!this.pcs[id])
+            return;
 
         if (this.pcs[id].pc)
             this.pcs[id].pc.close();

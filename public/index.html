@@ -44,8 +44,14 @@
         }
     </style>
 
-    <script src="network.js"></script>
-    <script src="app.js"></script>
+    <!--
+    <script src="util/observable.js"></script>
+    <script src="core/network/webrtc/peer.js"></script>
+    <script src="core/network/webrtc/webrtc.js"></script>
+    -->
+
+    <script src="network.js?v=1"></script>
+    <script src="app.js?v=1"></script>
     <script>
         let app = new App();
 
@@ -63,6 +69,7 @@
                 let amount = $('#txtCoin').val();
 
                 app.execute({ 'cmd': 'sendTransaction', 'address': address, 'amount': parseInt(amount) });
+                $('#dlgWallet').modal('hide');
             });
 
             $('#btnWallet').click(() => {
@@ -79,6 +86,7 @@
 <body>
     <div class="container">
         <h2>TESTNET</h2>
+        <div id="id"></div>
         <br>
         <div class="col-sm-12">
             <div class="progress" id="pgDownload">
