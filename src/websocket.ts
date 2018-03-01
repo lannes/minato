@@ -122,8 +122,10 @@ export class WebSocketServer {
                 try {
                     let data = JSON.parse(<string>message);
                     let type = data[0];
+                    if (type !== 'data')
+                        return;
 
-                    if (type == 'sdp' || type == 'candidate') {
+                    if (data[2].sdp || data[2].candidate) {
                         let id = ws['id'];
                         let target = data[1];
                         if (target == id)
@@ -133,6 +135,7 @@ export class WebSocketServer {
 
                         console.log(`${id} -> ${target} ${type}`);
                     }
+
                 } catch (e) {
                     console.log(e);
                 }

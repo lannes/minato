@@ -40,27 +40,25 @@ class WebP2P {
         this.signalingServer = signalingServer;
         this.cfgIceServers = cfgIceServers;
 
-        this._start(true);
+        this._connect(true);
     }
 
-    _start(first) {
+    _connect(first) {
         let url = this.signalingServer;
         if (this.id != '' && !first)
             url += '?id=' + this.id;
 
         this.signalingChannel = new WebSocket(url);
 
-        let self = this;
-
         this.signalingChannel.onopen = (event) => {
-            if (self.intervalId) {
-                clearInterval(self.intervalId);
-                self.intervalId = null;
+            if (this.intervalId) {
+                clearInterval(this.intervalId);
+                this.intervalId = null;
             }
         };
 
         this.signalingChannel.onclose = (event) => {
-            self._reconnectSignalingChannel();
+            this._reconnectSignalingChannel();
         };
 
         this.signalingChannel.onerror = (event) => {
@@ -71,13 +69,12 @@ class WebP2P {
     }
 
     _reconnectSignalingChannel() {
-        let self = this;
         if (this.intervalId)
             return;
 
         this.intervalId = setInterval(() => {
             console.log('SignalingChannel: reconnecting...');
-            self._start(false);
+            this._connect(false);
         }, 5000);
     }
 
@@ -91,15 +88,6 @@ class WebP2P {
         for (let id in this.dataChannels) {
             this.send(id, msg);
         }
-    }
-
-    _channelCount() {
-        let count = 0;
-        for (let id in this.dataChannels) {
-            count++;
-        }
-
-        return count;
     }
 
     send(id, msg) {
@@ -162,58 +150,54 @@ class WebP2P {
                 }
             }
                 break;
-            case 'sdp': {
+            case 'data': {
                 const id = message[1];
-                const sdp = message[2];
+                const data = message[2];
 
-                if (sdp.type === 'offer') {
-                    this._receiveOffer(id);
-                    this._createAnswer(id, sdp);
-                } else if (sdp.type === 'answer') {
-                    if (this.pcs[id])
-                        this.pcs[id].pc.setRemoteDescription(new RTCSessionDescription(sdp)).catch((e) => {
-                            console.log(e);
-                        });
+                if (data['sdp']) {
+                    if (data['type'] === 'offer') {
+                        this._receiveOffer(id);
+                        this._createAnswer(id, data);
+                    } else if (data['type'] === 'answer') {
+                        if (this.pcs[id])
+                            this.pcs[id].pc.setRemoteDescription(new RTCSessionDescription(data)).catch((e) => {
+                                console.log(e);
+                            });
+                    }
+                } else if (data['candidate']) {
+                    if (this.pcs[id].pc)
+                        this.pcs[id].pc.addIceCandidate(new RTCIceCandidate(data)).catch(e => console.log(e));
                 }
-            }
-                break;
-            case 'candidate': {
-                const id = message[1];
-                const candidate = message[2];
-
-                if (this.pcs[id].pc)
-                    this.pcs[id].pc.addIceCandidate(new RTCIceCandidate(candidate)).catch(e => console.log(e));
             }
                 break;
         }
     }
 
     _setupDataChannel(id) {
-        let self = this;
         this.dataChannels[id].onopen = () => {
-            self.channelCount++;
-            self.onopen(id, self.channelCount);
+            this.channelCount++;
+            this.onopen(id, this.channelCount);
 
-            if (self.timeouts[id])
-                clearTimeout(self.timeouts[id]);
+            if (this.timeouts[id])
+                clearTimeout(this.timeouts[id]);
         };
 
         this.dataChannels[id].onmessage = (event) => {
             let data = event.data;
 
             if (typeof (data) === 'string') {
-                self.chunks[id].data += data;
+                this.chunks[id].data += data;
 
-                const percent = (self.chunks[id].data.length * 100) / self.chunks[id].size;
-                self.onprogress(id, Math.floor(percent));
+                const percent = (this.chunks[id].data.length * 100) / this.chunks[id].size;
+                this.onprogress(id, Math.floor(percent));
 
-                if (self.chunks[id].data.length === self.chunks[id].size) {
-                    self.onmessage(id, self.chunks[id].data);
+                if (this.chunks[id].data.length === this.chunks[id].size) {
+                    this.onmessage(id, this.chunks[id].data);
                 }
             } else {
                 const bytes = new Uint8Array(data);
                 const size = byteArrayToNumber(bytes);
-                self.chunks[id] = { size: size, data: '' };
+                this.chunks[id] = { size: size, data: '' };
             }
         };
 
@@ -271,7 +255,7 @@ class WebP2P {
 
         pc.onicecandidate = (event) => {
             if (event.candidate) {
-                self.signalingChannel.send(JSON.stringify(['candidate', id, event.candidate]));
+                self.signalingChannel.send(JSON.stringify(['data', id, event.candidate]));
             }
         };
     }
@@ -279,10 +263,9 @@ class WebP2P {
     _receiveOffer(id) {
         this._initPeerConnection(id, false);
 
-        let self = this;
         this.pcs[id].pc.ondatachannel = (event) => {
-            self.dataChannels[id] = event.channel;
-            self._setupDataChannel(id);
+            this.dataChannels[id] = event.channel;
+            this._setupDataChannel(id);
         };
     }
 
@@ -295,7 +278,8 @@ class WebP2P {
             pc.createOffer().then((offer) => {
                 return pc.setLocalDescription(offer);
             }).then(() => {
-                self.signalingChannel.send(JSON.stringify(['sdp', id, pc.localDescription]));
+                self.signalingChannel.send(JSON.stringify(['data', id, pc.localDescription]));
+
             }).catch((e) => {
                 console.log(e);
             });
@@ -310,10 +294,10 @@ class WebP2P {
         let pc = this.pcs[id].pc;
         pc.setRemoteDescription(new RTCSessionDescription(sdp)).then(() => {
             return pc.createAnswer();
-        }).then((answer) => {
+        }).then(answer => {
             return pc.setLocalDescription(answer);
         }).then(() => {
-            self.signalingChannel.send(JSON.stringify(['sdp', id, pc.localDescription]));
+            self.signalingChannel.send(JSON.stringify(['data', id, pc.localDescription]));
         }).catch((e) => {
             console.log(e);
         });
