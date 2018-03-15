@@ -50,8 +50,8 @@
     <script src="core/network/webrtc/webrtc.js"></script>
     -->
 
-    <script src="network.js?v=1"></script>
-    <script src="app.js?v=1"></script>
+    <script src="network.js?v=0.1"></script>
+    <script src="app.js?v=0.1"></script>
     <script>
         let app = new App();
 
@@ -61,15 +61,35 @@
             app.start();
 
             $('#btnMining').click(() => {
-                app.execute({ 'cmd': 'pause' });
+                app.mining();
             });
 
             $('#btnSend').click(() => {
                 let address = $('#txtAddress').val();
-                let amount = $('#txtCoin').val();
+                let coin = $('#txtCoin').val();
 
-                app.execute({ 'cmd': 'sendTransaction', 'address': address, 'amount': parseInt(amount) });
+                if (address === '')
+                    return;
+
+                if (coin === '')
+                    return;
+
+                let amount = 0;
+                try {
+                    amount = parseInt(coin);
+                } catch (e) {
+                }
+
+                if (amount <= 0)
+                    return;
+
+                app.transfer(address, amount);
                 $('#dlgWallet').modal('hide');
+            });
+
+            $('#dlgWallet').on('shown.bs.modal', () => {
+                $('#txtAddress').val('');
+                $('#txtCoin').val('');
             });
 
             $('#btnWallet').click(() => {

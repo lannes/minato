@@ -1,5 +1,4 @@
 window.WebSocket = window.WebSocket || window.MozWebSocket;
-window.RTCPeerConnection = window.RTCPeerConnection || window.mozRTCPeerConnection || window.webkitRTCPeerConnection;
 
 const CHUNK_SIZE = 16 * 1024;
 
@@ -26,6 +25,7 @@ const byteArrayToNumber = (bytes) => {
 };
 
 const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
+const isFirefox = typeof InstallTrigger !== 'undefined';
 
 class WebP2P {
     constructor(signalingServer, cfgIceServers) {
@@ -115,6 +115,7 @@ class WebP2P {
             if (this.dataChannels[id].readyState === 'open') {
                 try {
                     this.dataChannels[id].send(msg);
+
                     return true;
                 } catch (e) {
                     console.log(e);
@@ -204,7 +205,11 @@ class WebP2P {
             }
         };
 
-        this.dataChannels[id].onclose = () => {
+        this.dataChannels[id].onerror = (error) => {
+            console.log('dataChannel error ', error);
+        };
+
+        this.dataChannels[id].onclose = (event) => {
             console.log('dataChannel close [%s]', id);
         };
     }
@@ -269,6 +274,7 @@ class WebP2P {
 
         this.pcs[id].pc.ondatachannel = (event) => {
             this.dataChannels[id] = event.channel;
+            this.dataChannels[id].binaryType = 'arraybuffer';
             this._setupDataChannel(id);
         };
     }
@@ -278,19 +284,19 @@ class WebP2P {
 
         let self = this;
         let pc = this.pcs[id].pc;
-        pc.onnegotiationneeded = () => {
-            pc.createOffer().then((offer) => {
-                return pc.setLocalDescription(offer);
-            }).then(() => {
-                self.signalingChannel.send(JSON.stringify(['data', id, pc.localDescription]));
-
-            }).catch((e) => {
-                console.log(e);
-            });
-        };
 
         this.dataChannels[id] = pc.createDataChannel(id);
+        this.dataChannels[id].binaryType = 'arraybuffer';
+
         this._setupDataChannel(id);
+
+        pc.createOffer().then((offer) => {
+            return pc.setLocalDescription(offer);
+        }).then(() => {
+            self.signalingChannel.send(JSON.stringify(['data', id, pc.localDescription]));
+        }).catch((e) => {
+            console.log(e);
+        });
     }
 
     _createAnswer(id, sdp) {

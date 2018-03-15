@@ -31,16 +31,18 @@ const isValidAddress = (address) => {
 
 const isValidTxOutStructure = (txOut) => {
     if (txOut == null) {
-        console.log('txOut is null');
         return false;
-    } else if (typeof txOut['address'] !== 'string') {
-        console.log('invalid address type in txOut');
+    }
+
+    if (typeof txOut['address'] !== 'string') {
         return false;
-    } else if (!isValidAddress(txOut['address'])) {
-        console.log('invalid TxOut address');
+    }
+
+    if (!isValidAddress(txOut['address'])) {
         return false;
-    } else if (typeof txOut['amount'] !== 'number') {
-        console.log('invalid amount type in txOut');
+    } 
+    
+    if (typeof txOut['amount'] !== 'number') {
         return false;
     }
 
@@ -49,22 +51,18 @@ const isValidTxOutStructure = (txOut) => {
 
 const isValidTxInStructure = (txIn) => {
     if (txIn == null) {
-        console.log('txIn is null');
         return false;
     }
 
     if (typeof txIn['signature'] !== 'string') {
-        console.log('invalid signature type in txIn');
         return false;
     }
 
     if (typeof txIn['txOutId'] !== 'string') {
-        console.log('invalid txOutId type in txIn');
         return false;
     }
 
     if (typeof txIn['txOutIndex'] !== 'number') {
-        console.log('invalid txOutIndex type in txIn');
         return false;
     }
 
@@ -93,12 +91,10 @@ const validateTxIn = async (txIn, transaction, aUnspentTxOuts) => {
 
 const isValidTransactionStructure = (transaction) => {
     if (typeof transaction['id'] !== 'string') {
-        console.log('transactionId missing');
         return false;
     }
 
     if (!(transaction['txIns'] instanceof Array)) {
-        console.log('invalid txIns type in transaction');
         return false;
     }
 
@@ -109,7 +105,6 @@ const isValidTransactionStructure = (transaction) => {
     }
 
     if (!(transaction['txOuts'] instanceof Array)) {
-        console.log('invalid txIns type in transaction');
         return false;
     }
 
@@ -128,7 +123,6 @@ const validateTransaction = async (transaction, aUnspentTxOuts) => {
     }
 
     if (await getTransactionId(transaction) !== transaction['id']) {
-        console.log('invalid tx id: ' + transaction['id']);
         return false;
     }
 
@@ -160,31 +154,26 @@ const validateTransaction = async (transaction, aUnspentTxOuts) => {
 
 const validateCoinbaseTx = async (transaction, blockIndex) => {
     if (transaction == null) {
-        console.log('the first transaction in the block must be coinbase transaction');
         return false;
     }
 
     if (await getTransactionId(transaction) !== transaction['id']) {
-        console.log('invalid coinbase tx id: ' + transaction['id']);
         return false;
     }
+
     if (transaction['txIns'].length !== 1) {
-        console.log('one txIn must be specified in the coinbase transaction');
         return;
     }
 
     if (transaction['txIns'][0].txOutIndex !== blockIndex) {
-        console.log('the txIn signature in coinbase tx must be the block height');
         return false;
     }
 
     if (transaction['txOuts'].length !== 1) {
-        console.log('invalid number of txOuts in coinbase transaction');
         return false;
     }
 
     if (transaction['txOuts'][0].amount !== COINBASE_AMOUNT) {
-        console.log('invalid coinbase amount in coinbase transaction');
         return false;
     }
 

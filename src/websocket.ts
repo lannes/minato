@@ -133,7 +133,7 @@ export class WebSocketServer {
 
                         self.send(target, [type, id, data[2]]);
 
-                        console.log(`${id} -> ${target} ${type}`);
+                        console.log(`${id} -> ${target} ${data[2].sdp | data[2].candidate}`);
                     }
 
                 } catch (e) {

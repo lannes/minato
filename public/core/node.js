@@ -8,12 +8,12 @@ importScripts(
 );
 
 importScripts(
-    './wallet.js',
-    './transaction/tx.js',
-    './transaction/txPool.js',
-    './block.js',
-    './blockchain.js',
-    './consensus.js'
+    './wallet.js?v=0.1',
+    './transaction/tx.js?v=0.1',
+    './transaction/txPool.js?v=0.1',
+    './block.js?v=0.1',
+    './blockchain.js?v=0.1',
+    './consensus.js?v=0.1'
 );
 
 let nodePort = null;
@@ -103,6 +103,9 @@ const onMessageFromMiner = async (event) => {
             break;
         case 'hashrate':
             this.postMessage(data);
+            break;
+        case 'state':
+            
             break;
         default:
             break;

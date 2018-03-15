@@ -13,6 +13,7 @@ let miner = new Miner();
 
 miner.on('hashrate', (hashrate) => minerPort.postMessage({ 'cmd': 'hashrate', 'msg': hashrate }));
 miner.on('block', (block) => minerPort.postMessage({ 'cmd': 'block', 'msg': block }));
+miner.on('state', (state) => minerPort.postMessage({ 'cmd': '' }));
 
 const onMessageFromNode = async (event) => {
     const data = event.data;

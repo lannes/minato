@@ -104,7 +104,6 @@ class Wallet {
     }
 
     static async createTransaction(receiverAddress, amount, privateKey, unspentTxOuts, txPool) {
-        console.log('txPool: %s', JSON.stringify(txPool));
         const myAddress = Wallet.getPublicFromWallet();
         const myUnspentTxOutsA = unspentTxOuts.filter((uTxO) => uTxO['address'] === myAddress);
 

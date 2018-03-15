@@ -14,6 +14,7 @@ class App {
     constructor() {
         this.webp2p = null;
         this.webrtc = null;
+        this.isMining = false;
 
         this.node = new Worker('./core/node.js');
         this.miner = new Worker('./core/miner/minerWorker.js');
@@ -30,7 +31,15 @@ class App {
     }
 
     start() {
-        this.execute({ 'cmd': 'init' });
+        this.node.postMessage({ 'cmd': 'init' });
+    }
+
+    mining() {
+        if (this.isMining) {
+            this.node.postMessage({ 'cmd': 'pause' });
+        } else {
+            this.node.postMessage({ 'cmd': 'mine' });
+        }
     }
 
     stop() {
@@ -38,8 +47,8 @@ class App {
             this.webp2p.disconnect();
     }
 
-    execute(cmd) {
-        this.node.postMessage(cmd);
+    transfer(address, amount) {
+        this.node.postMessage({ 'cmd': 'sendTransaction', 'address': address, 'amount': amount });
     }
 
     _onmessage(event) {
@@ -57,6 +66,14 @@ class App {
                 if (data['msg']['state'] === 5) {
                     $('#pgDownload').hide();
                 }
+                break;
+            case 'mining': {
+                const state = data['state'];
+                if (state)
+                    $('#btnMining').text('Pause Mining');
+                else
+                    $('#btnMining').text('Resume Mining');
+            }
                 break;
             case 'hashrate': {
                 const hashrate = data['msg'] + ' H/s';
@@ -108,7 +125,7 @@ class App {
 
         this.webp2p.onopen = (id, connections) => {
             $('#lblConnections').text(connections);
-            this.execute({ 'cmd': 'network', 'id': id, 'type': 'open' });
+            this.node.postMessage({ 'cmd': 'network', 'id': id, 'type': 'open' });
         };
 
         this.webp2p.onprogress = (id, percent) => {
@@ -117,11 +134,13 @@ class App {
 
         this.webp2p.onmessage = (id, message) => {
             //console.log('received from: ' + id + ' ' + message);
+        
             try {
                 let data = JSON.parse(message);
-                this.execute({ 'cmd': 'network', 'id': id, 'type': 'data', 'msg': data });
+                this.node.postMessage({ 'cmd': 'network', 'id': id, 'type': 'data', 'msg': data });
             } catch (e) {
                 console.log(e);
+                console.log(message);
             }
         };
 
