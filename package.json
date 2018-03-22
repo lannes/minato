@@ -7,10 +7,11 @@
     "compile": "tsc"
   },
   "dependencies": {
-    "ws": "^4.0.0"
+    "ws": "^5.1.0",
+    "node-webcrypto-ossl": "^1.0.36"
   },
   "devDependencies": {
-    "@types/node": "^9.4.0",
-    "@types/ws": "^4.0.0"
+    "@types/node": "^9.4.7",
+    "@types/ws": "^4.0.1"
   }
 }

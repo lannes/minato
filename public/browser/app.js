@@ -13,11 +13,10 @@ if (typeof (window.Worker) === 'undefined') {
 class App {
     constructor() {
         this.webp2p = null;
-        this.webrtc = null;
         this.isMining = false;
 
-        this.node = new Worker('./core/node.js');
-        this.miner = new Worker('./core/miner/minerWorker.js');
+        this.node = new Worker('./browser/node.js');
+        this.miner = new Worker('./browser/minerWorker.js');
         this.channel = new MessageChannel();
 
         this.node.postMessage({ 'cmd': 'connect' }, [this.channel.port1]);
@@ -115,7 +114,7 @@ class App {
             ]
         };
 
-        //this.webrtc = new WebRTC(signalingServer, configuration);
+        //this.webp2p = new WebRTC(signalingServer, configuration);
 
         this.webp2p = new WebP2P(signalingServer, configuration);
 
@@ -134,7 +133,7 @@ class App {
 
         this.webp2p.onmessage = (id, message) => {
             //console.log('received from: ' + id + ' ' + message);
-        
+
             try {
                 let data = JSON.parse(message);
                 this.node.postMessage({ 'cmd': 'network', 'id': id, 'type': 'data', 'msg': data });

@@ -1,11 +1,8 @@
 importScripts(
-    '../../util/hash.js',
-    '../../util/common.js',
-    '../../util/observable.js'
-);
-
-importScripts(
-    './miner.js',
+    '../util/hash.js',
+    '../util/common.js',
+    '../util/observable.js',
+    '../core/miner/miner.js',
 );
 
 let minerPort = null;

@@ -17,21 +17,24 @@ const SyncType = {
 };
 
 class Consensus extends Observable {
-    constructor() {
+    constructor(pool, blockchain) {
         super();
         this.isSync = true;
+
+        this.pool = pool;
+        this.blockchain = blockchain;
     }
 
     _responseLatestMsg() {
-        return [MessageType.RESPONSE_LATEST, getLatestBlock()];
+        return [MessageType.RESPONSE_LATEST, this.blockchain.getLatestBlock()];
     }
 
     _responseBlockchainMsg() {
-        return [MessageType.RESPONSE_BLOCKCHAIN, getBlockchain()];
+        return [MessageType.RESPONSE_BLOCKCHAIN, this.blockchain.getBlocks()];
     }
 
     _responseTransactionPoolMsg() {
-        return [MessageType.RESPONSE_TRANSACTION_POOL, getTransactionPool()];
+        return [MessageType.RESPONSE_TRANSACTION_POOL, this.pool.getTransactionPool()];
     }
 
     _queryLatestMsg() {
@@ -47,7 +50,7 @@ class Consensus extends Observable {
     }
 
     async _addBlockchain(blocks) {
-        let result = await replaceChain(blocks);
+        let result = await this.blockchain.replaceChain(blocks);
         if (result)
             this.notify('broadcast', this._responseLatestMsg());
 
@@ -55,7 +58,7 @@ class Consensus extends Observable {
     }
 
     async addBlock(block) {
-        let result = await addBlockToChain(block);
+        let result = await this.blockchain.addBlockToChain(block);
         if (result)
             this.notify('broadcast', this._responseLatestMsg());
 
@@ -72,7 +75,7 @@ class Consensus extends Observable {
         }
 
         const latestBlockReceived = blocks[blocks.length - 1];
-        if (!isValidBlockStructure(latestBlockReceived)) {
+        if (!Block.isValidBlockStructure(latestBlockReceived)) {
             if (this.isSync) {
                 this.notify('sync', { 'id': id, 'state': SyncType.SYNCHRONIZE_COMPLETED, 'block': null });
                 this.isSync = false;
@@ -80,7 +83,7 @@ class Consensus extends Observable {
             return;
         }
 
-        const latestBlock = getLatestBlock();
+        const latestBlock = this.blockchain.getLatestBlock();
         if (latestBlockReceived['index'] <= latestBlock['index']) {
             if (this.isSync) {
                 this.notify('sync', { 'id': id, 'state': SyncType.SYNCHRONIZE_COMPLETED, 'block': null });
@@ -90,7 +93,7 @@ class Consensus extends Observable {
             if (latestBlockReceived['index'] == latestBlock['index'])
                 this.notify('balance', Wallet.getAccountBalance());
 
-            this.notify('height', getLatestBlock()['index'] + 1);
+            this.notify('height', this.blockchain.getLatestBlock()['index'] + 1);
             return;
         }
 
@@ -115,7 +118,7 @@ class Consensus extends Observable {
             this.notify('broadcast', this._queryTransactionPoolMsg());
         }
 
-        this.notify('height', getLatestBlock()['index'] + 1);
+        this.notify('height', this.blockchain.getLatestBlock()['index'] + 1);
     }
 
     async process(id, message) {

@@ -1,0 +1,30 @@
+Sidechains: Tại sao các nhà nghiên cứu nghĩ rằng họ đã giải quyết được một phần quan trọng của câu đố
+
+Các blockchain mới được sinh ra mọi lúc. Bitcoin đã là một blockchain duy nhất trong nhiều năm, nhưng bây giờ có hàng trăm blockchain.
+Vấn đề là, nếu bạn muốn sử dụng các tính năng được cung cấp trên các blockchain khác, bạn phải mua các token của chúng.
+Nhưng tất cả những điều đó có thể sớm thay đổi. Một công nghệ đang phát triển được gọi là sidechain hứa hẹn làm cho nó dễ dàng hơn để di chuyển các token qua các
+blockchain, và kết qủa mở ra các cánh cửa cho thế giới của những khả năng, bao gồm xây dựng các cầu nối đến các hệ thống tài chính của các ngân hàng.
+
+Vào tháng 10 năm 2017, Aggelos Kiayias, giáo sư tại đại học Edinburgh và là nhà khoa học chính tại công ty nghiên cứu và phát triển blockchain IOHK;
+Andrew Miller, giáo sư tại đại học Illinois tại Urbana-Champaign; và Dionysis Zindros, nhà nghiên cứu tại đại học Athens, đã công bố bài báo "Non-Interactive Proofs of Proof-of-Work"
+(NiPoPoW), giới thiệu một phần quan trọng cho câu đố sidechain đã thiếu trong 3 năm, Đây là câu chuyện về cách họ đạt được.
+
+Nhưng, trước hết, chính xác thì một sidechain là gì?
+Cùng Coin, Khác Blockchain
+
+Một sidechain là một kỹ thuật cho phép bạn chuyển các token từ một blockchain đến một blockchain khác, sử dụng chúng trên blockchain khác và sau đó chuyển chúng trở
+lại vào một thời điểm sau đó, mà không cần bên thứ ba. 
+
+Trong quá khứ, blockchain gốc thường là Bitcoin, nhưng chuỗi gốc có thể là bất kỳ blockchain nào. Ngoài ra, khi một token chuyển đến blockchain khác, nó phải giữ
+cùng một giá trị. Nói cách khác, một bitcoin trên một sidechain Ethereum sẽ vẫn là một bitcoin.
+
+Lợi thế lớn nhất của các sidechain là chúng cho sẽ cho phép người dùng truy cập vào một loạt các dịch vụ mới. Ví dụ, bạn có thể chuyển bitcoin tới một blockchain khác
+để tận dụng các tính năng bảo mật, tốc độ giao dịch nhanh hơn và các hợp đồng thông minh.
+
+Các sidechain cũng có những cách sử dụng khác. Một sidechain có thể cung cấp một cách an toàn hơn để nâng cấp một giao thức, hoặc nó có thể phục vụ như một loại
+tường lửa bảo mật, do đó trong trường hợp thảm hoạ thảm khốc trên một sidechain, chuỗi chính sẽ vẫn không bị ảnh hưởng. "Nó là một loại trách nhiệm hữu hạn", 
+Zindros đã nói trong một video giải thích công nghệ hoạt động như thế nào.
+
+Cuối cùng, nếu các ngân hàng tạo ra các mạng blockchain riêng của họ, các sidechain có thể cho phép truyền thông với các mạng đó, cho phép người dùng phát sinh 
+và theo dõi các cổ phần, trái phiếu và các tài sản khác.
+

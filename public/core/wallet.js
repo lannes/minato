@@ -36,17 +36,22 @@ class Wallet {
         await Database.delete('hokage4');
     }
 
-    static findUnspentTxOuts(ownerAddress, unspentTxOuts) {
-        return unspentTxOuts.filter((uTxO) => uTxO['address'] === ownerAddress);
+    static isValidAddress(address) {
+        if (address.length !== 86) {
+            console.log('invalid public key length');
+            return false;
+        }
+
+        return true;
     }
 
     static getAccountBalance() {
         const address = Wallet.getPublicFromWallet();
-        return Wallet.getBalance(address, getUnspentTxOuts());
+        return Wallet.getBalance(address, blockchain.getUnspentTxOuts());
     }
 
     static getBalance(address, unspentTxOuts) {
-        return Wallet.findUnspentTxOuts(address, unspentTxOuts)
+        return blockchain.findUnspentTxOuts(address, unspentTxOuts)
             .map((uTxO) => uTxO['amount'])
             .reduce((a, b) => a + b, 0);
     }

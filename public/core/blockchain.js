@@ -1,152 +1,164 @@
-const genesisTransaction = {
-    'id': 'cb5619df923aed543813092583db69c59880c3d416c0ef6076fa88a304e328e8',
-    'txIns': [{ 'signature': '', 'txOutId': '', 'txOutIndex': 0 }],
-    'txOuts': [{
-        'address': 'Gt5TMnHCvW6XoRzdgVOwkjUzkMBsx0KOMmkxCBvXP34vLsFjg98YBuV9sXbsDkPLSrSpBMMIWXJq1YsNt8FHbc',
-        'amount': 50
-    }]
-};
 
-const genesisBlock = {
-    'index': 0,
-    'hash': '395d5a3abf873ba57506c0986f1f2c62b8d7abea99a012d906dab0be203a686b',
-    'previousHash': '',
-    'timestamp': 1519493046,
-    'data': [genesisTransaction],
-    'difficulty': 0,
-    'nonce': 0
-};
-
-let blockchain = [genesisBlock];
-
-let unspentTxOuts = null;
-
-const initBlockchain = async () => {
-    unspentTxOuts = await processTransactions(blockchain[0].data, [], 0);
-};
-
-const isValidGenesis = (block) => {
-    return JSON.stringify(block) === JSON.stringify(genesisBlock);
-};
-
-const getBlockchain = () => blockchain;
-
-const getUnspentTxOuts = () => cloneDeep(unspentTxOuts);
-
-// and txPool should be only updated at the same time
-const setUnspentTxOuts = (newUnspentTxOut) => {
-    unspentTxOuts = newUnspentTxOut;
-};
-
-const getLatestBlock = () => blockchain[blockchain.length - 1];
-
-// in seconds
 const BLOCK_GENERATION_INTERVAL = 10 * 6;
-
-// in blocks
 const DIFFICULTY_ADJUSTMENT_INTERVAL = 10;
 
-const getDifficulty = (aBlockchain) => {
-    const latestBlock = aBlockchain[blockchain.length - 1];
-    if (latestBlock['index'] % DIFFICULTY_ADJUSTMENT_INTERVAL === 0 && latestBlock['index'] !== 0) {
-        return getAdjustedDifficulty(latestBlock, aBlockchain);
-    } else {
-        return latestBlock['difficulty'];
-    }
-}
+class Blockchain {
+    constructor(pool) {
+        this.genesisTransaction = {
+            'id': 'cb5619df923aed543813092583db69c59880c3d416c0ef6076fa88a304e328e8',
+            'txIns': [{ 'signature': '', 'txOutId': '', 'txOutIndex': 0 }],
+            'txOuts': [{
+                'address': 'Gt5TMnHCvW6XoRzdgVOwkjUzkMBsx0KOMmkxCBvXP34vLsFjg98YBuV9sXbsDkPLSrSpBMMIWXJq1YsNt8FHbc',
+                'amount': 50
+            }]
+        };
 
-const getAdjustedDifficulty = (latestBlock, aBlockchain) => {
-    const prevAdjustmentBlock = aBlockchain[blockchain.length - DIFFICULTY_ADJUSTMENT_INTERVAL];
-    const timeExpected = BLOCK_GENERATION_INTERVAL * DIFFICULTY_ADJUSTMENT_INTERVAL;
-    const timeTaken = latestBlock['timestamp'] - prevAdjustmentBlock['timestamp'];
-    if (timeTaken < timeExpected / 2) {
-        return prevAdjustmentBlock['difficulty'] + 1;
-    } else if (timeTaken > timeExpected * 2) {
-        return prevAdjustmentBlock['difficulty'] - 1;
-    } else {
+        this.genesisBlock = {
+            'index': 0,
+            'hash': '395d5a3abf873ba57506c0986f1f2c62b8d7abea99a012d906dab0be203a686b',
+            'previousHash': '',
+            'timestamp': 1519493046,
+            'data': [this.genesisTransaction],
+            'difficulty': 0,
+            'nonce': 0
+        };
+
+        this.pool = pool;
+
+        this.blocks = [this.genesisBlock];
+
+        this.unspentTxOuts = null;
+    }
+
+    async init() {
+        this.unspentTxOuts = await Transaction.process(this.blocks[0]['data'], [], 0);
+    }
+
+    isValidGenesis(block) {
+        return JSON.stringify(block) === JSON.stringify(this.genesisBlock);
+    }
+
+    getBlocks() {
+        return this.blocks;
+    }
+
+    getUnspentTxOuts() {
+        return cloneDeep(this.unspentTxOuts);
+    }
+
+    // and txPool should be only updated at the same time
+    setUnspentTxOuts(newUnspentTxOut) {
+        this.unspentTxOuts = newUnspentTxOut;
+    }
+
+    findUnspentTxOuts(address, unspentTxOuts) {
+        return unspentTxOuts.filter((uTxO) => uTxO['address'] === address);
+    }
+
+    getLatestBlock() {
+        return this.blocks[this.blocks.length - 1];
+    }
+
+    getDifficulty(aBlockchain) {
+        const latestBlock = aBlockchain[aBlockchain.length - 1];
+        if (latestBlock['index'] % DIFFICULTY_ADJUSTMENT_INTERVAL === 0 && latestBlock['index'] !== 0) {
+            return this.getAdjustedDifficulty(latestBlock, aBlockchain);
+        } else {
+            return latestBlock['difficulty'];
+        }
+    }
+
+    getAdjustedDifficulty(latestBlock, aBlockchain) {
+        const prevAdjustmentBlock = aBlockchain[aBlockchain.length - DIFFICULTY_ADJUSTMENT_INTERVAL];
+        const timeExpected = BLOCK_GENERATION_INTERVAL * DIFFICULTY_ADJUSTMENT_INTERVAL;
+        const timeTaken = latestBlock['timestamp'] - prevAdjustmentBlock['timestamp'];
+
+        if (timeTaken < timeExpected / 2)
+            return prevAdjustmentBlock['difficulty'] + 1;
+
+        if (timeTaken > timeExpected * 2)
+            return prevAdjustmentBlock['difficulty'] - 1;
+
         return prevAdjustmentBlock['difficulty'];
     }
-}
 
-// gets the unspent transaction outputs owned by the wallet
-const getMyUnspentTransactionOutputs = () => {
-    return Wallet.findUnspentTxOuts(Wallet.getPublicFromWallet(), getUnspentTxOuts());
-};
+    // gets the unspent transaction outputs owned by the wallet
+    getMyUnspentTransactionOutputs() {
+        return Wallet.findUnspentTxOuts(Wallet.getPublicFromWallet(), this.getUnspentTxOuts());
+    }
 
-const sendTransaction = async (address, amount) => {
-    const tx = await Wallet.createTransaction(
-        address,
-        amount,
-        Wallet.getPrivateFromWallet(),
-        getUnspentTxOuts(),
-        getTransactionPool()
-    );
+    async sendTransaction(address, amount) {
+        const tx = await Wallet.createTransaction(
+            address,
+            amount,
+            Wallet.getPrivateFromWallet(),
+            this.getUnspentTxOuts(),
+            this.pool.getTransactionPool()
+        );
 
-    await addToTransactionPool(tx, getUnspentTxOuts());
-    return tx;
-};
+        await addToTransactionPool(tx, this.getUnspentTxOuts());
+        return tx;
+    };
 
-const getAccumulatedDifficulty = (aBlockchain) => {
-    return aBlockchain
-        .map((block) => block['difficulty'])
-        .map((difficulty) => Math.pow(2, difficulty))
-        .reduce((a, b) => a + b);
-}
+    getAccumulatedDifficulty(aBlockchain) {
+        return aBlockchain
+            .map((block) => block['difficulty'])
+            .map((difficulty) => Math.pow(2, difficulty))
+            .reduce((a, b) => a + b);
+    }
 
-/*
-    Lấy danh sách các giao dịch chưa tiêu trong quá trình kiểm tra chuỗi khối
- */
-const isValidChain = async (blocks) => {
-    if (!isValidGenesis(blocks[0]))
-        return null;
-
-    let aUnspentTxOuts = [];
-
-    for (let i = 1; i < blocks.length; i++) {
-        if (!(await isValidNewBlock(blocks[i], blocks[i - 1]))) {
-            console.log('invalid block in blockchain');
+    /*
+        Lấy danh sách các giao dịch chưa tiêu trong quá trình kiểm tra chuỗi khối
+     */
+    async isValidChain(blocks) {
+        if (!this.isValidGenesis(blocks[0]))
             return null;
+
+        let aUnspentTxOuts = [];
+
+        for (let i = 1; i < blocks.length; i++) {
+            if (!(await Block.isValidNewBlock(blocks[i], blocks[i - 1]))) {
+                console.log('invalid block in blockchain');
+                return null;
+            }
+
+            const currentBlock = blocks[i];
+            aUnspentTxOuts = await Transaction.process(currentBlock['data'], aUnspentTxOuts, currentBlock['index']);
+            if (aUnspentTxOuts === null) {
+                console.log('invalid transactions in blockchain');
+                return null;
+            }
         }
 
-        const currentBlock = blocks[i];
-        aUnspentTxOuts = await processTransactions(currentBlock['data'], aUnspentTxOuts, currentBlock['index']);
-        if (aUnspentTxOuts === null) {
-            console.log('invalid transactions in blockchain');
-            return null;
-        }
+        return aUnspentTxOuts;
     }
 
-    return aUnspentTxOuts;
-}
+    async addBlockToChain(newBlock) {
+        let isValid = await Block.isValidNewBlock(newBlock, this.getLatestBlock());
+        if (!isValid)
+            return false;
 
-const addBlockToChain = async (newBlock) => {
-    let isValid = await isValidNewBlock(newBlock, getLatestBlock());
-    if (!isValid) {
-        return false;
-    }
+        const retVal = await Transaction.process(newBlock['data'], this.getUnspentTxOuts(), newBlock['index']);
+        if (retVal === null)
+            return false;
 
-    const retVal = await processTransactions(newBlock['data'], getUnspentTxOuts(), newBlock['index']);
-    if (retVal === null) {
-        console.log('invalid transactions in blockchain');
-        return false;
-    }
-
-    blockchain.push(newBlock);
-    setUnspentTxOuts(retVal);
-    updateTransactionPool(unspentTxOuts);
-    return true;
-}
-
-const replaceChain = async (newBlocks) => {
-    const aUnspentTxOuts = await isValidChain(newBlocks);
-    const validChain = aUnspentTxOuts !== null;
-    if (validChain &&
-        getAccumulatedDifficulty(newBlocks) > getAccumulatedDifficulty(getBlockchain())) {
-        blockchain = newBlocks;
-        setUnspentTxOuts(aUnspentTxOuts);
-        updateTransactionPool(unspentTxOuts);
+        this.blocks.push(newBlock);
+        this.setUnspentTxOuts(retVal);
+        this.pool.updateTransactionPool(this.unspentTxOuts);
         return true;
     }
 
-    return false;
+    async replaceChain(newBlocks) {
+        const aUnspentTxOuts = await this.isValidChain(newBlocks);
+        const validChain = aUnspentTxOuts !== null;
+        if (validChain &&
+            this.getAccumulatedDifficulty(newBlocks) > this.getAccumulatedDifficulty(this.getBlocks())) {
+            this.blocks = newBlocks;
+            this.setUnspentTxOuts(aUnspentTxOuts);
+            this.pool.updateTransactionPool(this.unspentTxOuts);
+            return true;
+        }
+
+        return false;
+    }
 }

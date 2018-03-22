@@ -1,23 +1,23 @@
 importScripts(
-    '../util/common.js',
-    '../util/db.js',
-    '../util/hash.js',
-    '../util/crypto.js',
-    '../util/observable.js',
-    '../util/scheduler.js'
-);
-
-importScripts(
-    './wallet.js?v=0.1',
-    './transaction/tx.js?v=0.1',
-    './transaction/txPool.js?v=0.1',
-    './block.js?v=0.1',
-    './blockchain.js?v=0.1',
-    './consensus.js?v=0.1'
+    '../util/common.js?v=0.1',
+    '../util/db.js?v=0.1',
+    '../util/hash.js?v=0.1',
+    '../util/crypto.js?v=0.1',
+    '../util/observable.js?v=0.1',
+    '../util/scheduler.js?v=0.1',
+    '../core/transaction/tx.js?v=0.1',
+    '../core/transaction/txPool.js?v=0.1',
+    '../core/block.js?v=0.1',
+    '../core/blockchain.js?v=0.1',
+    '../core/consensus.js?v=0.1',
+    '../core/wallet.js?v=0.1'
 );
 
 let nodePort = null;
-let consensus = new Consensus();
+
+let pool = new TransactionPool();
+let blockchain = new Blockchain(pool);
+let consensus = new Consensus(pool, blockchain);
 
 let scheduler = new SchedulerAsync();
 
@@ -68,7 +68,7 @@ const init = async () => {
 
     await Wallet.initWallet();
 
-    await initBlockchain();
+    await blockchain.init();
 
     this.postMessage({ 'cmd': 'init', 'msg': Wallet.getPublicFromWallet() });
 
@@ -77,10 +77,10 @@ const init = async () => {
 
 const generateNextBlock = async () => {
     const address = Wallet.getPublicFromWallet();
-    const coinbaseTx = await getCoinbaseTransaction(address, getLatestBlock()['index'] + 1);
-    const blockData = [coinbaseTx].concat(getTransactionPool());
+    const coinbaseTx = await Transaction.getCoinbaseTransaction(address, blockchain.getLatestBlock()['index'] + 1);
+    const blockData = [coinbaseTx].concat(pool.getTransactionPool());
 
-    const latestBlock = getLatestBlock();
+    const latestBlock = blockchain.getLatestBlock();
 
     let block = {
         'index': latestBlock['index'] + 1,
@@ -88,7 +88,7 @@ const generateNextBlock = async () => {
         'previousHash': latestBlock['hash'],
         'timestamp': getCurrentTimestamp(),
         'data': blockData,
-        'difficulty': getDifficulty(getBlockchain()),
+        'difficulty': blockchain.getDifficulty(blockchain.getBlocks()),
         'nonce': 0
     };
 
@@ -105,7 +105,7 @@ const onMessageFromMiner = async (event) => {
             this.postMessage(data);
             break;
         case 'state':
-            
+
             break;
         default:
             break;
