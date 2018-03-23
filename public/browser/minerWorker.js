@@ -1,11 +1,10 @@
 importScripts(
-    './crypto/core-min.js?v=0.1',
-    './crypto/sha256-min.js?v=0.1',
-    '../util/buffer.js?v=0.1',
-    '../util/hash.js?v=0.1',
-    '../util/common.js?v=0.1',
-    '../util/observable.js?v=0.1',
-    '../core/miner/miner.js?v=0.1',
+    './crypto/sjcl.js?v=0.1',
+    './crypto/hash.js?v=0.1',
+    '../base/util/buffer.js?v=0.1',
+    '../base/util/common.js?v=0.1',
+    '../base/util/observable.js?v=0.1',
+    '../base/core/miner/miner.js?v=0.1',
 );
 
 let minerPort = null;
@@ -15,12 +14,12 @@ miner.on('hashrate', (hashrate) => minerPort.postMessage({ 'cmd': 'hashrate', 'm
 miner.on('block', (block) => minerPort.postMessage({ 'cmd': 'block', 'msg': block }));
 miner.on('state', (state) => minerPort.postMessage({ 'cmd': '' }));
 
-const onMessageFromNode = async (event) => {
+const onMessageFromNode = (event) => {
     const data = event.data;
     switch (data['cmd']) {
         case 'mine': {
             let block = data['msg'];
-            await miner.start(block);
+            miner.start(block);
         }
             break;
         case 'pause':
@@ -29,7 +28,7 @@ const onMessageFromNode = async (event) => {
     }
 };
 
-this.onmessage = async (event) => {
+this.onmessage = (event) => {
     const data = event.data;
     switch (data['cmd']) {
         case 'connect':

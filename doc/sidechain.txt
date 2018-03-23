@@ -28,3 +28,20 @@ Zindros đã nói trong một video giải thích công nghệ hoạt động nh
 Cuối cùng, nếu các ngân hàng tạo ra các mạng blockchain riêng của họ, các sidechain có thể cho phép truyền thông với các mạng đó, cho phép người dùng phát sinh 
 và theo dõi các cổ phần, trái phiếu và các tài sản khác.
 
+Cuộc đối thoại đầu tiên
+Cuộc đối thoại sớm về các sidechain lần đầu tiên xuất hiện trong các phòng chat Bitcoin vào khoảng năm 2012, khi các
+nhà phát triển Bitcoin Core đang nghĩ đến các cách để nâng cấp một cách an toàn giao thức Bitcoin.
+
+Một ý tưởng là cho một "one-way peg", nơi người dùng có thể di chuyển bitcoin đến một blockchain riêng biệt để kiểm
+tra một client mới; tuy nhiên, một khi các tài sản đó đã được di chuyển, chúng không thể được chuyển lại chuỗi chính.
+
+Adam Back, hiện là tại công ty phát triển blockchain Blockstream, cho biết trong một cuộc phỏng vấn với tạp chí Bitcoin
+"Tôi đã nghĩ đến điều này như là một công cụ kỹ thuật phần mềm có thể được sử dụng để tạo ra những thay đổi lớn".
+"Bạn có thể nói, chúng tôi sẽ tạo ra một phiên bản mới của Bitcoin, và chúng tôi nghĩ rằng nó sẽ sẵn sàng trong một năm,
+nhưng trong thời gian chờ đợi, bạn có thể lựa chọn sớm và thử nghiệm nó"
+
+Đồng ý với Back, vào năm sau, trên kênh Bitcoin IRC, Greg Maxwell, nhà phát triển Bitcoin Core gợi ý một ý tưởng về 
+một "two-way peg", trong đó giá trị có thể được chuyển sang chuỗi khác và sau đó trở lại Bitcoin sau đó.
+
+
+

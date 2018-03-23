@@ -117,7 +117,7 @@ class Blockchain {
         let aUnspentTxOuts = [];
 
         for (let i = 1; i < blocks.length; i++) {
-            if (!(await Block.isValidNewBlock(blocks[i], blocks[i - 1]))) {
+            if (!Block.isValidNewBlock(blocks[i], blocks[i - 1])) {
                 console.log('invalid block in blockchain');
                 return null;
             }
@@ -134,7 +134,7 @@ class Blockchain {
     }
 
     async addBlockToChain(newBlock) {
-        let isValid = await Block.isValidNewBlock(newBlock, this.getLatestBlock());
+        let isValid = Block.isValidNewBlock(newBlock, this.getLatestBlock());
         if (!isValid)
             return false;
 

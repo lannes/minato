@@ -1,7 +1,11 @@
+if (typeof require !== 'undefined') {
+    global.KHash = require('../nodejs/crypto/hash');
+}
+
 const COINBASE_AMOUNT = 50;
 
 class Transaction {
-    static async getTransactionId(transaction) {
+    static getTransactionId(transaction) {
         const txInContent = transaction['txIns']
             .map((txIn) => txIn['txOutId'] + txIn['txOutIndex'])
             .reduce((a, b) => a + b, '');
@@ -10,7 +14,7 @@ class Transaction {
             .map((txOut) => txOut['address'] + txOut['amount'])
             .reduce((a, b) => a + b, '');
 
-        return await KHash.sha256(txInContent + txOutContent);
+        return KHash.sha256(txInContent + txOutContent);
     }
 
     static getTxInAmount(txIn, aUnspentTxOuts) {
@@ -115,12 +119,12 @@ class Transaction {
             return false;
         }
 
-        if (await Transaction.getTransactionId(transaction) !== transaction['id']) {
+        if (Transaction.getTransactionId(transaction) !== transaction['id']) {
             return false;
         }
 
         const tmp = await Promise.all(transaction['txIns'].map(
-            async (txIn) => await validateTxIn(txIn, transaction, aUnspentTxOuts)
+            async (txIn) => await this.validateTxIn(txIn, transaction, aUnspentTxOuts)
         ));
         const hasValidTxIns = tmp.reduce((a, b) => a && b, true);
 
@@ -145,12 +149,12 @@ class Transaction {
         return true;
     }
 
-    static async validateCoinbaseTx(transaction, blockIndex) {
+    static validateCoinbaseTx(transaction, blockIndex) {
         if (transaction == null) {
             return false;
         }
 
-        if (await Transaction.getTransactionId(transaction) !== transaction['id']) {
+        if (Transaction.getTransactionId(transaction) !== transaction['id']) {
             return false;
         }
 
@@ -193,7 +197,7 @@ class Transaction {
 
     static async validateBlockTransactions(aTransactions, aUnspentTxOuts, blockIndex) {
         const coinbaseTx = aTransactions[0];
-        if (!(await Transaction.validateCoinbaseTx(coinbaseTx, blockIndex))) {
+        if (!Transaction.validateCoinbaseTx(coinbaseTx, blockIndex)) {
             console.log('invalid coinbase transaction: ' + JSON.stringify(coinbaseTx));
             return false;
         }
@@ -218,7 +222,7 @@ class Transaction {
     /**
      *  Thưởng 50 Coinbase cho giao dịch
      */
-    static async getCoinbaseTransaction(address, blockIndex) {
+    static getCoinbaseTransaction(address, blockIndex) {
         const txIn = {
             'signature': '',
             'txOutId': '',
@@ -234,7 +238,7 @@ class Transaction {
             }]
         };
 
-        t['id'] = await Transaction.getTransactionId(t);
+        t['id'] = Transaction.getTransactionId(t);
         return t;
     }
 

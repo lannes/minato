@@ -1,17 +1,18 @@
 importScripts(
-    '../util/common.js?v=0.1',
-    '../util/db.js?v=0.1',
-    '../util/buffer.js?v=0.1',
-    '../util/hash.js?v=0.1',
-    '../util/crypto.js?v=0.1',
-    '../util/observable.js?v=0.1',
-    '../util/scheduler.js?v=0.1',
-    '../core/transaction/tx.js?v=0.1',
-    '../core/transaction/txPool.js?v=0.1',
-    '../core/block.js?v=0.1',
-    '../core/blockchain.js?v=0.1',
-    '../core/consensus.js?v=0.1',
-    '../core/wallet.js?v=0.1'
+    './crypto/sjcl.js?v=0.1',
+    './crypto/hash.js?v=0.1',
+    './crypto/elliptic.js?v=0.1',
+    '../base/util/common.js?v=0.1',
+    '../base/util/db.js?v=0.1',
+    '../base/util/buffer.js?v=0.1',
+    '../base/util/observable.js?v=0.1',
+    '../base/util/scheduler.js?v=0.1',
+    '../base/core/transaction/tx.js?v=0.1',
+    '../base/core/transaction/txPool.js?v=0.1',
+    '../base/core/block.js?v=0.1',
+    '../base/core/blockchain.js?v=0.1',
+    '../base/core/consensus.js?v=0.1',
+    '../base/core/wallet.js?v=0.1'
 );
 
 let nodePort = null;
@@ -27,7 +28,7 @@ const mine = (block) => {
         if (block)
             await consensus.addBlock(block);
 
-        const newBlock = await generateNextBlock();
+        const newBlock = generateNextBlock();
         nodePort.postMessage({ 'cmd': 'mine', 'msg': newBlock });
     });
 };
@@ -76,9 +77,9 @@ const init = async () => {
     scheduler.start();
 };
 
-const generateNextBlock = async () => {
+const generateNextBlock = () => {
     const address = Wallet.getPublicFromWallet();
-    const coinbaseTx = await Transaction.getCoinbaseTransaction(address, blockchain.getLatestBlock()['index'] + 1);
+    const coinbaseTx = Transaction.getCoinbaseTransaction(address, blockchain.getLatestBlock()['index'] + 1);
     const blockData = [coinbaseTx].concat(pool.getTransactionPool());
 
     const latestBlock = blockchain.getLatestBlock();

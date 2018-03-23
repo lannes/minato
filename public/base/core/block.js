@@ -1,3 +1,6 @@
+if (typeof require !== 'undefined')
+    global.KHash = require('../nodejs/crypto/hash');
+
 class Block {
     static isValidBlockStructure(block) {
         return typeof block['index'] === 'number'
@@ -12,12 +15,12 @@ class Block {
             && newBlock['timestamp'] - 60 < getCurrentTimestamp();
     }
 
-    static async calculateHash(index, previousHash, timestamp, data, difficulty, nonce) {
-        return await KHash.sha256(index + previousHash + timestamp + data + difficulty + nonce);
+    static calculateHash(index, previousHash, timestamp, data, difficulty, nonce) {
+        return KHash.sha256(index + previousHash + timestamp + data + difficulty + nonce);
     }
 
-    static async calculateHashForBlock(block) {
-        return await Block.calculateHash(
+    static calculateHashForBlock(block) {
+        return Block.calculateHash(
             block['index'],
             block['previousHash'],
             block['timestamp'],
@@ -26,8 +29,8 @@ class Block {
             block['nonce']);
     }
 
-    static async hashMatchesBlockContent(block) {
-        const blockHash = await Block.calculateHashForBlock(block);
+    static hashMatchesBlockContent(block) {
+        const blockHash = Block.calculateHashForBlock(block);
         return blockHash === block['hash'];
     }
 
@@ -37,8 +40,8 @@ class Block {
         return hashInBinary.startsWith(requiredPrefix);
     }
 
-    static async hasValidHash(block) {
-        if (!(await Block.hashMatchesBlockContent(block))) {
+    static hasValidHash(block) {
+        if (!Block.hashMatchesBlockContent(block)) {
             console.log('invalid hash, got:' + block['hash']);
             return false;
         }
@@ -51,7 +54,7 @@ class Block {
         return true;
     }
 
-    static async isValidNewBlock(newBlock, previousBlock) {
+    static isValidNewBlock(newBlock, previousBlock) {
         if (!Block.isValidBlockStructure(newBlock)) {
             return false;
         }
@@ -68,7 +71,7 @@ class Block {
             return false;
         }
 
-        if (!(await Block.hasValidHash(newBlock))) {
+        if (!Block.hasValidHash(newBlock)) {
             return false;
         }
 

@@ -130,7 +130,7 @@ class Wallet {
             'txIns': unsignedTxIns,
             'txOuts': Wallet.createTxOuts(receiverAddress, myAddress, amount, leftOverAmount)
         };
-        tx['id'] = await getTransactionId(tx);
+        tx['id'] = Transaction.getTransactionId(tx);
 
         tx['txIns'] = await Promise.all(tx['txIns'].map(async (txIn, index) => {
             txIn['signature'] = await signTxIn(tx, index, privateKey, unspentTxOuts);
