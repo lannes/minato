@@ -27,3 +27,6 @@ class Observable {
         }
     }
 } 
+
+if (typeof module !== 'undefined')
+    module.exports = Observable;

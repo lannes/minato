@@ -56,7 +56,7 @@ class Miner extends Observable {
         let nonce = startNonce;
 
         while (this.enabled) {
-            const hash = await sha256(
+            const hash = await KHash.sha256(
                 this.block['index'] +
                 this.block['previousHash'] +
                 this.block['timestamp'] +

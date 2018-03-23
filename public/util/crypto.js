@@ -1,6 +1,12 @@
 // ECDSA - Elliptic Curve Digital Signature Algorithm
 // NIST recommended curve P-256, also known as secp256r1.
-var crypt = this.crypto || this.msCrypto;
+
+if (typeof require !== 'undefined') {
+    //global.WebCrypto = require('node-webcrypto-ossl');
+    //global.webcrypto = new WebCrypto();
+}
+
+var crypt = this.crypto || this.msCrypto || global.webcrypto;
 
 class Elliptic {
     static generatePublicKey(keyPair) {
@@ -115,3 +121,6 @@ class Elliptic {
         return isvalid;
     }
 }
+
+if (typeof module !== 'undefined')
+    module.exports = Elliptic;

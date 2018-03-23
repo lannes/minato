@@ -70,3 +70,6 @@ class TransactionPool {
         }
     }
 }
+
+if (typeof module !== 'undefined')
+    module.exports = TransactionPool;

@@ -13,7 +13,7 @@ class Block {
     }
 
     static async calculateHash(index, previousHash, timestamp, data, difficulty, nonce) {
-        return await sha256(index + previousHash + timestamp + data + difficulty + nonce);
+        return await KHash.sha256(index + previousHash + timestamp + data + difficulty + nonce);
     }
 
     static async calculateHashForBlock(block) {
@@ -75,3 +75,6 @@ class Block {
         return true;
     }
 }
+
+if (typeof module !== 'undefined')
+    module.exports = Block;

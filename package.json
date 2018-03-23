@@ -8,7 +8,8 @@
   },
   "dependencies": {
     "ws": "^5.1.0",
-    "node-webcrypto-ossl": "^1.0.36"
+    "leveldown": "^3.0.0",
+    "levelup": "^2.0.2"
   },
   "devDependencies": {
     "@types/node": "^9.4.7",

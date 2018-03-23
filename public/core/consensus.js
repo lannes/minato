@@ -1,3 +1,6 @@
+if (typeof require !== 'undefined')
+    global.Observable = require('../util/observable');
+
 const MessageType = {
     QUERY_LATEST: 0,
     QUERY_BLOCKCHAIN: 1,
@@ -161,7 +164,7 @@ class Consensus extends Observable {
                 for (let i = 0; i < receivedTransactions.length; i++) {
                     let transaction = receivedTransactions[i];
                     try {
-                        await addToTransactionPool(transaction, getUnspentTxOuts());
+                        await this.pool.addToTransactionPool(transaction, this.blockchain.getUnspentTxOuts());
                         //this.notify('broadcast', this._responseTransactionPoolMsg());
                     } catch (e) {
                         console.log(e.message);
@@ -179,7 +182,10 @@ class Consensus extends Observable {
     }
 
     async transfer(account, amount) {
-        await sendTransaction(account, amount);
+        await this.blockchain.sendTransaction(account, amount);
         this.notify('broadcast', this._responseTransactionPoolMsg());
     }
 }
+
+if (typeof module !== 'undefined')
+    module.exports = Consensus;

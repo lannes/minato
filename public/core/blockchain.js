@@ -98,7 +98,7 @@ class Blockchain {
 
         await addToTransactionPool(tx, this.getUnspentTxOuts());
         return tx;
-    };
+    }
 
     getAccumulatedDifficulty(aBlockchain) {
         return aBlockchain
@@ -162,3 +162,6 @@ class Blockchain {
         return false;
     }
 }
+
+if (typeof module !== 'undefined')
+    module.exports = Blockchain;

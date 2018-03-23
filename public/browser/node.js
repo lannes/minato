@@ -1,6 +1,7 @@
 importScripts(
     '../util/common.js?v=0.1',
     '../util/db.js?v=0.1',
+    '../util/buffer.js?v=0.1',
     '../util/hash.js?v=0.1',
     '../util/crypto.js?v=0.1',
     '../util/observable.js?v=0.1',

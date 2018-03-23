@@ -25,3 +25,6 @@ class SchedulerAsync {
         await this.start();
     }
 }
+
+if (typeof module !== 'undefined')
+    module.exports = SchedulerAsync;

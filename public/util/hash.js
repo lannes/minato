@@ -1,18 +1,22 @@
+if (typeof require !== 'undefined') {
+    global.KBuffer = require('./util/buffer');
+} 
+
 var crypt = this.crypto || this.msCrypto;
 
-const buffer2hexa = buf => buf.map(b => ('00' + b.toString(16)).slice(-2)).join('');
+class KHash {
+    static async sha256(message) {
+        let msgBuffer = null;
+        if (typeof message === 'string') {
+            msgBuffer = KBuffer.str2buffer(message);
+        } else {
+            msgBuffer = message;
+        }
 
-const sha256 = async (message) => {
-    // encode as UTF-8
-    const msgBuffer = new TextEncoder('utf-8').encode(message);
+        const hashBuffer = await crypt.subtle.digest('SHA-256', msgBuffer);
+        return KBuffer.buffer2hex(hashBuffer);
+    }
+}
 
-    // hash the message
-    const hashBuffer = await crypt.subtle.digest('SHA-256', msgBuffer);
-
-    // convert ArrayBuffer to Array
-    const hashArray = Array.from(new Uint8Array(hashBuffer));
-
-    // convert bytes to hex string
-    const hashHex = buffer2hexa(hashArray);
-    return hashHex;
-};
+if (typeof module !== 'undefined')
+    module.exports = KHash;

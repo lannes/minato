@@ -140,3 +140,6 @@ class Wallet {
         return tx;
     }
 }
+
+if (typeof module !== 'undefined')
+    module.exports = Wallet;

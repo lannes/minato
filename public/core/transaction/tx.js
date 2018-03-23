@@ -10,7 +10,7 @@ class Transaction {
             .map((txOut) => txOut['address'] + txOut['amount'])
             .reduce((a, b) => a + b, '');
 
-        return await sha256(txInContent + txOutContent);
+        return await KHash.sha256(txInContent + txOutContent);
     }
 
     static getTxInAmount(txIn, aUnspentTxOuts) {
@@ -302,6 +302,5 @@ class Transaction {
     }
 }
 
-if (typeof exports !== 'undefined') {
-    module.exports[Transaction.prototype.constructor.name] = Transaction;
-}
+if (typeof module !== 'undefined')
+    module.exports = Transaction;
