@@ -10,7 +10,7 @@ if (idbTransaction) {
 
 var db = null;
 
-class Database {
+class KDatabase {
     static open(dbName, dbVersion, callback) {
         return new Promise((resolve, reject) => {
             let request = idb.open(dbName, dbVersion);
@@ -81,8 +81,8 @@ class Database {
     }
 
     static get(storeName, keyValue) {
-        return new Promise((resolve, reject) => {
-            let objectStore = Database.getObjectStore(storeName, idbTransaction.READ_ONLY);
+        return new Promise((resolve) => {
+            let objectStore = KDatabase.getObjectStore(storeName, idbTransaction.READ_ONLY);
             let request = objectStore.get(keyValue);
 
             request.onsuccess = (event) => {
@@ -92,14 +92,14 @@ class Database {
 
             request.onerror = (event) => {
                 console.log('open: ' + event.target.errorCode);
-                reject(event.target.errorCode);
+                resolve(null);
             };
         });
     }
 
     static getAll(storeName) {
-        return new Promise((resolve, reject) => {
-            let objectStore = Database.getObjectStore(storeName, idbTransaction.READ_ONLY);
+        return new Promise((resolve) => {
+            let objectStore = KDatabase.getObjectStore(storeName, idbTransaction.READ_ONLY);
 
             let result = [];
             let request = objectStore.openCursor();
@@ -113,12 +113,17 @@ class Database {
                     resolve(result);
                 }
             };
+
+            request.onerror = (event) => {
+                console.log('open: ' + event.target.errorCode);
+                resolve(result);
+            };
         });
     }
 
     static add(storeName, obj) {
         return new Promise((resolve, reject) => {
-            let objectStore = Database.getObjectStore(storeName, idbTransaction.READ_WRITE);
+            let objectStore = KDatabase.getObjectStore(storeName, idbTransaction.READ_WRITE);
             let request = objectStore.put(obj);
 
             request.onsuccess = (event) => {
@@ -132,7 +137,7 @@ class Database {
     }
 
     static addList(storeName, objs) {
-        let objectStore = Database.getObjectStore(storeName, idbTransaction.READ_WRITE);
+        let objectStore = KDatabase.getObjectStore(storeName, idbTransaction.READ_WRITE);
 
         for (let i in objs) {
             objectStore.put(objs[i]);
@@ -140,7 +145,7 @@ class Database {
     }
 
     static remove(storeName, index) {
-        let objectStore = Database.getObjectStore(storeName, idbTransaction.READ_WRITE);
+        let objectStore = KDatabase.getObjectStore(storeName, idbTransaction.READ_WRITE);
         let request = objectStore.delete(index);
 
         request.onsuccess = (event) => {

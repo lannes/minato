@@ -1,5 +1,6 @@
 if (typeof require !== 'undefined') {
     global.KElliptic = require('../crypto/elliptic');
+    global.KDatabase = require('../../nodejs/util/db');
 }
 
 var minato = minato || {};
@@ -14,10 +15,10 @@ class Wallet {
     }
 
     static async initWallet() {
-        const wallet = await Database.get('wallet', 1);
-        if (wallet) {
-            minato.privateKey = KElliptic.importPrivateKey(wallet[0]);
-            minato.address = wallet[1];
+        const wallet = await KDatabase.getAll('wallet');
+        if (wallet.length === 1) {
+            minato.privateKey = KElliptic.importPrivateKey(wallet[0][0]);
+            minato.address = wallet[0][1];
             return;
         }
 
@@ -28,11 +29,11 @@ class Wallet {
         minato.privateKey = KElliptic.importPrivateKey(keyPair.private);
         minato.address = publicData;
 
-        await Database.add('wallet', [privateData, publicData]);
+        await KDatabase.add('wallet', [privateData, publicData]);
     }
 
     static async deleteWallet() {
-        await Database.delete('hokage4');
+        await KDatabase.delete('hokage4');
     }
 
     static isValidAddress(address) {

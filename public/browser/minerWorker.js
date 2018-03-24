@@ -3,8 +3,8 @@ importScripts(
     './crypto/hash.js?v=0.1',
     '../base/util/buffer.js?v=0.1',
     '../base/util/common.js?v=0.1',
-    '../base/util/observable.js?v=0.1',
-    '../base/core/miner/miner.js?v=0.1',
+    '../base/util/observable.js?v=0.2',
+    '../base/core/miner/miner.js?v=0.2',
 );
 
 let minerPort = null;

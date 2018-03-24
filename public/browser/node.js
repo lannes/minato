@@ -6,14 +6,14 @@ importScripts(
     '../base/util/common.js?v=0.1',
     '../base/util/db.js?v=0.1',
     '../base/util/buffer.js?v=0.1',
-    '../base/util/observable.js?v=0.1',
-    '../base/util/scheduler.js?v=0.1',
-    '../base/core/transaction/tx.js?v=0.1',
-    '../base/core/transaction/txPool.js?v=0.1',
-    '../base/core/block.js?v=0.1',
-    '../base/core/blockchain.js?v=0.1',
-    '../base/core/consensus.js?v=0.1',
-    '../base/core/wallet.js?v=0.1'
+    '../base/util/observable.js?v=0.2',
+    '../base/util/scheduler.js?v=0.2',
+    '../base/core/transaction/tx.js?v=0.2',
+    '../base/core/transaction/txPool.js?v=0.2',
+    '../base/core/block.js?v=0.2',
+    '../base/core/blockchain.js?v=0.2',
+    '../base/core/consensus.js?v=0.2',
+    '../base/core/wallet.js?v=0.2'
 );
 
 let nodePort = null;
@@ -61,13 +61,13 @@ consensus.on('send', (data) => this.postMessage({ 'cmd': 'network', 'msg': data 
 consensus.on('broadcast', (data) => this.postMessage({ 'cmd': 'network', 'msg': [0, data] }));
 
 const init = async () => {
-    console.log('MINATO VERSION 0.0.1');
+    console.log('MINATO VERSION 0.0.2');
 
-    await Database.delete('hokage4');
-    await Database.open('hokage', 1, () => {
-        Database.createStore('blockchain', 'index');
-        Database.createStore('transaction', 'id');
-        Database.createStore('wallet');
+    await KDatabase.delete('hokage4');
+    await KDatabase.open('hokage', 1, () => {
+        KDatabase.createStore('blockchain', 'index');
+        KDatabase.createStore('transaction', 'id');
+        KDatabase.createStore('wallet');
     });
 
     await Wallet.initWallet();
