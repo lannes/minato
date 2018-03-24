@@ -1,3 +1,7 @@
+if (typeof require !== 'undefined') {
+    global.KElliptic = require('../crypto/elliptic');
+}
+
 var minato = minato || {};
 
 class Wallet {
@@ -12,24 +16,19 @@ class Wallet {
     static async initWallet() {
         const wallet = await Database.get('wallet', 1);
         if (wallet) {
-            const privateKey = wallet['private'];
-            const publicKey = wallet['public'];
-            minato.address = publicKey;
-            minato.privateKey = await Elliptic.importPrivateKey(publicKey, privateKey);
+            minato.privateKey = KElliptic.importPrivateKey(wallet[0]);
+            minato.address = wallet[1];
             return;
         }
 
-        const keyPair = await Elliptic.generateKeyPair();
-        const privateKey = Elliptic.generatePrivateKey(keyPair);
-        const publicKey = Elliptic.generatePublicKey(keyPair);
+        const keyPair = KElliptic.generateKeyPair();
+        const privateData = KElliptic.generatePrivateData(keyPair.private);
+        const publicData = KElliptic.generatePublicData(keyPair.public);
 
-        await Database.add('wallet', {
-            private: privateKey,
-            public: publicKey
-        });
+        minato.privateKey = KElliptic.importPrivateKey(keyPair.private);
+        minato.address = publicData;
 
-        minato.address = publicKey;
-        minato.privateKey = await Elliptic.importPrivateKey(publicKey, privateKey);
+        await Database.add('wallet', [privateData, publicData]);
     }
 
     static async deleteWallet() {
@@ -108,7 +107,7 @@ class Wallet {
         return unspentTxOuts.filter(value => !removable.includes(value));
     }
 
-    static async createTransaction(receiverAddress, amount, privateKey, unspentTxOuts, txPool) {
+    static createTransaction(receiverAddress, amount, privateKey, unspentTxOuts, txPool) {
         const myAddress = Wallet.getPublicFromWallet();
         const myUnspentTxOutsA = unspentTxOuts.filter((uTxO) => uTxO['address'] === myAddress);
 
@@ -132,10 +131,10 @@ class Wallet {
         };
         tx['id'] = Transaction.getTransactionId(tx);
 
-        tx['txIns'] = await Promise.all(tx['txIns'].map(async (txIn, index) => {
-            txIn['signature'] = await signTxIn(tx, index, privateKey, unspentTxOuts);
+        tx['txIns'] = tx['txIns'].map((txIn, index) => {
+            txIn['signature'] = signTxIn(tx, index, privateKey, unspentTxOuts);
             return txIn;
-        }));
+        });
 
         return tx;
     }

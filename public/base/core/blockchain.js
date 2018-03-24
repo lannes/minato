@@ -30,8 +30,8 @@ class Blockchain {
         this.unspentTxOuts = null;
     }
 
-    async init() {
-        this.unspentTxOuts = await Transaction.process(this.blocks[0]['data'], [], 0);
+    init() {
+        this.unspentTxOuts = Transaction.process(this.blocks[0]['data'], [], 0);
     }
 
     isValidGenesis(block) {
@@ -87,8 +87,8 @@ class Blockchain {
         return Wallet.findUnspentTxOuts(Wallet.getPublicFromWallet(), this.getUnspentTxOuts());
     }
 
-    async sendTransaction(address, amount) {
-        const tx = await Wallet.createTransaction(
+    sendTransaction(address, amount) {
+        const tx = Wallet.createTransaction(
             address,
             amount,
             Wallet.getPrivateFromWallet(),
@@ -96,7 +96,7 @@ class Blockchain {
             this.pool.getTransactionPool()
         );
 
-        await addToTransactionPool(tx, this.getUnspentTxOuts());
+        TransactionPool.addToTransactionPool(tx, this.getUnspentTxOuts());
         return tx;
     }
 
@@ -110,7 +110,7 @@ class Blockchain {
     /*
         Lấy danh sách các giao dịch chưa tiêu trong quá trình kiểm tra chuỗi khối
      */
-    async isValidChain(blocks) {
+    isValidChain(blocks) {
         if (!this.isValidGenesis(blocks[0]))
             return null;
 
@@ -123,7 +123,7 @@ class Blockchain {
             }
 
             const currentBlock = blocks[i];
-            aUnspentTxOuts = await Transaction.process(currentBlock['data'], aUnspentTxOuts, currentBlock['index']);
+            aUnspentTxOuts = Transaction.process(currentBlock['data'], aUnspentTxOuts, currentBlock['index']);
             if (aUnspentTxOuts === null) {
                 console.log('invalid transactions in blockchain');
                 return null;
@@ -133,12 +133,12 @@ class Blockchain {
         return aUnspentTxOuts;
     }
 
-    async addBlockToChain(newBlock) {
+    addBlockToChain(newBlock) {
         let isValid = Block.isValidNewBlock(newBlock, this.getLatestBlock());
         if (!isValid)
             return false;
 
-        const retVal = await Transaction.process(newBlock['data'], this.getUnspentTxOuts(), newBlock['index']);
+        const retVal = Transaction.process(newBlock['data'], this.getUnspentTxOuts(), newBlock['index']);
         if (retVal === null)
             return false;
 
@@ -148,8 +148,8 @@ class Blockchain {
         return true;
     }
 
-    async replaceChain(newBlocks) {
-        const aUnspentTxOuts = await this.isValidChain(newBlocks);
+    replaceChain(newBlocks) {
+        const aUnspentTxOuts = this.isValidChain(newBlocks);
         const validChain = aUnspentTxOuts !== null;
         if (validChain &&
             this.getAccumulatedDifficulty(newBlocks) > this.getAccumulatedDifficulty(this.getBlocks())) {

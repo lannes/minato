@@ -28,8 +28,8 @@ class TransactionPool {
         return true;
     }
 
-    async addToTransactionPool(tx, unspentTxOuts) {
-        if (!(await Transaction.validateTransaction(tx, unspentTxOuts))) {
+    addToTransactionPool(tx, unspentTxOuts) {
+        if (!Transaction.validateTransaction(tx, unspentTxOuts)) {
             throw Error('Trying to add invalid tx to pool');
         }
 

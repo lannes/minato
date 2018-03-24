@@ -11,18 +11,16 @@ class SchedulerAsync {
         this.queue.splice(id, 1);
     }
 
-    _await(ms) {
-        return new Promise(resolve => setTimeout(resolve, ms));
-    }
-
-    async start() {
+    start() {
         if (this.queue.length > 0) {
             const task = this.queue.shift();
-            await task();
+            task();
         }
 
-        await this._await(50);
-        await this.start();
+        let self = this;
+        setTimeout(() => {
+            self.start();
+        }, 50)
     }
 }
 

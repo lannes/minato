@@ -1,7 +1,8 @@
 importScripts(
     './crypto/sjcl.js?v=0.1',
     './crypto/hash.js?v=0.1',
-    './crypto/elliptic.js?v=0.1',
+    './crypto/elliptic.min.js?v=0.1',
+    '../base/crypto/elliptic.js?v=0.1',
     '../base/util/common.js?v=0.1',
     '../base/util/db.js?v=0.1',
     '../base/util/buffer.js?v=0.1',
@@ -24,16 +25,16 @@ let consensus = new Consensus(pool, blockchain);
 let scheduler = new SchedulerAsync();
 
 const mine = (block) => {
-    scheduler.addJob(async () => {
+    scheduler.addJob(() => {
         if (block)
-            await consensus.addBlock(block);
+            consensus.addBlock(block);
 
         const newBlock = generateNextBlock();
         nodePort.postMessage({ 'cmd': 'mine', 'msg': newBlock });
     });
 };
 
-consensus.on('sync', async (data) => {
+consensus.on('sync', (data) => {
     switch (data['state']) {
         case SyncType.SYNCHRONIZE_STARTED:
             nodePort.postMessage({ 'cmd': 'pause' });
@@ -62,7 +63,8 @@ consensus.on('broadcast', (data) => this.postMessage({ 'cmd': 'network', 'msg': 
 const init = async () => {
     console.log('MINATO VERSION 0.0.1');
 
-    await Database.open('hokage4', 1, () => {
+    await Database.delete('hokage4');
+    await Database.open('hokage', 1, () => {
         Database.createStore('blockchain', 'index');
         Database.createStore('transaction', 'id');
         Database.createStore('wallet');
@@ -70,7 +72,7 @@ const init = async () => {
 
     await Wallet.initWallet();
 
-    await blockchain.init();
+    blockchain.init();
 
     this.postMessage({ 'cmd': 'init', 'msg': Wallet.getPublicFromWallet() });
 
@@ -97,7 +99,7 @@ const generateNextBlock = () => {
     return block;
 };
 
-const onMessageFromMiner = async (event) => {
+const onMessageFromMiner = (event) => {
     const data = event.data;
     switch (data['cmd']) {
         case 'block':
@@ -129,7 +131,7 @@ this.onmessage = async (event) => {
             nodePort.postMessage(data);
             break;
         case 'sendTransaction':
-            await consensus.transfer(data['address'], data['amount']);
+            consensus.transfer(data['address'], data['amount']);
             break;
         case 'network':
             switch (data['type']) {
@@ -137,7 +139,7 @@ this.onmessage = async (event) => {
                     consensus.start(data['id']);
                     break;
                 case 'data':
-                    await consensus.process(data['id'], data['msg']);
+                    consensus.process(data['id'], data['msg']);
                     break;
             }
             break;

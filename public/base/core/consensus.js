@@ -52,23 +52,23 @@ class Consensus extends Observable {
         return [MessageType.QUERY_TRANSACTION_POOL, null];
     }
 
-    async _addBlockchain(blocks) {
-        let result = await this.blockchain.replaceChain(blocks);
+    _addBlockchain(blocks) {
+        let result = this.blockchain.replaceChain(blocks);
         if (result)
             this.notify('broadcast', this._responseLatestMsg());
 
         return result;
     }
 
-    async addBlock(block) {
-        let result = await this.blockchain.addBlockToChain(block);
+    addBlock(block) {
+        let result = this.blockchain.addBlockToChain(block);
         if (result)
             this.notify('broadcast', this._responseLatestMsg());
 
         return result;
     }
 
-    async _checkReceivedBlocks(id, blocks) {
+    _checkReceivedBlocks(id, blocks) {
         if (blocks.length === 0) {
             if (this.isSync) {
                 this.notify('sync', { 'id': id, 'state': SyncType.SYNCHRONIZE_COMPLETED, 'block': null });
@@ -113,7 +113,7 @@ class Consensus extends Observable {
         } else {
             this.notify('sync', { 'id': id, 'state': SyncType.DOWNLOAD_BLOCKCHAIN_FINISHED });
 
-            if (await this._addBlockchain(blocks))
+            if (this._addBlockchain(blocks))
                 this.notify('balance', Wallet.getAccountBalance());
 
             this.notify('sync', { 'id': id, 'state': SyncType.DOWNLOAD_TRANSACTION_STARTED });
@@ -124,7 +124,7 @@ class Consensus extends Observable {
         this.notify('height', this.blockchain.getLatestBlock()['index'] + 1);
     }
 
-    async process(id, message) {
+    process(id, message) {
         switch (message[0]) {
             case MessageType.QUERY_LATEST:
                 this.notify('send', [id, this._responseLatestMsg()]);
@@ -140,7 +140,7 @@ class Consensus extends Observable {
                 if (block === null)
                     break;
 
-                await this._checkReceivedBlocks(id, [block]);
+                this._checkReceivedBlocks(id, [block]);
             }
                 break;
             case MessageType.RESPONSE_BLOCKCHAIN: {
@@ -148,7 +148,7 @@ class Consensus extends Observable {
                 if (blocks === null)
                     break;
 
-                await this._checkReceivedBlocks(id, blocks);
+                this._checkReceivedBlocks(id, blocks);
             }
                 break;
             case MessageType.RESPONSE_TRANSACTION_POOL: {
@@ -164,7 +164,7 @@ class Consensus extends Observable {
                 for (let i = 0; i < receivedTransactions.length; i++) {
                     let transaction = receivedTransactions[i];
                     try {
-                        await this.pool.addToTransactionPool(transaction, this.blockchain.getUnspentTxOuts());
+                        this.pool.addToTransactionPool(transaction, this.blockchain.getUnspentTxOuts());
                         //this.notify('broadcast', this._responseTransactionPoolMsg());
                     } catch (e) {
                         console.log(e.message);
@@ -181,8 +181,8 @@ class Consensus extends Observable {
         this.notify('send', [id, this._queryLatestMsg()]);
     }
 
-    async transfer(account, amount) {
-        await this.blockchain.sendTransaction(account, amount);
+    transfer(account, amount) {
+        this.blockchain.sendTransaction(account, amount);
         this.notify('broadcast', this._responseTransactionPoolMsg());
     }
 }

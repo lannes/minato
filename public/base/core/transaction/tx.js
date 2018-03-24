@@ -65,7 +65,7 @@ class Transaction {
         return true;
     }
 
-    async validateTxIn(txIn, transaction, aUnspentTxOuts) {
+    validateTxIn(txIn, transaction, aUnspentTxOuts) {
         const referencedUTxOut =
             aUnspentTxOuts.find((uTxO) => uTxO['txOutId'] === txIn['txOutId'] &&
                 uTxO['txOutIndex'] === txIn['txOutIndex']);
@@ -75,8 +75,8 @@ class Transaction {
         }
 
         const address = referencedUTxOut['address'];
-        const publicKey = await Elliptic.importPublicKey(address);
-        const validSignature = await Elliptic.verify(publicKey, txIn['signature'], transaction['id']);
+        const publicKey = KElliptic.importPublicKey(address);
+        const validSignature = KElliptic.verify(publicKey, txIn['signature'], transaction['id']);
         if (!validSignature) {
             console.log('invalid txIn signature: %s txId: %s address: %s',
                 txIn['signature'], transaction['id'], referencedUTxOut['address']);
@@ -114,7 +114,7 @@ class Transaction {
         return true;
     }
 
-    static async validateTransaction(transaction, aUnspentTxOuts) {
+    static validateTransaction(transaction, aUnspentTxOuts) {
         if (!Transaction.isValidTransactionStructure(transaction)) {
             return false;
         }
@@ -123,9 +123,9 @@ class Transaction {
             return false;
         }
 
-        const tmp = await Promise.all(transaction['txIns'].map(
-            async (txIn) => await this.validateTxIn(txIn, transaction, aUnspentTxOuts)
-        ));
+        const tmp = transaction['txIns'].map(
+            (txIn) => this.validateTxIn(txIn, transaction, aUnspentTxOuts)
+        );
         const hasValidTxIns = tmp.reduce((a, b) => a && b, true);
 
         if (!hasValidTxIns) {
@@ -195,7 +195,7 @@ class Transaction {
         return false;
     }
 
-    static async validateBlockTransactions(aTransactions, aUnspentTxOuts, blockIndex) {
+    static validateBlockTransactions(aTransactions, aUnspentTxOuts, blockIndex) {
         const coinbaseTx = aTransactions[0];
         if (!Transaction.validateCoinbaseTx(coinbaseTx, blockIndex)) {
             console.log('invalid coinbase transaction: ' + JSON.stringify(coinbaseTx));
@@ -213,9 +213,9 @@ class Transaction {
 
         // all but coinbase transactions
         const normalTransactions = aTransactions.slice(1);
-        const tmp = await Promise.all(normalTransactions.map(
-            async (tx) => await Transaction.validateTransaction(tx, aUnspentTxOuts)
-        ));
+        const tmp = normalTransactions.map(
+            (tx) => Transaction.validateTransaction(tx, aUnspentTxOuts)
+        );
         return tmp.reduce((a, b) => (a && b), true);
     }
 
@@ -242,7 +242,7 @@ class Transaction {
         return t;
     }
 
-    static async signTxIn(transaction, txInIndex, privateKey, aUnspentTxOuts) {
+    static signTxIn(transaction, txInIndex, privateKey, aUnspentTxOuts) {
         const txIn = transaction['txIns'][txInIndex];
 
         const dataToSign = transaction['id'];
@@ -259,7 +259,7 @@ class Transaction {
             throw Error();
         }
 
-        const signature = await Elliptic.sign(privateKey, dataToSign);
+        const signature = Elliptic.sign(privateKey, dataToSign);
         return signature;
     }
 
@@ -296,8 +296,8 @@ class Transaction {
         return resultingUnspentTxOuts;
     }
 
-    static async process(aTransactions, aUnspentTxOuts, blockIndex) {
-        if (!(await Transaction.validateBlockTransactions(aTransactions, aUnspentTxOuts, blockIndex))) {
+    static process(aTransactions, aUnspentTxOuts, blockIndex) {
+        if (!Transaction.validateBlockTransactions(aTransactions, aUnspentTxOuts, blockIndex)) {
             console.log('invalid block transactions');
             return null;
         }
