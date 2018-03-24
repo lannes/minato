@@ -1,5 +1,6 @@
 if (typeof require !== 'undefined') {
     global.KHash = require('../nodejs/crypto/hash');
+    global.KElliptic = require('../../crypto/elliptic');
 }
 
 const COINBASE_AMOUNT = 50;
@@ -65,7 +66,7 @@ class Transaction {
         return true;
     }
 
-    validateTxIn(txIn, transaction, aUnspentTxOuts) {
+    static validateTxIn(txIn, transaction, aUnspentTxOuts) {
         const referencedUTxOut =
             aUnspentTxOuts.find((uTxO) => uTxO['txOutId'] === txIn['txOutId'] &&
                 uTxO['txOutIndex'] === txIn['txOutIndex']);
@@ -96,7 +97,7 @@ class Transaction {
         }
 
         if (!transaction['txIns']
-            .map(isValidTxInStructure)
+            .map(Transaction.isValidTxInStructure)
             .reduce((a, b) => (a && b), true)) {
             return false;
         }
@@ -124,7 +125,7 @@ class Transaction {
         }
 
         const tmp = transaction['txIns'].map(
-            (txIn) => this.validateTxIn(txIn, transaction, aUnspentTxOuts)
+            (txIn) => Transaction.validateTxIn(txIn, transaction, aUnspentTxOuts)
         );
         const hasValidTxIns = tmp.reduce((a, b) => a && b, true);
 
@@ -259,7 +260,7 @@ class Transaction {
             throw Error();
         }
 
-        const signature = Elliptic.sign(privateKey, dataToSign);
+        const signature = KElliptic.sign(privateKey, dataToSign);
         return signature;
     }
 

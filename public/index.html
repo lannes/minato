@@ -65,8 +65,8 @@
             });
 
             $('#btnSend').click(() => {
-                let address = $('#txtAddress').val();
-                let coin = $('#txtCoin').val();
+                let address = $('#txtAddress').val().trim();
+                let coin = $('#txtCoin').val().trim();
 
                 if (address === '')
                     return;

@@ -55,6 +55,17 @@ class Blockchain {
         return unspentTxOuts.filter((uTxO) => uTxO['address'] === address);
     }
 
+    getAccountBalance() {
+        const address = Wallet.getPublicFromWallet();
+        return this.getBalance(address, this.getUnspentTxOuts());
+    }
+
+    getBalance(address, unspentTxOuts) {
+        return this.findUnspentTxOuts(address, unspentTxOuts)
+            .map((uTxO) => uTxO['amount'])
+            .reduce((a, b) => a + b, 0);
+    }
+
     getLatestBlock() {
         return this.blocks[this.blocks.length - 1];
     }
@@ -96,7 +107,7 @@ class Blockchain {
             this.pool.getTransactionPool()
         );
 
-        TransactionPool.addToTransactionPool(tx, this.getUnspentTxOuts());
+        this.pool.addToTransactionPool(tx, this.getUnspentTxOuts());
         return tx;
     }
 

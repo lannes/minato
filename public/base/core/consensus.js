@@ -94,7 +94,7 @@ class Consensus extends Observable {
             }
 
             if (latestBlockReceived['index'] == latestBlock['index'])
-                this.notify('balance', Wallet.getAccountBalance());
+                this.notify('balance', this.blockchain.getAccountBalance());
 
             this.notify('height', this.blockchain.getLatestBlock()['index'] + 1);
             return;
@@ -114,7 +114,7 @@ class Consensus extends Observable {
             this.notify('sync', { 'id': id, 'state': SyncType.DOWNLOAD_BLOCKCHAIN_FINISHED });
 
             if (this._addBlockchain(blocks))
-                this.notify('balance', Wallet.getAccountBalance());
+                this.notify('balance', this.blockchain.getAccountBalance());
 
             this.notify('sync', { 'id': id, 'state': SyncType.DOWNLOAD_TRANSACTION_STARTED });
 
@@ -165,7 +165,7 @@ class Consensus extends Observable {
                     let transaction = receivedTransactions[i];
                     try {
                         this.pool.addToTransactionPool(transaction, this.blockchain.getUnspentTxOuts());
-                        //this.notify('broadcast', this._responseTransactionPoolMsg());
+                        this.notify('broadcast', this._responseTransactionPoolMsg());
                     } catch (e) {
                         console.log(e.message);
                     }

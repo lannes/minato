@@ -33,27 +33,19 @@ class Wallet {
     }
 
     static async deleteWallet() {
-        await KDatabase.delete('hokage4');
+        await KDatabase.delete('hokage');
     }
 
     static isValidAddress(address) {
-        if (address.length !== 86) {
-            console.log('invalid public key length');
+        if (address.length !== 130) {
+            return false;
+        } else if (address.match('^[a-fA-F0-9]+$') === null) {
+            return false;
+        } else if (!address.startsWith('04')) {
             return false;
         }
 
         return true;
-    }
-
-    static getAccountBalance() {
-        const address = Wallet.getPublicFromWallet();
-        return Wallet.getBalance(address, blockchain.getUnspentTxOuts());
-    }
-
-    static getBalance(address, unspentTxOuts) {
-        return blockchain.findUnspentTxOuts(address, unspentTxOuts)
-            .map((uTxO) => uTxO['amount'])
-            .reduce((a, b) => a + b, 0);
     }
 
     static findTxOutsForAmount(amount, myUnspentTxOuts) {
@@ -133,7 +125,7 @@ class Wallet {
         tx['id'] = Transaction.getTransactionId(tx);
 
         tx['txIns'] = tx['txIns'].map((txIn, index) => {
-            txIn['signature'] = signTxIn(tx, index, privateKey, unspentTxOuts);
+            txIn['signature'] = Transaction.signTxIn(tx, index, privateKey, unspentTxOuts);
             return txIn;
         });
 
