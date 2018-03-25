@@ -1,11 +1,22 @@
-window.WebSocket = window.WebSocket || window.MozWebSocket;
+
+if (typeof require !== 'undefined') {
+    global.WebSocket = require('ws');
+    global.webrtc = require('wrtc');
+    global.KNumberUtil = require('../../util/number');
+
+    global.RTCPeerConnection = webrtc.RTCPeerConnection;
+    global.RTCSessionDescription = webrtc.RTCSessionDescription;
+    global.RTCIceCandidate = webrtc.RTCIceCandidate;
+} else {
+    window.WebSocket = window.WebSocket || window.MozWebSocket;
+}
 
 const CHUNK_SIZE = 16 * 1024;
 
-const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
-const isFirefox = typeof InstallTrigger !== 'undefined';
+//const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
+//const isFirefox = typeof InstallTrigger !== 'undefined';
 
-class WebP2P {
+class KNetwork {
     constructor(signalingServer, cfgIceServers) {
         this.pcs = {};
         this.dataChannels = {};
@@ -72,7 +83,8 @@ class WebP2P {
         const nChunks = Math.floor(msg.length / CHUNK_SIZE);
         const remainder = msg.length - (nChunks * CHUNK_SIZE);
 
-        let result = this._sendChunk(id, new Uint8Array(numberToByteArray(msg.length)));
+        const arrLength = new Uint8Array(KNumberUtil.numberToByteArray(msg.length));
+        let result = this._sendChunk(id, arrLength);
 
         for (let i = 0; i < nChunks; i++) {
             const chunk = msg.substr(i * CHUNK_SIZE, CHUNK_SIZE);
@@ -178,7 +190,7 @@ class WebP2P {
                 }
             } else {
                 const bytes = new Uint8Array(data);
-                const size = byteArrayToNumber(bytes);
+                const size = KNumberUtil.byteArrayToNumber(bytes);
                 this.chunks[id] = { size: size, data: '' };
             }
         };
@@ -304,3 +316,6 @@ class WebP2P {
         delete this.pcs[id];
     }
 }
+
+if (typeof module !== 'undefined')
+    module.exports = KNetwork;

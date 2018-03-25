@@ -16,7 +16,7 @@ const Consensus = require('../base/core/consensus');
 const Wallet = require('../base/core/wallet');
 const KDatabase = require('./util/db');
 
-class Node {
+class KNode {
     constructor() {
         this.scheduler = new SchedulerAsync();
 
@@ -42,25 +42,25 @@ class Node {
                     break;
             }
 
-            this.send({
+            this._send({
                 'cmd': 'sync', 'msg': data
             });
         });
 
-        this.consensus.on('send', (data) => this.send({
+        this.consensus.on('send', (data) => this._send({
             'cmd': 'network', 'msg': data
         }));
 
-        this.consensus.on('broadcast', (data) => this.send({
+        this.consensus.on('broadcast', (data) => this._send({
             'cmd': 'network', 'msg': [0, data]
         }));
     }
 
-    send(message) {
+    _send(message) {
 
     }
 
-    async init() {
+    async _init() {
         console.log('MINATO VERSION 0.0.2');
 
         KDatabase.open('hokage');
@@ -71,7 +71,7 @@ class Node {
         this.scheduler.start();
     }
 
-    generateNextBlock() {
+    _generateNextBlock() {
         const address = Wallet.getPublicFromWallet();
         const latestBlock = this.blockchain.getLatestBlock();
 
@@ -91,19 +91,16 @@ class Node {
         return block;
     }
 
-    mine(block) {
+    _mine(block) {
         this.scheduler.addJob(() => {
             if (block)
                 this.consensus.addBlock(block);
 
-            const newBlock = this.generateNextBlock();
+            const newBlock = this._generateNextBlock();
             nodePort.postMessage({ 'cmd': 'mine', 'msg': newBlock });
         });
     }
 
 }
 
-const node = new Node();
-(async () => {
-    await node.init();
-})();
+module.exports = KNode;

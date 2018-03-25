@@ -1,22 +1,22 @@
 importScripts(
-    './crypto/sjcl.js?v=0.1',
-    './crypto/hash.js?v=0.1',
-    './crypto/elliptic.min.js?v=0.1',
-    '../base/crypto/elliptic.js?v=0.1',
-    '../base/util/common.js?v=0.1',
-    '../base/util/db.js?v=0.1',
-    '../base/util/buffer.js?v=0.1',
-    '../base/util/observable.js?v=0.2',
-    '../base/util/scheduler.js?v=0.2',
-    '../base/core/transaction/tx.js?v=0.2',
-    '../base/core/transaction/txPool.js?v=0.2',
-    '../base/core/block.js?v=0.2',
-    '../base/core/blockchain.js?v=0.2',
-    '../base/core/consensus.js?v=0.2',
-    '../base/core/wallet.js?v=0.2'
+    '../crypto/sjcl.js?v=0.1',
+    '../crypto/hash.js?v=0.1',
+    '../crypto/elliptic.min.js?v=0.1',
+    '../../base/crypto/elliptic.js?v=0.1',
+    '../../base/util/common.js?v=0.1',
+    '../../base/util/db.js?v=0.1',
+    '../../base/util/buffer.js?v=0.1',
+    '../../base/util/observable.js?v=0.2',
+    '../../base/util/scheduler.js?v=0.2',
+    '../../base/core/transaction/tx.js?v=0.2',
+    '../../base/core/transaction/txPool.js?v=0.2',
+    '../../base/core/block.js?v=0.2',
+    '../../base/core/blockchain.js?v=0.2',
+    '../../base/core/consensus.js?v=0.2',
+    '../../base/core/wallet.js?v=0.2'
 );
 
-class Node {
+class KNodeWorker {
     constructor() {
         this.nodePort = null;
 
@@ -42,37 +42,37 @@ class Node {
                 case SyncType.DOWNLOAD_BLOCKCHAIN_FINISHED:
                     break;
                 case SyncType.SYNCHRONIZE_COMPLETED:
-                    this.mine(data['block']);
+                    this._mine(data['block']);
                     break;
             }
 
-            this.send({
+            this._send({
                 'cmd': 'sync', 'msg': data
             });
         });
 
-        this.consensus.on('balance', (balance) => this.send({
+        this.consensus.on('balance', (balance) => this._send({
             'cmd': 'balance', 'msg': this.blockchain.getAccountBalance()
         }));
 
-        this.consensus.on('height', (height) => this.send({
+        this.consensus.on('height', (height) => this._send({
             'cmd': 'height', 'msg': height
         }));
 
-        this.consensus.on('send', (data) => this.send({
+        this.consensus.on('send', (data) => this._send({
             'cmd': 'network', 'msg': data
         }));
 
-        this.consensus.on('broadcast', (data) => this.send({
+        this.consensus.on('broadcast', (data) => this._send({
             'cmd': 'network', 'msg': [0, data]
         }));
     }
 
-    send(message) {
+    _send(message) {
         self.postMessage(message);
     }
 
-    generateNextBlock() {
+    _generateNextBlock() {
         const address = Wallet.getPublicFromWallet();
         const latestBlock = this.blockchain.getLatestBlock();
 
@@ -92,19 +92,19 @@ class Node {
         return block;
     }
 
-    mine(block) {
+    _mine(block) {
         this.scheduler.addJob(() => {
             if (block)
                 this.consensus.addBlock(block);
 
-            const newBlock = this.generateNextBlock();
+            const newBlock = this._generateNextBlock();
             this.nodePort.postMessage({
                 'cmd': 'mine', 'msg': newBlock
             });
         });
     }
 
-    async init() {
+    async _init() {
         console.log('MINATO VERSION 0.0.2');
 
         await KDatabase.delete('hokage4');
@@ -118,21 +118,21 @@ class Node {
 
         this.blockchain.init();
 
-        this.send({
+        this._send({
             'cmd': 'init', 'msg': Wallet.getPublicFromWallet()
         });
 
         this.scheduler.start();
     }
 
-    onMessageFromMiner(event) {
+    _onMessageFromMiner(event) {
         const data = event.data;
         switch (data['cmd']) {
             case 'block':
-                this.mine(data['msg']);
+                this._mine(data['msg']);
                 break;
             case 'hashrate':
-                this.send(data);
+                this._send(data);
                 break;
             case 'state':
 
@@ -147,10 +147,10 @@ class Node {
         switch (data['cmd']) {
             case 'connect':
                 this.nodePort = event.ports[0];
-                this.nodePort.onmessage = this.onMessageFromMiner.bind(this);
+                this.nodePort.onmessage = this._onMessageFromMiner.bind(this);
                 break;
             case 'init':
-                await this.init();
+                await this._init();
                 break;
             case 'mine':
             case 'pause':
@@ -179,9 +179,9 @@ class Node {
     }
 }
 
-const node = new Node();
+const nodeWorker = new KNodeWorker();
 self.onmessage = async (event) => {
-    await node.onmessage(event);
+    await nodeWorker.onmessage(event);
 }
 
 self.onerror = (e) => {

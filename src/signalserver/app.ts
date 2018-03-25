@@ -15,7 +15,6 @@ import { Feedback } from './webcore/feedback';
 import { WebSocketServer } from './websocket';
 
 const httpPort: number = parseInt(process.env.HTTP_PORT) || 3001;
-const p2pPort: number = parseInt(process.env.P2P_PORT) || 6001;
 
 const initHttpServer = (port: number) => {
     let server = new Server();

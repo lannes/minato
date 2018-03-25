@@ -10,13 +10,13 @@ if (typeof (window.Worker) === 'undefined') {
     alert('No Web Worker support');
 }
 
-class App {
+class KApp {
     constructor() {
-        this.webp2p = null;
+        this.network = null;
         this.isMining = false;
 
-        this.node = new Worker('./browser/node.js');
-        this.miner = new Worker('./browser/minerWorker.js');
+        this.node = new Worker('./browser/worker/node.js');
+        this.miner = new Worker('./browser/worker/miner.js');
         this.channel = new MessageChannel();
 
         this.node.postMessage({ 'cmd': 'connect' }, [this.channel.port1]);
@@ -42,8 +42,8 @@ class App {
     }
 
     stop() {
-        if (this.webp2p)
-            this.webp2p.disconnect();
+        if (this.network)
+            this.network.disconnect();
     }
 
     transfer(address, amount) {
@@ -95,9 +95,9 @@ class App {
                 const id = data['msg'][0];
                 const msg = data['msg'][1];
                 if (id === 0)
-                    this.webp2p.broadcast(JSON.stringify(msg));
+                    this.network.broadcast(JSON.stringify(msg));
                 else
-                    this.webp2p.send(id, JSON.stringify(msg));
+                    this.network.send(id, JSON.stringify(msg));
             }
                 break;
         }
@@ -116,22 +116,22 @@ class App {
 
         //this.webp2p = new WebRTC(signalingServer, configuration);
 
-        this.webp2p = new WebP2P(signalingServer, configuration);
+        this.network = new KNetwork(signalingServer, configuration);
 
-        this.webp2p.onconnect = (id) => {
+        this.network.onconnect = (id) => {
             $('#id').text('id: ' + id);
         }
 
-        this.webp2p.onopen = (id, connections) => {
+        this.network.onopen = (id, connections) => {
             $('#lblConnections').text(connections);
             this.node.postMessage({ 'cmd': 'network', 'id': id, 'type': 'open' });
         };
 
-        this.webp2p.onprogress = (id, percent) => {
+        this.network.onprogress = (id, percent) => {
             $('#barDownload').css('width', percent + '%').attr('aria-valuenow', percent).text(percent + '%');
         };
 
-        this.webp2p.onmessage = (id, message) => {
+        this.network.onmessage = (id, message) => {
             //console.log('received from: ' + id + ' ' + message);
 
             try {
@@ -143,9 +143,8 @@ class App {
             }
         };
 
-        this.webp2p.onclose = (id, connections) => {
+        this.network.onclose = (id, connections) => {
             $('#lblConnections').text(connections);
         }
-        /**/
     }
 }
