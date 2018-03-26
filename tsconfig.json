@@ -12,6 +12,7 @@
     },
     "exclude": [
         "client",
+        "server/signal",
         "node_modules"
     ]
 }

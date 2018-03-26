@@ -1,48 +1,46 @@
-import * as http from 'http';
-import * as url from 'url';
-import * as WebSocket from 'ws';
+const http = require('http');
+const url = require('url');
+const WebSocket = require('ws');
 
-import { UUID } from './uuid';
+const UUID = require('./uuid');
 
-export class WebSocketServer {
-    private wss: WebSocket.Server;
-    private port: string | number;
-    private clients = new Map<string, WebSocket>();
-    private isAlive = false;
-
-    constructor(port: string | number) {
+class WebSocketServer {
+    constructor(port) {
+        this.wss = null;
         this.port = port;
-        this.createServer();
-        this.listen();
+        this.clients = new Map();
+        this.isAlive = false;
+        this._createServer();
+        this._listen();
     }
 
-    private createServer = (): void => {
-        this.wss = new WebSocket.Server(<WebSocket.ServerOptions>{ port: this.port });
+    _createServer() {
+        this.wss = new WebSocket.Server({ port: this.port });
         console.log(`WebSocketServer has started at port: ${this.port}`);
     }
 
-    private removeClient = (id: string): void => {
+    _removeClient(id) {
         this.clients.delete(id);
     }
 
-    private registerClient = (id: string, ws: WebSocket): void => {
+    _registerClient(id, ws) {
         ws['id'] = id;
 
         this.clients.set(id, ws);
 
-        this.send(id, ['id', id]);
+        this._send(id, ['id', id]);
     }
 
-    private updateUserListOnClients = (): void => {
+    _updateUserListOnClients() {
         let userList = new Array();
         this.clients.forEach((websocket, id) => {
             userList.push(id);
         });
 
-        this.broadcast(['clients', userList.length]);
+        this._broadcast(['clients', userList.length]);
     }
 
-    private send = (id, message) => {
+    _send(id, message) {
         let msg = JSON.stringify(message);
 
         let ws = this.clients.get(id);
@@ -50,14 +48,14 @@ export class WebSocketServer {
             return;
 
         if (ws.readyState === WebSocket.OPEN) {
-            ws.send(msg, (err: Error) => {
+            ws.send(msg, (err) => {
                 if (err)
                     console.log(err);
             });
         }
     }
 
-    private broadcast = (message, exclude?: string) => {
+    _broadcast(message, exclude) {
         let self = this;
         let msg = JSON.stringify(message);
 
@@ -70,15 +68,15 @@ export class WebSocketServer {
                     websocket.send(msg);
                 }
             } catch (error) {
-                self.removeClient(id);
-                self.updateUserListOnClients();
+                self._removeClient(id);
+                self._updateUserListOnClients();
 
                 console.log(error);
             }
         });
     }
 
-    private getClientId = (ws: WebSocket): string => {
+    _getClientId(ws) {
         this.clients.forEach((websocket, id) => {
             if (websocket == ws)
                 return id;
@@ -87,9 +85,9 @@ export class WebSocketServer {
         return null;
     }
 
-    private listen = (): void => {
+    _listen() {
         var self = this;
-        this.wss.on('connection', (ws: WebSocket, req: http.IncomingMessage) => {
+        this.wss.on('connection', (ws, req) => {
             const ip = req.connection.remoteAddress || req.headers['x-forwarded-for'];
 
             const location = url.parse(req.url, true);
@@ -99,7 +97,7 @@ export class WebSocketServer {
             let userAgent = req.headers['user-agent'];
             console.log(`connected ${ip} ${userAgent}`);
 
-            let id = <string>location.query['id'];
+            let id = location.query['id'];
             if (id) {
                 console.log(`reconnected [${id}]`);
             } else {
@@ -107,11 +105,11 @@ export class WebSocketServer {
                 console.log(`connected [${id}]`);
             }
 
-            self.registerClient(id, ws);
+            self._registerClient(id, ws);
 
-            self.updateUserListOnClients();
+            self._updateUserListOnClients();
 
-            self.broadcast(['initiator', id], id);
+            self._broadcast(['initiator', id], id);
 
             ws['isAlive'] = true;
             ws.on('pong', () => {
@@ -120,7 +118,7 @@ export class WebSocketServer {
 
             ws.on('message', (message) => {
                 try {
-                    let data = JSON.parse(<string>message);
+                    let data = JSON.parse(message);
                     let type = data[0];
                     if (type !== 'data')
                         return;
@@ -131,7 +129,7 @@ export class WebSocketServer {
                         if (target == id)
                             return;
 
-                        self.send(target, [type, id, data[2]]);
+                        self._send(target, [type, id, data[2]]);
 
                         console.log(`${id} -> ${target} ${data[2].sdp | data[2].candidate}`);
                     }
@@ -146,8 +144,8 @@ export class WebSocketServer {
 
                 let id = ws['id'];
 
-                self.removeClient(id);
-                self.updateUserListOnClients();
+                self._removeClient(id);
+                self._updateUserListOnClients();
             });
 
             ws.on('error', (e) => {
@@ -166,3 +164,5 @@ export class WebSocketServer {
         }, 30000);
     }
 }
+
+module.exports = WebSocketServer;

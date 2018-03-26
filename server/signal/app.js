@@ -1,4 +1,4 @@
-process.on('uncaughtException', (err: Error) => {
+process.on('uncaughtException', (err) => {
     const message = err.message;
     if (message &&
         (message.startsWith('connect E') ||
@@ -8,12 +8,10 @@ process.on('uncaughtException', (err: Error) => {
     console.error(`Uncaught exception: ${message || err}`, err);
 });
 
-import * as cfg from '../../config.json';
-
-import { WebSocketServer } from './websocket';
+const WebSocketServer = require('./websocket');
 
 const initWebSocketServer = (port) => {
     const server = new WebSocketServer(port);
-}
+};
 
-initWebSocketServer((<any>cfg).INTERNAL_PORT);
+initWebSocketServer(3002);

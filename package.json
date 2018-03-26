@@ -3,7 +3,7 @@
   "version": "0.0.1",
   "description": "",
   "scripts": {
-    "start": "node bin/signal/app.js",
+    "start": "node server/signal/app.js",
     "compile": "tsc"
   },
   "dependencies": {

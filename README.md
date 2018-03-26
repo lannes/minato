@@ -59,9 +59,6 @@ sudo nginx -t
 ## **5. RUN APP**
 * Source code
 ```
-+ bin
-|   + signal
-|   + web
 + client
 |   + base
 |   + browser
@@ -69,29 +66,27 @@ sudo nginx -t
 |   + index.html
 |   + package.json
 + server
-|   + singal (for webrtc)
-|   + web (for test localhost)
+|   + signal (for webrtc)
+|   + web (for test localhost, need compile from typescript to js)
 + package.json
 ```    
 * Setup files on server
 ``` 
-    + /home/minato/client
-    |   + base
-    |   + browser
-    |   + nodejs
-    |   + index.html
-    |   + package.json
-    + /home/minato/server
-    |   + bin
-    |   |   + singal   
-    |   |   + web (optional)
-    |   + package.json
++ /home/minato/client
+|   + base
+|   + browser
+|   + nodejs
+|   + index.html
+|   + package.json
++ /home/minato/server
+|   + signal
+|   + package.json
 ```
 * signalserver
 ```sh
 cd /home/minato/server
 npm install
-pm2 start ./bin/signal/app.js --name signalserver
+pm2 start ./signal/app.js --name signalserver
 ```
 * nodejs client
 ```sh
@@ -110,7 +105,7 @@ http {
         ''      close;
     }
 
-    upstream blockchain {
+    upstream signalserver {
         server 127.0.0.1:3002;
     }
 
@@ -125,7 +120,7 @@ http {
         }
 
         location /minato {
-            proxy_pass http://blockchain;
+            proxy_pass http://signalserver;
             #HTTP version 1.1 is needed for sockets
             proxy_http_version 1.1;
             proxy_set_header Upgrade $http_upgrade;
