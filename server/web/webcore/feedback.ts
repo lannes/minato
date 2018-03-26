@@ -104,7 +104,7 @@ export class Feedback {
 
             Feedback.file(response, cache, ext);
         } else {
-            let filepath = path.join(process.cwd(), '/public', filename);
+            let filepath = path.join(process.cwd(), '/' + <string>Mem.get('webdir'), filename);
             fs.readFile(filepath, 'utf8', (err, data) => {
                 if (err) {
                     console.log(filepath);

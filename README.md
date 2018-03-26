@@ -57,16 +57,49 @@ sudo firewall-cmd --reload
 sudo nginx -t
 ```
 ## **5. RUN APP**
-* Setup files
-    * client: /home/minato/client
-    * server: /home/minato/server
-
-* Run app
-```sh
-pm2 start ./bin/app.js --name blockchain
-pm2 start ./bin/app.js --name blockchain --node-args="--nouse-idle-notification --expose-gc -–max-old-space-size=2048 --max-new-space-size=2048"  
+* Source code
 ```
-* Config
++ bin
+|   + signal
+|   + web
++ client
+|   + base
+|   + browser
+|   + nodejs
+|   + index.html
+|   + package.json
++ server
+|   + singal (for webrtc)
+|   + web (for test localhost)
++ package.json
+```    
+* Setup files on server
+``` 
+    + /home/minato/client
+    |   + base
+    |   + browser
+    |   + nodejs
+    |   + index.html
+    |   + package.json
+    + /home/minato/server
+    |   + bin
+    |   |   + singal   
+    |   |   + web (optional)
+    |   + package.json
+```
+* signalserver
+```sh
+cd /home/minato/server
+npm install
+pm2 start ./bin/signal/app.js --name signalserver
+```
+* nodejs client
+```sh
+cd /home/minato/client
+npm install
+pm2 start ./nodejs/app.js --name blockchain
+```
+* browser client
 ```sh
 sudo vi /etc/nginx/nginx.conf
 ```
@@ -187,47 +220,35 @@ IMPORTANT NOTES:
     }
 ```
 ## **7. WEBRTC**
-* Overview
 
-|          A            |    signaling    |          B              |
-|-----------------------|:---------------:|-------------------------|
-|creates peerconnection |                 |                         |
-|creates datachannel    |                 |                         |
-|creates offer          |                 |                         |
-|                       |---- offer ----> |                         |
-|                       |                 |creates peerconnection   |
-|                       |                 |creates datachannel      |
-|                       |                 |creates answer with offer|
-|                       |<---- answer ----|                         |
-|processing Answer      |                 |                         |
-|datachannel opens      |                 |datachannel opens        |
+## **8. TURN SERVER**
+```sh
+yum install -y make gcc cc gcc-c++ wget
+yum install -y openssl-devel libevent libevent-devel mysql-devel mysql-server
 
-* Detail
+wget https://github.com/downloads/libevent/libevent/libevent-2.0.21-stable.tar.gz
+tar xvfz libevent-2.0.21-stable.tar.gz
+cd libevent-2.0.21-stable && ./configure
+make && make install && cd ..
 
-|          A               |    signaling    |          B                 |
-|--------------------------|:---------------:|----------------------------|
-|create peerconnection     |                 |                            |
-|create datachannel        |                 |                            |
-|create offer              |                 |                            |
-|(callback) offer created  |                 |                            |
-|setLocalDescription(offer)|                 |                            |
-|                          |---- offer ----> |                            |
-|                          |                 |create peerconnection       |
-|                          |                 |create datachannel          |
-|                          |                 |setRemoteDescription(offer) |
-|                          |                 |create answer               |
-|                          |                 |(callback) answer created   |
-|                          |                 |setRemoteDescription(answer)|
-|                          |<---- answer ----|                            |
-|processing Answer         |                 |                            |
-|                          |                 |(event) onicecandidate      |
-|                          |<-ice candidate--|                            |
-|                          |<-ice candidate--|                            |
-|                          |<-ice candidate--|                            |
-|processIce                |                 |                            |
-|(event) onicecandidate    |                 |                            |
-|                          |--ice candidate->|                            |
-|                          |--ice candidate->|                            |
-|                          |--ice candidate->|                            |
-|                          |                 |processIce                  |
-|datachannel opens         |                 |datachannel opens           |
+wget http://turnserver.open-sys.org/downloads/v3.2.4.1/turnserver-3.2.4.1.tar.gz
+tar -xvzf turnserver-3.2.4.1.tar.gz
+cd turnserver-3.2.4.1
+./configure
+make
+make install
+
+cd /etc
+mkdir turnserver && cd turnserver
+vi turnserver.conf
+
+user=minato:hakoge4
+listening-port=19302
+listening-ip=
+
+/etc/turnuserdb.conf
+
+$ turnserver [-n | -c <config-file> ] [flags] [ --userdb=<userdb-file> | --psql-userdb=<db-conn-string> | --mysql-userdb=<db-conn-string>  | --mongo-userdb=<db-conn-string>  | --redis-userdb=<db-conn-string> ] [-z | --no-auth | -a | --lt-cred-mech ] [options]
+
+turnserver -v -r ip:19302 -a -b turnuserdb.conf -c turnserver.conf -u minato -r ip:19302 -p hokage4
+```

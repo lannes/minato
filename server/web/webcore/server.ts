@@ -3,6 +3,7 @@ import * as url from 'url';
 import * as path from 'path';
 import * as http from 'http';
 
+import Mem from './memory';
 import { Router } from './router';
 import { Cookie } from './cookie';
 import { Feedback } from './feedback';
@@ -10,8 +11,13 @@ import { Feedback } from './feedback';
 export class Server {
     private _router: Router;
 
-    constructor() {
+    constructor(dirname?: string) {
         this._router = new Router(this);
+
+        if (dirname)
+            Mem.set('webdir', dirname);
+        else
+            Mem.set('webdir', 'public');
 
         this._router.get('/robots.txt', (request, response) => {
             response.setHeader('Content-Type', 'text/plain');

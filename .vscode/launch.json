@@ -11,7 +11,7 @@
             "program": "${workspaceFolder}/bin/main.js",
             //"preLaunchTask": "compile",
             "outFiles": [
-                "${workspaceFolder}/lib/**/*.js"
+                "${workspaceFolder}/bin/**/*.js"
             ]
         }
     ]

@@ -1,5 +1,5 @@
 
-const KNetwork = require('../base/core/network/network');
+const KNetwork = require('../base/network/network');
 
 class KApp {
     constructor() {

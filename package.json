@@ -3,15 +3,11 @@
   "version": "0.0.1",
   "description": "",
   "scripts": {
-    "start": "node bin/app.js",
+    "start": "node bin/signal/app.js",
     "compile": "tsc"
   },
   "dependencies": {
-    "leveldown": "^3.0.0",
-    "levelup": "^2.0.2",
-    "elliptic": "^6.4.0",
-    "ws": "^5.1.0",
-    "wrtc": "^0.0.67"
+    "ws": "^5.1.0"
   },
   "devDependencies": {
     "@types/node": "^9.6.0",

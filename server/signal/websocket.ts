@@ -2,7 +2,7 @@ import * as http from 'http';
 import * as url from 'url';
 import * as WebSocket from 'ws';
 
-import { UUID } from './webcore/uuid';
+import { UUID } from './uuid';
 
 export class WebSocketServer {
     private wss: WebSocket.Server;
