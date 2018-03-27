@@ -67,11 +67,12 @@ sudo nginx -t
 |   + package.json
 + server
 |   + signal (for webrtc)
-|   + web (for test localhost, need compile from typescript to js)
-+ package.json
+|   + web (for test browser at localhost, need compile from typescript to js)
+|   + package.json
+|   + tsconfig.json (typescript config)
 ```    
 * Setup files on server
-``` 
+```
 + /home/minato/client
 |   + base
 |   + browser
@@ -82,7 +83,7 @@ sudo nginx -t
 |   + signal
 |   + package.json
 ```
-* signalserver
+* signalserver (port 3002)
 ```sh
 cd /home/minato/server
 npm install
@@ -125,6 +126,11 @@ http {
             proxy_http_version 1.1;
             proxy_set_header Upgrade $http_upgrade;
             proxy_set_header Connection $connection_upgrade;
+        }
+
+        location /nodejs {
+            deny all;
+            return 404;
         }
 
         error_page 404 /404.html;
