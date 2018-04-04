@@ -2,7 +2,6 @@
 if (typeof require !== 'undefined') {
     global.WebSocket = require('ws');
     global.webrtc = require('wrtc');
-    global.KNumberUtil = require('../util/number');
 
     global.RTCPeerConnection = webrtc.RTCPeerConnection;
     global.RTCSessionDescription = webrtc.RTCSessionDescription;
@@ -10,8 +9,6 @@ if (typeof require !== 'undefined') {
 } else {
     window.WebSocket = window.WebSocket || window.MozWebSocket;
 }
-
-const CHUNK_SIZE = 16 * 1024;
 
 //const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
 //const isFirefox = typeof InstallTrigger !== 'undefined';
@@ -21,7 +18,6 @@ class KNetwork {
         this.pcs = {};
         this.dataChannels = {};
         this.channelCount = 0;
-        this.chunks = {};
         this.timeouts = {};
         this.timeoutTime = 2 * 1000;
         this.id = '';
@@ -80,42 +76,8 @@ class KNetwork {
     }
 
     send(id, msg) {
-        const nChunks = Math.floor(msg.length / CHUNK_SIZE);
-        const remainder = msg.length - (nChunks * CHUNK_SIZE);
-
-        const arrLength = new Uint8Array(KNumberUtil.numberToByteArray(msg.length));
-        let result = this._sendChunk(id, arrLength);
-
-        for (let i = 0; i < nChunks; i++) {
-            const chunk = msg.substr(i * CHUNK_SIZE, CHUNK_SIZE);
-            result = this._sendChunk(id, chunk);
-            if (!result)
-                break;
-        }
-
-        if (result && remainder > 0) {
-            result = this._sendChunk(id, msg.substr(nChunks * CHUNK_SIZE, remainder));
-        }
-
-        return result;
-    }
-
-    _sendChunk(id, msg) {
-        if (this.dataChannels[id]) {
-            if (this.dataChannels[id].readyState === 'open') {
-                try {
-                    this.dataChannels[id].send(msg);
-
-                    return true;
-                } catch (e) {
-                    console.log(e);
-                }
-            }
-        } else {
-            this._disconnect(id);
-        }
-
-        return false;
+        if (this.dataChannels[id])
+            this.dataChannels[id].send(msg);
     }
 
     _signaling(event) {
@@ -165,8 +127,10 @@ class KNetwork {
         }
     }
 
-    _setupDataChannel(id) {
-        this.dataChannels[id].onopen = () => {
+    _setupDataChannel(id, nativeChannel) {
+        const channel = new WebRtcDataChannel(nativeChannel);
+
+        channel.on('open', (message) => {
             console.log('dataChannel open [%s]', id);
 
             this.channelCount++;
@@ -174,34 +138,13 @@ class KNetwork {
 
             if (this.timeouts[id])
                 clearTimeout(this.timeouts[id]);
-        };
+        });
 
-        this.dataChannels[id].onmessage = (event) => {
-            let data = event.data;
+        channel.on('message', (message) => this.onmessage(id, message));
+        channel.on('close', () => this._disconnect(id));
+        channel.on('error', (e) => console.log(e));
 
-            if (typeof (data) === 'string') {
-                this.chunks[id].data += data;
-
-                const percent = (this.chunks[id].data.length * 100) / this.chunks[id].size;
-                this.onprogress(id, Math.floor(percent));
-
-                if (this.chunks[id].data.length === this.chunks[id].size) {
-                    this.onmessage(id, this.chunks[id].data);
-                }
-            } else {
-                const bytes = new Uint8Array(data);
-                const size = KNumberUtil.byteArrayToNumber(bytes);
-                this.chunks[id] = { size: size, data: '' };
-            }
-        };
-
-        this.dataChannels[id].onerror = (error) => {
-            console.log('dataChannel error ', error);
-        };
-
-        this.dataChannels[id].onclose = (event) => {
-            console.log('dataChannel close [%s]', id);
-        };
+        this.dataChannels[id] = channel;
     }
 
     _initPeerConnection(id, creator) {
@@ -263,9 +206,10 @@ class KNetwork {
         this._initPeerConnection(id, false);
 
         this.pcs[id].pc.ondatachannel = (event) => {
-            this.dataChannels[id] = event.channel;
-            this.dataChannels[id].binaryType = 'arraybuffer';
-            this._setupDataChannel(id);
+            let channel = event.channel;
+            channel.binaryType = 'arraybuffer';
+
+            this._setupDataChannel(id, channel);
         };
     }
 
@@ -275,10 +219,10 @@ class KNetwork {
         let self = this;
         let pc = this.pcs[id].pc;
 
-        this.dataChannels[id] = pc.createDataChannel(id);
-        this.dataChannels[id].binaryType = 'arraybuffer';
+        let channel = pc.createDataChannel(id);
+        channel.binaryType = 'arraybuffer';
 
-        this._setupDataChannel(id);
+        this._setupDataChannel(id, channel);
 
         pc.createOffer().then((offer) => {
             return pc.setLocalDescription(offer);

@@ -6,7 +6,7 @@ let EC = null;
 if (typeof require !== 'undefined') {
     const ec = require('elliptic').ec;
     EC = new ec('secp256k1');
-    
+
     global.KBuffer = require('../util/buffer');
 } else {
     EC = new elliptic.ec('secp256k1');
@@ -22,23 +22,24 @@ class KElliptic {
     }
 
     static generatePublicData(publicKey) {
-        return publicKey.encode('hex');
+        return publicKey.encode('bin');
     }
 
     static generatePrivateData(privateKey) {
-        return privateKey.toString(16);
+        return privateKey.toArray();
     }
 
     static importPublicKey(publicData) {
-        return EC.keyFromPublic(publicData, 'hex');
+        //return EC.keyFromPublic(Array.from(publicData));
+        return EC.keyFromPublic(publicData);
     }
 
     static importPrivateKey(privateData) {
-        return EC.keyFromPrivate(privateData, 'hex');
+        return EC.keyFromPrivate(privateData, 'bin');
     }
 
     static sign(privateKey, data) {
-        return KBuffer.buffer2hex(privateKey.sign(data).toDER());
+        return privateKey.sign(data).toDER();
     }
 
     static verify(publicKey, signature, data) {

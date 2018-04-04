@@ -1,4 +1,4 @@
-const formatBalance = (n) => {
+const formatNumber = (n) => {
     let result = n.toFixed(0).replace(/./g, (c, i, a) => {
         return i > 0 && c !== '.' && (a.length - i) % 3 === 0 ? ',' + c : c;
     });
@@ -32,11 +32,6 @@ class KApp {
         this.isMining = false;
 
         this.node = new Worker('./browser/worker/node.js');
-        this.miner = new Worker('./browser/worker/miner.js');
-        this.channel = new MessageChannel();
-
-        this.node.postMessage({ 'cmd': 'connect' }, [this.channel.port1]);
-        this.miner.postMessage({ 'cmd': 'connect' }, [this.channel.port2]);
 
         this.node.onmessage = this._onmessage.bind(this);
 
@@ -95,11 +90,13 @@ class KApp {
                 $('#lblMyHashrate').text(hashrate);
             }
                 break;
-            case 'height':
-                $('#lblBlock').text(data['msg']);
+            case 'height': {
+                const height = formatNumber(data['msg']);
+                $('#lblBlock').text(height);
+            }
                 break;
             case 'balance': {
-                const balance = formatBalance(data['msg']);
+                const balance = formatNumber(data['msg']);
                 $('#lblBalance').text(balance);
                 $('#lblAmount').text(balance);
             }
@@ -111,9 +108,9 @@ class KApp {
                 const id = data['msg'][0];
                 const msg = data['msg'][1];
                 if (id === 0)
-                    this.network.broadcast(JSON.stringify(msg));
+                    this.network.broadcast(msg);
                 else
-                    this.network.send(id, JSON.stringify(msg));
+                    this.network.send(id, msg);
             }
                 break;
         }
@@ -129,8 +126,6 @@ class KApp {
                 { 'urls': 'stun:stun.l.google.com:19302' }
             ]
         };
-
-        //this.webp2p = new WebRTC(signalingServer, configuration);
 
         this.network = new KNetwork(signalingServer, configuration);
 
@@ -148,11 +143,10 @@ class KApp {
         };
 
         this.network.onmessage = (id, message) => {
-            //console.log('received from: ' + id + ' ' + message);
+            //console.log(`received from: ${id} ${message}`);
 
             try {
-                let data = JSON.parse(message);
-                this.node.postMessage({ 'cmd': 'network', 'id': id, 'type': 'data', 'msg': data });
+                this.node.postMessage({ 'cmd': 'network', 'id': id, 'type': 'data', 'msg': message });
             } catch (e) {
                 console.log(e);
                 console.log(message);

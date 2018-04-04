@@ -1,17 +1,23 @@
 if (typeof require !== 'undefined') {
     global.KElliptic = require('../crypto/elliptic');
     global.KDatabase = require('../../nodejs/util/db');
+    global.Transaction = require('./transaction/Transaction');
+    global.TransactionOuput = require('./transaction/TransactionOutput');
 }
 
 var minato = minato || {};
 
 class Wallet {
+    constructor() {
+
+    }
+
     static getPrivateFromWallet() {
         return minato.privateKey;
     }
 
     static getPublicFromWallet() {
-        return minato.address;
+        return new Address(new Uint8Array(minato.address));
     }
 
     static async initWallet() {
@@ -36,59 +42,40 @@ class Wallet {
         await KDatabase.delete('hokage');
     }
 
-    static isValidAddress(address) {
-        if (address.length !== 130) {
-            return false;
-        } else if (address.match('^[a-fA-F0-9]+$') === null) {
-            return false;
-        } else if (!address.startsWith('04')) {
-            return false;
-        }
-
-        return true;
-    }
-
-    static findTxOutsForAmount(amount, myUnspentTxOuts) {
+    static findTxOutsForAmount(amount, unspentTxOuts) {
         let currentAmount = 0;
-        const includedUnspentTxOuts = [];
-        for (const myUnspentTxOut of myUnspentTxOuts) {
+        let includedUnspentTxOuts = [];
+        for (const myUnspentTxOut of unspentTxOuts) {
             includedUnspentTxOuts.push(myUnspentTxOut);
-            currentAmount = currentAmount + myUnspentTxOut['amount'];
+            currentAmount = currentAmount + myUnspentTxOut.amount;
+
             if (currentAmount >= amount) {
                 const leftOverAmount = currentAmount - amount;
                 return { includedUnspentTxOuts, leftOverAmount }
             }
         }
 
-        throw Error('not enough coins to send transaction');
+        throw new Error('not enough coins to send transaction');
     }
 
     static createTxOuts(receiverAddress, myAddress, amount, leftOverAmount) {
-        const txOut1 = {
-            'address': receiverAddress,
-            'amount': amount
-        };
+        const txOut1 = new TransactionOutput(receiverAddress, amount);
 
         if (leftOverAmount === 0) {
             return [txOut1];
         } else {
-            const leftOverTx = {
-                'address': myAddress,
-                'amount': leftOverAmount
-            };
+            const leftOverTx = new TransactionOuput(myAddress, leftOverAmount);
             return [txOut1, leftOverTx];
         }
     }
 
     static filterTxPoolTxs(unspentTxOuts, transactionPool) {
-        const txIns = transactionPool
-            .map((tx) => tx['txIns'])
-            .reduce((a, b) => a.concat(b), []);
+        const txIns = transactionPool.reduce((sum, tx) => sum.concat(tx.txIns), []);
 
         const removable = [];
         for (const unspentTxOut of unspentTxOuts) {
-            const txIn = txIns.find((aTxIn) => {
-                return aTxIn['txOutIndex'] === unspentTxOut['txOutIndex'] && aTxIn['txOutId'] === unspentTxOut['txOutId'];
+            const txIn = txIns.find((tx) => {
+                return tx.txOutIndex === unspentTxOut.txOutIndex && ArrayUtils.equals(tx.txOutId, unspentTxOut.txOutId);
             });
 
             if (txIn === undefined) {
@@ -102,32 +89,26 @@ class Wallet {
 
     static createTransaction(receiverAddress, amount, privateKey, unspentTxOuts, txPool) {
         const myAddress = Wallet.getPublicFromWallet();
-        const myUnspentTxOutsA = unspentTxOuts.filter((uTxO) => uTxO['address'] === myAddress);
+        const myUnspentTxOutsA = unspentTxOuts.filter((tx) => tx.address.equals(myAddress));
 
         const myUnspentTxOuts = Wallet.filterTxPoolTxs(myUnspentTxOutsA, txPool);
 
         // filter from unspentOutputs such inputs that are referenced in pool
         const { includedUnspentTxOuts, leftOverAmount } = Wallet.findTxOutsForAmount(amount, myUnspentTxOuts);
 
-        const unsignedTxIns = includedUnspentTxOuts.map((unspentTxOut) => {
-            return {
-                'txOutId': unspentTxOut.txOutId,
-                'txOutIndex': unspentTxOut.txOutIndex,
-                'signature': ''
-            };
+        const unsignedTxIns = includedUnspentTxOuts.map((tx) => {
+            return new TransactionInput(null, tx.txOutId, tx.txOutIndex);
         });
 
-        const tx = {
-            'id': '',
-            'txIns': unsignedTxIns,
-            'txOuts': Wallet.createTxOuts(receiverAddress, myAddress, amount, leftOverAmount)
-        };
-        tx['id'] = Transaction.getTransactionId(tx);
+        const tx = new Transaction(
+            null,
+            unsignedTxIns,
+            Wallet.createTxOuts(receiverAddress, myAddress, amount, leftOverAmount)
+        );
 
-        tx['txIns'] = tx['txIns'].map((txIn, index) => {
-            txIn['signature'] = Transaction.signTxIn(tx, index, privateKey, unspentTxOuts);
-            return txIn;
-        });
+        // FIX ME
+        tx._id = tx.getId();
+        tx.signTxIn(privateKey, unspentTxOuts);
 
         return tx;
     }

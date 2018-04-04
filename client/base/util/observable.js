@@ -1,32 +1,41 @@
 class Observable {
     constructor() {
-        this.listeners = new Map();
+        this._listeners = new Map();
     }
 
-    on(type, observer) {
-        if (this.listeners.has(type)) {
-            return this.listeners.get(type).push(observer);
+    on(type, callback) {
+        if (!this._listeners.has(type)) {
+            this._listeners.set(type, [callback]);
+            return 0;
+        } else {
+            return this._listeners.get(type).push(callback) - 1;
         }
-
-        this.listeners.set(type, [observer]);
-        return 1;
     }
 
     off(type, id) {
-        if (!this.listeners.has(type) || !this.listeners.get(type)[id])
+        if (!this._listeners.has(type) || !this._listeners.get(type)[id])
             return;
-        delete this.listeners.get(type)[id];
+        delete this._listeners.get(type)[id];
     }
 
-    notify(type, message) {
-        if (this.listeners.has(type)) {
-            for (const id in this.listeners.get(type)) {
-                const listener = this.listeners.get(type)[id];
-                listener(message);
+    notify(type, ...args) {
+        const promises = [];
+
+        if (this._listeners.has(type)) {
+            for (const id in this._listeners.get(type)) {
+                const listener = this._listeners.get(type)[id];
+                const result = listener.apply(null, args);
+                if (result instanceof Promise)
+                    promises.push(result);
             }
         }
+
+        if (promises.length > 0)
+            return Promise.all(promises);
+
+        return null;
     }
-} 
+}
 
 if (typeof module !== 'undefined')
     module.exports = Observable;

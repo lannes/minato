@@ -1,0 +1,76 @@
+if (typeof require !== 'undefined') {
+    global.Observable = require('../../util/Observable');
+}
+
+class MinerWorker extends Observable {
+    constructor() {
+        super();
+
+        this._miningEnabled = false;
+        this._activeNonces = [];
+        this._noncesPerRun = 256;
+        this._cycleWait = 100;
+    }
+
+    startMiningOnBlock(block, difficult) {
+        this._block = block;
+        this._difficult = difficult;
+
+        this._activeNonces = [];
+        this._miningEnabled = true;
+
+        this._startMiner();
+    }
+
+    get noncesPerRun() {
+        return this._noncesPerRun;
+    }
+
+    set noncesPerRun(nonces) {
+        this._noncesPerRun = nonces;
+    }
+
+    get working() {
+        return this._miningEnabled;
+    }
+
+    stop() {
+        this._miningEnabled = false;
+    }
+
+    _startMiner() {
+        const minNonce = this._activeNonces.length === 0 ? 0 : Math.max.apply(null, this._activeNonces.map((a) => a.maxNonce));
+        const maxNonce = minNonce + this._noncesPerRun;
+        const nonceRange = { minNonce, maxNonce };
+        this._activeNonces.push(nonceRange);
+
+        this._mineBlock(nonceRange);
+    }
+
+    _mineBlock(nonceRange) {
+        const block = this._block;
+        let blockHeader = new KBuffer(block.header.serialize());
+
+        if (this._miningEnabled) {
+            let result = MinerWorkerImpl.mine(blockHeader, this._difficult, nonceRange.minNonce, nonceRange.maxNonce);
+            if (result) {
+                this.notify('share', { block: block, nonce: result.nonce, hash: result.hash });
+                return;
+            } else {
+                this.notify('no-share', { nonce: nonceRange.maxNonce });
+            }
+
+            const newMin = Math.max.apply(null, this._activeNonces.map((a) => a.maxNonce));
+            const newRange = { minNonce: newMin, maxNonce: newMin + this._noncesPerRun };
+            this._activeNonces.splice(this._activeNonces.indexOf(nonceRange), 1, newRange);
+            nonceRange = newRange;
+        }
+
+        if (this._miningEnabled) {
+            setTimeout(() => this._mineBlock(nonceRange), this._cycleWait);
+        }
+    }
+}
+
+if (typeof module !== 'undefined')
+    module.exports = MinerWorker;
