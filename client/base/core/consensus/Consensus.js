@@ -26,7 +26,7 @@ class Consensus extends Observable {
         this._blockchain.on('push-block', (result) => {
             if (result !== null) {
                 this._unspentTxOuts = result;
-                this._mempool.update(self._unspentTxOuts);
+                this._mempool.update(result);
                 this.notify('broadcast', this._blocks(1));
             }
         });
