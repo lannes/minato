@@ -2,14 +2,24 @@ if (typeof require !== 'undefined') {
     global.Observable = require('../../util/Observable');
 }
 
-class MinerWorker extends Observable {
+class MinerWorker extends MinerWorkerImpl {
     constructor() {
         super();
+
+        this._observable = new Observable();
 
         this._miningEnabled = false;
         this._activeNonces = [];
         this._noncesPerRun = 256;
         this._cycleWait = 100;
+    }
+
+    on(type, callback) {
+        this._observable.on(type, callback);
+    }
+
+    off(type, id) {
+        this._observable.off(type, id);
     }
 
     startMiningOnBlock(block, difficult) {
@@ -54,10 +64,10 @@ class MinerWorker extends Observable {
         if (this._miningEnabled) {
             let result = MinerWorkerImpl.mine(blockHeader, this._difficult, nonceRange.minNonce, nonceRange.maxNonce);
             if (result) {
-                this.notify('share', { block: block, nonce: result.nonce, hash: result.hash });
+                this._observable.notify('share', { block: block, nonce: result.nonce, hash: result.hash });
                 return;
             } else {
-                this.notify('no-share', { nonce: nonceRange.maxNonce });
+                this._observable.notify('no-share', { nonce: nonceRange.maxNonce });
             }
 
             const newMin = Math.max.apply(null, this._activeNonces.map((a) => a.maxNonce));

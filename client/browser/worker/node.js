@@ -15,6 +15,7 @@ importScripts(
     '../../base/core/transaction/TransactionInput.js?v=0.1',
     '../../base/core/transaction/TransactionOutput.js?v=0.1',
     '../../base/core/transaction/UnspentTransactionOutput.js?v=0.1',
+    '../../base/core/transaction/UnspentTransactionOutputPool.js?v=0.1',
     '../../base/core/transaction/Transaction.js?v=0.2',
     '../../base/core/transaction/TransactionPool.js?v=0.2',
     '../../base/core/block/BlockBody.js?v=0.1',
@@ -40,12 +41,12 @@ importScripts(
 class KNodeWorker {
     constructor() {
         this._pool = new TransactionPool([]);
-        this._unspentTxOuts = Transaction.process(GenesisConfig.GENESIS_BLOCK.transactions, [], 0);
+        this._uTxOPool = new UnspentTransactionOutputPool();
 
         this._blockchain = new Blockchain([GenesisConfig.GENESIS_BLOCK]);
-        this._consensus = new Consensus(this._blockchain, this._pool, this._unspentTxOuts);
+        this._consensus = new Consensus(this._blockchain, this._pool, this._uTxOPool);
 
-        this._miner = new Miner(this._blockchain, this._pool, this._unspentTxOuts);
+        this._miner = new Miner(this._blockchain, this._pool, this._uTxOPool);
 
         this._miner.on('hashrate', (value) => this._send({
             'cmd': 'hashrate', 'msg': value

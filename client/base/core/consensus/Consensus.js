@@ -14,19 +14,19 @@ const SyncType = {
 };
 
 class Consensus extends Observable {
-    constructor(blockchain, pool, unspentTxOuts) {
+    constructor(blockchain, pool, uTxOPool) {
         super();
         this.isSync = true;
 
-        this._mempool = pool;
         this._blockchain = blockchain;
-        this._unspentTxOuts = unspentTxOuts;
+        this._mempool = pool;
+        this._uTxOPool = uTxOPool;
 
         let self = this;
-        this._blockchain.on('push-block', (result) => {
-            if (result !== null) {
-                this._unspentTxOuts = result;
-                this._mempool.update(result);
+        this._blockchain.on('push-block', (unspentTxOuts) => {
+            if (unspentTxOuts !== null) {
+                this._uTxOPool.update(unspentTxOuts);
+                this._mempool.update(unspentTxOuts);
                 this.notify('broadcast', this._blocks(1));
             }
         });
@@ -37,11 +37,11 @@ class Consensus extends Observable {
             address,
             amount,
             Wallet.getPrivateFromWallet(),
-            this._unspentTxOuts,
+            this._uTxOPool.transaction,
             this._mempool.transactions
         );
 
-        this._mempool.add(tx, this._unspentTxOuts);
+        this._mempool.add(tx, this._uTxOPool.transactions);
     }
 
     _send(message) {
@@ -76,19 +76,20 @@ class Consensus extends Observable {
         return this._send(new PoolMessage(this._mempool.transactions));
     }
 
-    _addBlockchain(blocks) {
-        const unspentTxOuts = this._blockchain.replaceChain(blocks);
+    _addBlocks(blocks) {
+        let unspentTxOuts = this._blockchain.replaceChain(blocks);
         if (unspentTxOuts !== null) {
-            this._unspentTxOuts = unspentTxOuts;
-            this._mempool.update(this._unspentTxOuts);
+            this._uTxOPool.update(unspentTxOuts);
+            this._mempool.update(unspentTxOuts);
             this.notify('broadcast', this._blocks(1));
+            return true;
         }
 
-        return unspentTxOuts;
+        return false;
     }
 
     _getBalance() {
-        return Account.getMyBalance(this._unspentTxOuts);
+        return Account.getMyBalance(this._uTxOPool.transactions);
     }
 
     _checkReceivedBlocks(id, blocks) {
@@ -129,7 +130,7 @@ class Consensus extends Observable {
         } else {
             this.notify('sync', { 'id': id, 'state': SyncType.DOWNLOAD_BLOCKCHAIN_FINISHED });
 
-            if (this._addBlockchain(blocks))
+            if (this._addBlocks(blocks))
                 this.notify('balance', this._getBalance());
 
             this.notify('sync', { 'id': id, 'state': SyncType.DOWNLOAD_TRANSACTION_STARTED });
@@ -172,10 +173,8 @@ class Consensus extends Observable {
                 }
 
                 for (let i = 0; i < transactions.length; i++) {
-                    let transaction = transactions[i];
                     try {
-                        this._mempool.add(transaction, this._unspentTxOuts);
-                        this.notify('broadcast', this._pool());
+                        this._mempool.add(transactions[i], this._uTxOPool.transactions);
                     } catch (e) {
                         console.log(e.message);
                     }
@@ -185,10 +184,6 @@ class Consensus extends Observable {
             }
                 break;
         }
-    }
-
-    get unspentTxOuts() {
-        return this._unspentTxOuts;
     }
 
     start(id) {

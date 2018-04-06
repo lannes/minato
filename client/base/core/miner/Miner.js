@@ -5,12 +5,12 @@ if (typeof require !== 'undefined') {
 }
 
 class Miner extends Observable {
-    constructor(blockchain, pool, unspentTxOuts) {
+    constructor(blockchain, pool, uTxOPool) {
         super();
 
         this._blockchain = blockchain;
         this._pool = pool;
-        this._unspentTxOuts = unspentTxOuts;
+        this._uTxOPool = uTxOPool;
 
         this._hashCount = 0;
         this._hashrate = 0;
@@ -41,7 +41,7 @@ class Miner extends Observable {
                 if (obj.block.header.verifyProofOfWork()) {
                     this._submittingBlock = true;
 
-                    const unspentTxOuts = await this._blockchain.pushBlock(obj.block, this._unspentTxOuts);
+                    const unspentTxOuts = await this._blockchain.pushBlock(obj.block, this._uTxOPool.transactions);
                     if (unspentTxOuts !== null) {
                         this._submittingBlock = false;
                         this._startWork();

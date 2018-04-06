@@ -139,7 +139,7 @@ class Transaction {
     }
 
     static findUnspentTxOut(transactionId, index, unspentTxOuts) {
-        return unspentTxOuts.find((it) => it.txOutId === transactionId && it.txOutIndex === index);
+        return unspentTxOuts.find((tx) => ArrayUtils.equals(tx.txOutId, transactionId) && tx.txOutIndex === index);
     }
 
     static getTxInAmount(txIn, unspentTxOuts) {
@@ -228,9 +228,7 @@ class Transaction {
         }
 
         // check for duplicate txIns. Each txIn can be included only once
-        const txIns = transactions
-            .map((tx) => tx.txIns)
-            .reduce((arr, value) => arr.concat(value), []);
+        const txIns = transactions.reduce((arr, tx) => arr.concat(tx.txIns), []);
 
         if (Transaction.hasDuplicates(txIns)) {
             return false;

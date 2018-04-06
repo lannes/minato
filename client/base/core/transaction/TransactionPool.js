@@ -12,7 +12,7 @@ class TransactionPool {
         if (!obj)
             return obj;
 
-        const transactions = obj.transactions.map(it => Transaction.clone(it));
+        const transactions = obj.transactions.map(tx => Transaction.clone(tx));
         return new TransactionPool(transactions);
     }
 
@@ -56,7 +56,9 @@ class TransactionPool {
     }
 
     _containsTxIn(txIns, txIn) {
-        const tmp = txIns.find(tx => txIn.txOutIndex === tx.txOutIndex && txIn.txOutId === tx.txOutId);
+        const tmp = txIns.find(
+            tx => txIn.txOutIndex === tx.txOutIndex && ArrayUtils.equals(txIn.txOutId, tx.txOutId)
+        );
         return tmp !== undefined;
     }
 
@@ -87,7 +89,7 @@ class TransactionPool {
 
     hasTxIn(txIn, unspentTxOuts) {
         const foundTxIn = unspentTxOuts.find((tx) => {
-            return tx.txOutId === txIn.txOutId && tx.txOutIndex === txIn.txOutIndex;
+            return ArrayUtils.equals(tx.txOutId, txIn.txOutId) && tx.txOutIndex === txIn.txOutIndex;
         });
 
         return foundTxIn !== undefined;

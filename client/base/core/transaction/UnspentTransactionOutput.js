@@ -17,7 +17,7 @@ class UnspentTransactionOutput {
 
     equals(obj) {
         return obj instanceof UnspentTransactionOutput
-            && this._txOutId.equals(obj.txOutId)
+            && ArrayUtils.equals(this._txOutId, obj.txOutId)
             && this._txOutIndex === obj.txOutIndex
             && this._address.equals(obj.address)
             && this._amount === obj.amount

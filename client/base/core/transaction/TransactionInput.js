@@ -123,8 +123,7 @@ class TransactionInput {
 
         const address = referencedUTxOut.address;
         const publicKey = KElliptic.importPublicKey(address.value);
-        const validSignature = KElliptic.verify(publicKey, this._signature, id);
-        if (!validSignature) {
+        if (!KElliptic.verify(publicKey, this._signature, id)) {
             console.log('invalid txIn signature: %s txId: %s address: %s',
                 this._signature, id, referencedUTxOut.address);
             return false;
