@@ -10,11 +10,11 @@ if (typeof require !== 'undefined') {
 
 class Transaction {
     constructor(id, txIns, txOuts) {
-        if (id && !(id instanceof Uint8Array))
+        if (!(id instanceof Hash))
             throw Error('Invalid id');
-        if (!Array.isArray(txIns) || txIns.some(it => !(it instanceof TransactionInput)))
+        if (!Array.isArray(txIns) || txIns.some(tx => !(tx instanceof TransactionInput)))
             throw Error('Invalid transactions input');
-        if (!Array.isArray(txOuts) || txOuts.some(it => !(it instanceof TransactionOutput)))
+        if (!Array.isArray(txOuts) || txOuts.some(tx => !(tx instanceof TransactionOutput)))
             throw Error('Invalid transactions output');
 
         this._id = id;
@@ -26,10 +26,11 @@ class Transaction {
         if (!obj)
             return obj;
 
-        const txIns = obj.txIns.map(it => TransactionInput.clone(it));
-        const txOuts = obj.txOuts.map(it => TransactionOutput.clone(it));
+        const id = Hash.clone(obj.id);
+        const txIns = obj.txIns.map(tx => TransactionInput.clone(tx));
+        const txOuts = obj.txOuts.map(tx => TransactionOutput.clone(tx));
 
-        return new Transaction(obj.id, txIns, txOuts);
+        return new Transaction(id, txIns, txOuts);
     }
 
     equals(obj) {
@@ -54,7 +55,7 @@ class Transaction {
 
     serialize(buf) {
         buf = buf || new KBuffer(this.serializeSize);
-        buf.write(this._id);
+        this._id.serialize(buf);
 
         buf.writeUint16(this._txIns.length);
         for (const tx of this._txIns) {
@@ -70,7 +71,7 @@ class Transaction {
     }
 
     static deserialize(buf) {
-        const id = buf.read(32);
+        const id = Hash.deserialize(buf);
 
         const sizeOftxIns = buf.readUint16();
         const txIns = new Array(sizeOftxIns);
@@ -88,7 +89,7 @@ class Transaction {
     }
 
     get serializeSize() {
-        let size = 32 /* id */
+        let size = this._id.serializeSize /* id */
             + 2 /* size of txIns */
             + 2 /* size of txOuts */;
 
@@ -135,11 +136,11 @@ class Transaction {
     }
 
     getId() {
-        return KHash.sha256(this.serializeContent());
+        return new Hash(KHash.sha256(this.serializeContent()));
     }
 
-    static findUnspentTxOut(transactionId, index, unspentTxOuts) {
-        return unspentTxOuts.find((tx) => ArrayUtils.equals(tx.txOutId, transactionId) && tx.txOutIndex === index);
+    static findUnspentTxOut(txId, index, unspentTxOuts) {
+        return unspentTxOuts.find((tx) => txId.equals(tx.txOutId) && tx.txOutIndex === index);
     }
 
     static getTxInAmount(txIn, unspentTxOuts) {
@@ -147,14 +148,14 @@ class Transaction {
     }
 
     verify(unspentTxOuts) {
-        if (!ArrayUtils.equals(this.getId(), this._id)) {
-            console.log(`${ArrayUtils.toHex(this.getId())} != ${ArrayUtils.toHex(this._id)}`);
+        if (!this.getId().equals(this._id)) {
+            console.log(`${this.getId().hex} != ${this._id.hex}`);
             return false;
         }
 
         const hasValidTxIns = this._txIns.every(tx => tx.verify(this._id, unspentTxOuts));
         if (!hasValidTxIns) {
-            console.log(`some of the txIns are invalid in tx: ${ArrayUtils.toHex(this._id)}`);
+            console.log(`some of the txIns are invalid in tx: ${this._id.hex}`);
             return false;
         }
 
@@ -165,7 +166,7 @@ class Transaction {
         const totalTxOutValues = this._txOuts.reduce((sum, tx) => sum + tx.amount, 0);
 
         if (totalTxOutValues !== totalTxInValues) {
-            console.log(`totalTxOutValues !== totalTxInValues in tx: ${ArrayUtils.toHex(this._id)}`);
+            console.log(`totalTxOutValues !== totalTxInValues in tx: ${this._id.hex}`);
             return false;
         }
 
@@ -173,8 +174,8 @@ class Transaction {
     }
 
     verifyRewardTx(blockIndex) {
-        if (!ArrayUtils.equals(this.getId(), this._id)) {
-            console.log(`${ArrayUtils.toHex(this.getId)} != ${ArrayUtils.toHex(this._id)}`);
+        if (!this.getId().equals(this._id)) {
+            console.log(`${this.getId().hex} != ${this._id.hex}`);
             return false;
         }
 
@@ -204,6 +205,7 @@ class Transaction {
 
     static hasDuplicates(txIns) {
         //const groups = txIns.countBy((txIn: TxIn) => txIn.txOutId + txIn.txOutIndex);
+        // ERROR: FIXME
         const groups = txIns.reduce((a, b) => {
             let key = b.txOutId + b.txOutIndex;
             a[key] = a[key] ? a[key] += 1 : 1;
@@ -239,13 +241,10 @@ class Transaction {
         return normalTransactions.every((tx) => tx.verify(unspentTxOuts));
     }
 
-    /**
-     *  Thưởng 50 coin cho giao dịch
-     */
     static createReward(address, blockIndex) {
         const transaction = new Transaction(
-            null,
-            [new TransactionInput(null, null, blockIndex)],
+            new Hash(null),
+            [new TransactionInput(new Signature(null), new Hash(null), blockIndex)],
             [new TransactionOutput(address, GenesisConfig.BASE_AMOUNT)]
         );
 
@@ -254,7 +253,7 @@ class Transaction {
     }
 
     signTxIn(privateKey, unspentTxOuts) {
-        const dataToSign = this._id;
+        const dataToSign = this._id.value;
         const signature = KElliptic.sign(privateKey, dataToSign);
 
         for (let index = 0; index < this._txIns.length; index++) {
@@ -268,8 +267,7 @@ class Transaction {
             const referencedAddress = referencedUnspentTxOut.address;
 
             if (!Wallet.getPublicFromWallet().equals(referencedAddress)) {
-                console.log('trying to sign an input with private' +
-                    ' key that does not match the address that is referenced in txIn');
+                console.log('key that does not match the address that is referenced in txIn');
                 throw Error();
             }
 
@@ -279,9 +277,9 @@ class Transaction {
 
     static updateUnspentTxOuts(transactions, unspentTxOuts) {
         const newUnspentTxOuts = transactions
-            .map((it) => {
-                return it.txOuts.map((txOut, index) => {
-                    return new UnspentTransactionOutput(it.id, index, txOut.address, txOut.amount);
+            .map((tx) => {
+                return tx.txOuts.map((txOut, index) => {
+                    return new UnspentTransactionOutput(tx.id, index, txOut.address, txOut.amount);
                 });
             })
             .reduce((arr, value) => arr.concat(value), []);
@@ -289,7 +287,7 @@ class Transaction {
         const consumedTxOuts = transactions
             .reduce((arr, tx) => arr.concat(tx.txIns), [])
             .map((txIn) => {
-                return new UnspentTransactionOutput(txIn.txOutId, txIn.txOutIndex, null, 0);
+                return new UnspentTransactionOutput(txIn.txOutId, txIn.txOutIndex, new Address(null), 0);
             });
 
         const resultingUnspentTxOuts = unspentTxOuts

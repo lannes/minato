@@ -62,7 +62,7 @@ class MinerWorker extends MinerWorkerImpl {
         let blockHeader = new KBuffer(block.header.serialize());
 
         if (this._miningEnabled) {
-            let result = MinerWorkerImpl.mine(blockHeader, this._difficult, nonceRange.minNonce, nonceRange.maxNonce);
+            let result = this.mine(blockHeader, this._difficult, nonceRange.minNonce, nonceRange.maxNonce);
             if (result) {
                 this._observable.notify('share', { block: block, nonce: result.nonce, hash: result.hash });
                 return;

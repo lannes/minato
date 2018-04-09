@@ -5,11 +5,13 @@ if (typeof require !== 'undefined') {
 
 class Address {
     constructor(value) {
-        if (!(value instanceof Uint8Array))
-            throw Error('Invalid type');
+        if (value !== null) {
+            if (!(value instanceof Uint8Array))
+                throw Error('Invalid type');
 
-        if (value.length !== Address.SERIALIZE_SIZE)
-            throw Error('Invalid length');
+            if (value.length !== Address.SERIALIZE_SIZE)
+                throw Error('Invalid length');
+        }
 
         this._value = value;
     }
@@ -18,7 +20,10 @@ class Address {
         if (!obj)
             return obj;
 
-        const value = new Uint8Array(obj.value);
+        let value = null;
+        if (obj.value !== null)
+            value = new Uint8Array(obj.value);
+
         return new Address(value);
     }
 
@@ -33,16 +38,29 @@ class Address {
 
     serialize(buf) {
         buf = buf || new KBuffer(this.serializeSize);
-        buf.write(this._value);
+
+        if (this._value) {
+            buf.writeUint8(1);
+            buf.write(this._value);
+        } else {
+            buf.writeUint8(0);
+        }
+
         return buf;
     }
 
-    deserialize(buf) {
-        return new Address(buf.read(this.serializeSize));
+    static deserialize(buf) {
+        let value = null;
+        const valuePresent = buf.readUint8();
+        if (valuePresent)
+            value = buf.read(Address.SERIALIZE_SIZE);
+
+        return new Address(value);
     }
 
     get serializeSize() {
-        return Address.SERIALIZE_SIZE;
+        return 1 /* valuePresent */
+            + (this._value ? Address.SERIALIZE_SIZE : 0);
     }
 
     get base64() {

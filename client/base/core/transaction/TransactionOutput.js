@@ -9,7 +9,9 @@ class TransactionOutput {
     constructor(address, amount) {
         if (!(address instanceof Address))
             throw Error('Invalid Address');
-        if (!NumberUtils.isUint64(amount) || amount < 0)
+        if (!NumberUtils.isUint64(amount))
+            throw Error('Invalid Amount');
+        if (amount < 0)
             throw Error('Invalid Amount');
 
         this._address = address;
@@ -40,21 +42,23 @@ class TransactionOutput {
 
     serialize(buf) {
         buf = buf || new KBuffer(this.serializeSize);
+
         this._address.serialize(buf);
         buf.writeUint64(this._amount);
+
         return buf;
     }
 
     static deserialize(buf) {
-        const value = buf.read(Address.SERIALIZE_SIZE);
-        const address = new Address(value);
+        const address = Address.deserialize(buf);
         const amount = buf.readUint64();
+
         return new TransactionOutput(address, amount);
     }
 
     get serializeSize() {
-        return Address.SERIALIZE_SIZE + /* address */
-            8 /* amount */;
+        return this._address.serializeSize /* address */
+            + 8 /* amount */;
     }
 }
 

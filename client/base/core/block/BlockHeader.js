@@ -1,22 +1,22 @@
 if (typeof require !== 'undefined') {
     global.KBuffer = require('../../util/buffer');
-    global.ArrayUtils = require('../../util/ArrayUtils');
-    global.Hash = require('../nodejs/crypto/Hash');
+    global.Hash = require('../common/Hash');
+    global.KHash = require('../nodejs/crypto/Hash');
 }
 
 class BlockHeader {
     constructor(height, prevHash, bodyHash, timestamp, difficulty, nonce) {
-        if (typeof height !== 'number')
+        if (!NumberUtils.isUint32(height))
             throw Error('Invalid height');
-        if (prevHash && !(prevHash instanceof Uint8Array))
+        if (!(prevHash instanceof Hash))
             throw Error('Invalid prevhash');
-        if (!(bodyHash instanceof Uint8Array))
+        if (!(bodyHash instanceof Hash))
             throw Error('Invalid bodyHash');
-        if (typeof timestamp !== 'number')
+        if (!NumberUtils.isUint32(timestamp))
             throw Error('Invalid timestamp');
-        if (typeof difficulty !== 'number')
+        if (!NumberUtils.isUint32(difficulty))
             throw Error('Invalid difficulty');
-        if (typeof nonce !== 'number')
+        if (!NumberUtils.isUint32(nonce))
             throw Error('Invalid nonce');
 
         this._height = height;
@@ -31,17 +31,17 @@ class BlockHeader {
         if (!obj)
             return obj;
 
-        const previousHash = obj.prevHash;
-        const bodyHash = obj.bodyHash;
+        const prevHash = Hash.clone(obj.prevHash);
+        const bodyHash = Hash.clone(obj.bodyHash);
 
-        return new BlockHeader(obj.height, previousHash, bodyHash, obj.timestamp, obj.difficulty, obj.nonce);
+        return new BlockHeader(obj.height, prevHash, bodyHash, obj.timestamp, obj.difficulty, obj.nonce);
     }
 
     equals(obj) {
         return obj instanceof BlockHeader
             && this._height === obj.height
-            && ArrayUtils.equals(this._prevHash, obj.prevHash)
-            && ArrayUtils.equals(this._bodyHash, obj.bodyHash)
+            && this._prevHash.equals(obj.prevHash)
+            && this._bodyHash.equals(obj.bodyHash)
             && this._timestamp === obj.timestamp
             && this._difficulty === obj.difficulty
             && this._nonce === obj.nonce;
@@ -50,8 +50,8 @@ class BlockHeader {
     toString() {
         return `{`
             + `height: ${this._height},`
-            + `prevHash: ${ArrayUtils.toHex(this._prevHash)},`
-            + `bodyHash: ${ArrayUtils.toHex(this._bodyHash)},`
+            + `prevHash: ${this._prevHash.hex},`
+            + `bodyHash: ${this._bodyHash.hex},`
             + `timesteamp: ${this._timestamp}`
             + `difficulty: ${this._difficulty}`
             + `nonce: ${this._nonce}`
@@ -59,7 +59,7 @@ class BlockHeader {
     }
 
     verifyProofOfWork() {
-        return BlockUtils.isProofOfWork(this.hash(), this._difficulty);
+        return BlockUtils.isProofOfWork(this.hash().value, this._difficulty);
     }
 
     get height() {
@@ -92,7 +92,7 @@ class BlockHeader {
 
     hash() {
         if (!this._hash) {
-            this._hash = KHash.sha256(this.serialize());
+            this._hash = new Hash(KHash.sha256(this.serialize()));
         }
 
         return this._hash;
@@ -100,16 +100,10 @@ class BlockHeader {
 
     serialize(buf) {
         buf = buf || new KBuffer(this.serializeSize);
+
         buf.writeUint32(this._height);
-
-        if (this._prevHash) {
-            buf.writeUint8(1);
-            buf.write(this._prevHash);
-        } else {
-            buf.writeUint8(0);
-        }
-
-        buf.write(this._bodyHash);
+        this._prevHash.serialize(buf);
+        this._bodyHash.serialize(buf);
         buf.writeUint32(this._timestamp);
         buf.writeUint32(this._difficulty);
         buf.writeUint32(this._nonce);
@@ -119,13 +113,8 @@ class BlockHeader {
 
     static deserialize(buf) {
         const height = buf.readUint32();
-
-        let prevHash = null;
-        const prevHashPresent = buf.readUint8();
-        if (prevHashPresent)
-            prevHash = buf.read(32);
-
-        const bodyHash = buf.read(32);
+        const prevHash = Hash.deserialize(buf);
+        const bodyHash = Hash.deserialize(buf);
         const timestamp = buf.readUint32();
         const difficulty = buf.readUint32();
         const nonce = buf.readUint32();
@@ -135,9 +124,8 @@ class BlockHeader {
 
     get serializeSize() {
         return 4 /* height */
-            + 1 /* prevHashPresent */
-            + (this._prevHash ? 32 : 0) /* prevHash */
-            + 32 /* bodyHash */
+            + this._prevHash.serializeSize /* prevHash */
+            + this._bodyHash.serializeSize /* bodyHash */
             + 4 /* timestamp */
             + 4 /* difficulty */
             + 4 /* nonce */;

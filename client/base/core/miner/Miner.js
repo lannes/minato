@@ -9,7 +9,7 @@ class Miner extends Observable {
         super();
 
         this._blockchain = blockchain;
-        this._pool = pool;
+        this._mempool = pool;
         this._uTxOPool = uTxOPool;
 
         this._hashCount = 0;
@@ -17,11 +17,26 @@ class Miner extends Observable {
         this._lastHashrate = 0;
         this._hashrateWorker = null;
 
+        this._lastHashCounts = [];
+        this._totalHashCount = 0;
+        this._lastElapsed = [];
+
+        this._mempoolChanged = false;
+
+        this._restarting = false;
+        this._lastRestart = 0;
+
         this._submittingBlock = false;
 
         this._worker = new MinerWorker();
         this._worker.on('share', (obj) => this._onWorkerShare(obj));
         this._worker.on('no-share', (obj) => this._onWorkerShare(obj));
+
+        this._blockchain.on('push-block', (obj) => {
+            this._startWork();
+        });
+
+        this._mempool.on('transaction-added', () => this._mempoolChanged = true);
     }
 
     get working() {
@@ -34,7 +49,7 @@ class Miner extends Observable {
 
     async _onWorkerShare(obj) {
         this._hashCount += this._worker.noncesPerRun;
-        if (obj.block && ArrayUtils.equals(obj.block.prevHash, this._blockchain.headHash)) {
+        if (obj.block && obj.block.prevHash.equals(this._blockchain.headHash)) {
             if (BlockUtils.isProofOfWork(obj.hash, obj.block.difficulty) && !this._submittingBlock) {
                 obj.block.header.nonce = obj.nonce;
 
@@ -50,6 +65,10 @@ class Miner extends Observable {
                     }
                 }
             }
+        }
+
+        if (this._mempoolChanged && this._lastRestart + Miner.MIN_TIME_ON_BLOCK < Date.now()) {
+            this._startWork();
         }
     }
 
@@ -68,7 +87,7 @@ class Miner extends Observable {
         const address = Wallet.getPublicFromWallet();
 
         const rewardTx = Transaction.createReward(address, this._blockchain.height + 1);
-        const transactions = [rewardTx].concat(this._pool.transactions);
+        const transactions = [rewardTx].concat(this._mempool.transactions);
 
         return new BlockBody(transactions);
     }
@@ -82,12 +101,26 @@ class Miner extends Observable {
 
     _updateHashrate() {
         const elapsed = (Date.now() - this._lastHashrate) / 1000;
+        const hashCount = this._hashCount;
 
-        this._hashrate = Math.round(this._hashCount / elapsed);
-        this.notify('hashrate', this._hashrate);
-
-        this._lastHashrate = Date.now();
         this._hashCount = 0;
+        this._lastHashrate = Date.now();
+
+        this._lastElapsed.push(elapsed);
+        this._lastHashCounts.push(hashCount);
+        this._totalElapsed += elapsed;
+        this._totalHashCount += hashCount;
+
+        if (this._lastElapsed.length > Miner.MOVING_AVERAGE_MAX_SIZE) {
+            const oldestElapsed = this._lastElapsed.shift();
+            const oldestHashCount = this._lastHashCounts.shift();
+            this._totalElapsed -= oldestElapsed;
+            this._totalHashCount -= oldestHashCount;
+        }
+
+        this._hashrate = Math.round(this._totalHashCount / this._totalElapsed);
+
+        this.notify('hashrate', this._hashrate);
     }
 
     startWork() {
@@ -95,9 +128,15 @@ class Miner extends Observable {
             return;
         }
 
-        this._hashCount = 0;
+        this._lastRestart = Date.now();
 
+        this._hashCount = 0;
+        this._lastHashCounts = [];
+        this._totalHashCount = 0;
+        this._lastElapsed = [];
+        this._totalElapsed = 0;
         this._lastHashrate = Date.now();
+
         this._hashrateWorker = setInterval(() => this._updateHashrate(), 1000);
 
         this.notify('start', this);
@@ -105,12 +144,18 @@ class Miner extends Observable {
     }
 
     _startWork() {
-        //if (this.working) {
-        //    return;
-        //}
+        if (!this.working || this._restarting) {
+            return;
+        }
+
+        this._restarting = true;
+        this._lastRestart = Date.now();
+        this._mempoolChanged = false;
 
         const block = this._getNextBlock();
         this._worker.startMiningOnBlock(block, block.difficulty);
+
+        this._restarting = false;
     }
 
     stopWork() {
@@ -121,11 +166,20 @@ class Miner extends Observable {
         clearInterval(this._hashrateWorker);
         this._hashrateWorker = null;
         this._hashrate = 0;
-        this._totalHashCount = 0;
 
+        this._hashCount = 0;
+        this._lastHashCounts = [];
+        this._totalHashCount = 0;
+        this._lastElapsed = [];
+        this._totalElapsed = 0;
+
+        this._worker.stop();
         this.notify('stop', this);
     }
 }
+
+Miner.MIN_TIME_ON_BLOCK = 10000;
+Miner.MOVING_AVERAGE_MAX_SIZE = 10;
 
 if (typeof module !== 'undefined')
     module.exports = Miner;

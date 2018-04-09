@@ -5,31 +5,49 @@ if (typeof require !== 'undefined') {
 }
 
 class GetBlocksMessage extends Message {
-    constructor(count) {
+    constructor(locators) {
         super(Message.Type.GET_BLOCKS);
-        this._count = count;
+
+        this._locators = locators;
     }
 
     serialize(buf) {
         buf = buf || new KBuffer(this.serializeSize);
         super.serialize(buf);
-        buf.writeUint16(this._count);
+
+        buf.writeUint16(this._locators.length);
+        for (const locator of this._locators) {
+            locator.serialize(buf);
+        }
+
         return buf;
     }
 
     static deserialize(buf) {
         Message.deserialize(buf);
         const count = buf.readUint16();
-        return new GetBlocksMessage(count);
+
+        const locators = [];
+        for (let i = 0; i < count; i++) {
+            locators.push(Hash.deserialize(buf));
+        }
+
+        return new GetBlocksMessage(locators);
     }
 
     get serializeSize() {
-        return super.serializeSize
+        let size = super.serializeSize
             + 2 /* count */;
+
+        for (const locator of this._locators) {
+            size += locator.serializeSize;
+        }
+
+        return size;
     }
 
-    get count() {
-        return this._count;
+    get locators() {
+        return this._locators;
     }
 }
 

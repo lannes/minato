@@ -1,5 +1,10 @@
 class UnspentTransactionOutput {
     constructor(txOutId, txOutIndex, address, amount) {
+        if (!(txOutId instanceof Hash))
+            throw Error('Invalid txOutId');
+        if (!(address instanceof Address))
+            throw Error('Invalid addess');
+
         this._txOutId = txOutId;
         this._txOutIndex = txOutIndex;
         this._address = address;
@@ -10,14 +15,14 @@ class UnspentTransactionOutput {
         if (!obj)
             return obj;
 
-        const txOutId = obj.txOutId;
+        const txOutId = Hash.clone(obj.txOutId);
         const address = Address.clone(obj.address);
         return new UnspentTransactionOutput(txOutId, obj.txOutIndex, address, obj.amount);
     }
 
     equals(obj) {
         return obj instanceof UnspentTransactionOutput
-            && ArrayUtils.equals(this._txOutId, obj.txOutId)
+            && this._txOutId.equals(obj.txOutId)
             && this._txOutIndex === obj.txOutIndex
             && this._address.equals(obj.address)
             && this._amount === obj.amount

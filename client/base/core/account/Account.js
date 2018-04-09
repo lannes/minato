@@ -6,9 +6,10 @@ class Account {
     static findUnspentTxOuts(address, unspentTxOuts) {
         return unspentTxOuts.filter((tx) => tx.address.equals(address));
     }
-    
+
     static getBalance(address, unspentTxOuts) {
-        return Account.findUnspentTxOuts(address, unspentTxOuts).reduce((sum, tx) => sum + tx.amount, 0);
+        const uTxOs = Account.findUnspentTxOuts(address, unspentTxOuts);
+        return uTxOs.reduce((sum, tx) => sum + tx.amount, 0);
     }
 
     static getMyBalance(unspentTxOuts) {

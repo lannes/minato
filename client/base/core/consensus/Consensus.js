@@ -13,21 +13,18 @@ const SyncType = {
     SYNCHRONIZE_COMPLETED: 5
 };
 
-class Consensus extends Observable {
+class Consensus extends BaseConsensus {
     constructor(blockchain, pool, uTxOPool) {
-        super();
+        super(blockchain, pool, uTxOPool);
+
         this.isSync = true;
+        this._syncing = false;
 
-        this._blockchain = blockchain;
-        this._mempool = pool;
-        this._uTxOPool = uTxOPool;
-
-        let self = this;
         this._blockchain.on('push-block', (unspentTxOuts) => {
             if (unspentTxOuts !== null) {
                 this._uTxOPool.update(unspentTxOuts);
                 this._mempool.update(unspentTxOuts);
-                this.notify('broadcast', this._blocks(1));
+                this.notify('broadcast', this._blocks([this._blockchain.headHash]));
             }
         });
     }
@@ -44,28 +41,35 @@ class Consensus extends Observable {
         this._mempool.add(tx, this._uTxOPool.transactions);
     }
 
+    syncBlockchain() {
+        this._syncing = true;
+
+        this._getBlocks();
+    }
+
     _send(message) {
         return message.serialize();
     }
 
-    _getBlocks(count) {
-        return this._send(new GetBlocksMessage(count));
+    _getBlocks() {
+        const locators = this._blockchain.getBlockLocators();
+        return this._send(new GetBlocksMessage(locators));
     }
 
-    _blocks(count) {
-        if (count < 1 || count > this._blockchain.length)
-            return this._send(new BlocksMessage([]));
-
-        if (count === 1)
-            return this._send(new BlocksMessage([this._blockchain.head]));
-
-        //let blocks = [];
-        //for (let i = this._blockchain.length - count; i < this._blockchain.length; i++) {
-        //    blocks.push(this._blockchain.blocks[i]);
-        //}
-
-        //return this._send(new BlocksMessage(blocks));
-        return this._send(new BlocksMessage(this._blockchain.blocks));
+    _blocks(locators) {
+        let startBlock = GenesisConfig.GENESIS_BLOCK;
+        /*
+        for (const locator of locators) {
+            const block = this._blockchain.getBlock(locator);
+            if (block) {
+                startBlock = block;
+                break;
+            }
+        }
+        */
+        
+        const blocks = this._blockchain.getBlocks(startBlock, this._blockchain.height - startBlock.height);
+        return this._send(new BlocksMessage(blocks));
     }
 
     _getPool() {
@@ -77,11 +81,11 @@ class Consensus extends Observable {
     }
 
     _addBlocks(blocks) {
-        let unspentTxOuts = this._blockchain.replaceChain(blocks);
+        let unspentTxOuts = this._blockchain.replaceChain(blocks, this._uTxOPool.transactions);
         if (unspentTxOuts !== null) {
             this._uTxOPool.update(unspentTxOuts);
             this._mempool.update(unspentTxOuts);
-            this.notify('broadcast', this._blocks(1));
+            this.notify('broadcast', this._blocks([this._blockchain.headHash]));
             return true;
         }
 
@@ -101,6 +105,8 @@ class Consensus extends Observable {
             return;
         }
 
+        this.notify('balance', this._getBalance());
+
         const headReceived = blocks[blocks.length - 1];
 
         const head = this._blockchain.head;
@@ -109,29 +115,28 @@ class Consensus extends Observable {
                 this.notify('sync', { 'id': id, 'state': SyncType.SYNCHRONIZE_COMPLETED, 'block': null });
                 this.isSync = false;
             }
-
-            if (headReceived.height == head.height)
-                this.notify('balance', this._getBalance());
-
+            
             this.notify('height', this._blockchain.height + 1);
             return;
         }
 
-        if (ArrayUtils.equals(head.hash(), headReceived.prevHash)) {
+        if (head.hash().equals(headReceived.prevHash)) {
+            this._blockchain.pushBlock(headReceived, this._uTxOPool.transactions);
+
             if (this.isSync) {
                 this.notify('sync', { 'id': id, 'state': SyncType.SYNCHRONIZE_COMPLETED, 'block': headReceived });
                 this.isSync = false;
             }
         } else if (blocks.length === 1) {
-            this.notify('broadcast', this._getBlocks(headReceived.height - head.height));
+            this.notify('broadcast', this._getBlocks());
 
             this.isSync = true;
             this.notify('sync', { 'id': id, 'state': SyncType.SYNCHRONIZE_STARTED });
         } else {
             this.notify('sync', { 'id': id, 'state': SyncType.DOWNLOAD_BLOCKCHAIN_FINISHED });
 
-            if (this._addBlocks(blocks))
-                this.notify('balance', this._getBalance());
+            this._addBlocks(blocks);
+            this.notify('balance', this._getBalance());
 
             this.notify('sync', { 'id': id, 'state': SyncType.DOWNLOAD_TRANSACTION_STARTED });
 
@@ -147,10 +152,11 @@ class Consensus extends Observable {
         let message = MessageFactory.parse(buf);
 
         switch (type) {
-            case Message.Type.GET_BLOCKS:
-                const count = message.count;
-                this.notify('send', [id, this._blocks(count)]);
+            case Message.Type.GET_BLOCKS: {
+                const locators = message.locators;
+                this.notify('send', [id, this._blocks(locators)]);
                 break;
+            }
             case Message.Type.BLOCKS: {
                 const blocks = message.blocks;
                 if (blocks === null)
@@ -163,7 +169,6 @@ class Consensus extends Observable {
                 this.notify('send', [id, this._pool()]);
                 break;
             case Message.Type.POOL: {
-                this.isSync = false;
                 this.notify('sync', { 'id': id, 'state': SyncType.DOWNLOAD_TRANSACTION_FINISHED });
 
                 const transactions = message.transactions;
@@ -187,7 +192,7 @@ class Consensus extends Observable {
     }
 
     start(id) {
-        this.notify('send', [id, this._getBlocks(1)]);
+        this.notify('send', [id, this._getBlocks()]);
     }
 
     transfer(address, amount) {

@@ -1,15 +1,16 @@
 if (typeof require !== 'undefined') {
     global.KBuffer = require('../../util/Buffer');
-    global.ArrayUtils = require('../../util/ArrayUtils');
+    global.Hash = require('../common/Hash');
+    global.Signature = require('../common/Signature');
     global.KElliptic = require('../crypto/elliptic');
 }
 
 class TransactionInput {
     constructor(signature, txOutId, txOutIndex) {
-        if (signature !== null && !(signature instanceof Uint8Array))
+        if (!(signature instanceof Signature))
             throw Error('Invalid signature');
 
-        if (txOutId !== null && !(txOutId instanceof Uint8Array))
+        if (!(txOutId instanceof Hash))
             throw Error('Invalid txOutId');
 
         if (typeof txOutIndex !== 'number')
@@ -24,16 +25,16 @@ class TransactionInput {
         if (!obj)
             return obj;
 
-        const signature = obj.signature;
-        const txOutId = obj.txOutId;
+        const signature = Signature.clone(obj.signature);
+        const txOutId = Hash.clone(obj.txOutId);
 
         return new TransactionInput(signature, txOutId, obj.txOutIndex);
     }
 
     equals(obj) {
         return obj instanceof TransactionInput
-            && ArrayUtils.equals(this._signature, obj.signature)
-            && ArrayUtils.equals(this._txOutId, obj.txOutId)
+            && this._signature.equals(obj.signature)
+            && this._txOutId.equals(obj.txOutId)
             && this._txOutIndex === obj.txOutIndex;
     }
 
@@ -51,70 +52,46 @@ class TransactionInput {
 
     serialize(buf) {
         buf = buf || new KBuffer(this.serializeSize);
-        if (this._signature) {
-            buf.writeUint8(1);
-            buf.write(this._signature);
-        } else {
-            buf.writeUint8(0);
-        }
 
-        if (this._txOutId) {
-            buf.writeUint8(1);
-            buf.write(this._txOutId);
-        } else {
-            buf.writeUint8(0);
-        }
-
+        this._signature.serialize(buf);
+        this._txOutId.serialize(buf);
         buf.writeUint32(this._txOutIndex);
+        
         return buf;
     }
 
     static deserialize(buf) {
-        let signature = null;
-        const signaturePresent = buf.readUint8();
-        if (signaturePresent)
-            signature = buf.read(65);
-
-        let txOutId = null;
-        const txOutIdPresent = buf.readUint8();
-        if (txOutIdPresent)
-            txOutId = buf.read(32);
-
+        const signature = Signature.deserialize(buf);
+        const txOutId = Hash.deserialize(buf);
         const txOutIndex = buf.readUint32();
+
         return new TransactionInput(signature, txOutId, txOutIndex);
     }
 
     get serializeSize() {
-        return 1 /* signaturePresent */
-            + (this._signature ? 65 : 0) /* signature */
-            + 1 /* txtOutIdPresent */
-            + (this._txOutId ? 32 : 0) /* txtOutId */
+        return this._signature.serializeSize /* signature */
+            + this._txOutId.serializeSize /* txtOutId */
             + 4 /* txtOutIndex */;
     }
 
     serializeContent(buf) {
         buf = buf || new KBuffer(this.serializeSize);
 
-        if (this._txOutId) {
-            buf.writeUint8(1);
-            buf.write(this._txOutId);
-        } else {
-            buf.writeUint8(0);
-        }
-
+        this._txOutId.serialize(buf);
         buf.writeUint32(this._txOutIndex);
+
         return buf;
     }
 
     get serializeContentSize() {
         return 1 /* txtOutIdPresent */
-            + (this._txOutId ? 32 : 0) /* txtOutId */
+            + this._txOutId.serializeSize /* txtOutId */
             + 4 /* txtOutIndex */;
     }
 
     verify(id, unspentTxOuts) {
         const referencedUTxOut = unspentTxOuts.find(
-            (tx) => ArrayUtils.equals(tx.txOutId, this._txOutId) && tx.txOutIndex === this._txOutIndex
+            (tx) => tx.txOutId.equals(this._txOutId) && tx.txOutIndex === this._txOutIndex
         );
         if (referencedUTxOut == null) {
             console.log('referenced txOut not found: ');

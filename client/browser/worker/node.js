@@ -11,7 +11,9 @@ importScripts(
     '../../base/util/Buffer.js?v=0.2',
     '../../base/util/Observable.js?v=0.2',
     '../../base/util/Synchronizer.js?v=0.1',
-    '../../base/core/Address.js?v=0.1',
+    '../../base/core/common/Signature.js?v=0.1',    
+    '../../base/core/common/Address.js?v=0.1',
+    '../../base/core/common/Hash.js?v=0.1',
     '../../base/core/transaction/TransactionInput.js?v=0.1',
     '../../base/core/transaction/TransactionOutput.js?v=0.1',
     '../../base/core/transaction/UnspentTransactionOutput.js?v=0.1',
@@ -22,6 +24,7 @@ importScripts(
     '../../base/core/block/BlockHeader.js?v=0.1',
     '../../base/core/block/Block.js?v=0.1',
     '../../base/core/block/BlockUtils.js?v=0.1',
+    '../../base/core/blockchain/BaseChain.js?v=0.1',
     '../../base/core/blockchain/Blockchain.js?v=0.2',
     '../../base/network/message/Message.js?v=0.1',
     '../../base/network/message/GetBlocksMessage.js?v=0.1',
@@ -31,6 +34,7 @@ importScripts(
     '../../base/network/message/MessageFactory.js?v=0.1',
     '../../base/core/account/Account.js?v=0.1',
     '../../base/core/consensus/GenesisConfig.js?v=0.1',
+    '../../base/core/consensus/BaseConsensus.js?v=0.1',
     '../../base/core/consensus/Consensus.js?v=0.1',
     '../../base/core/miner/MinerWorkerImpl.js?v=0.1',
     '../../base/core/miner/MinerWorker.js?v=0.1',
@@ -40,10 +44,10 @@ importScripts(
 
 class KNodeWorker {
     constructor() {
-        this._pool = new TransactionPool([]);
+        this._blockchain = new Blockchain();
+        this._pool = new TransactionPool();
         this._uTxOPool = new UnspentTransactionOutputPool();
 
-        this._blockchain = new Blockchain([GenesisConfig.GENESIS_BLOCK]);
         this._consensus = new Consensus(this._blockchain, this._pool, this._uTxOPool);
 
         this._miner = new Miner(this._blockchain, this._pool, this._uTxOPool);

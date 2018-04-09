@@ -108,7 +108,7 @@ class Block {
             return false;
 
         const bodyHash = this._body.hash();
-        if (!ArrayUtils.equals(this._header.bodyHash, bodyHash)) {
+        if (!this._header.bodyHash.equals(bodyHash)) {
             return false;
         }
 
@@ -125,7 +125,7 @@ class Block {
             return false;
         }
 
-        if (!ArrayUtils.equals(newBlock.prevHash, prevBlock.hash())) {
+        if (!newBlock.prevHash.equals(prevBlock.hash())) {
             return false;
         }
 

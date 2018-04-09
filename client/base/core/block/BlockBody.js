@@ -1,7 +1,7 @@
 
 if (typeof require !== 'undefined') {
     global.KBuffer = require('../../util/buffer');
-    global.Hash = require('../nodejs/crypto/Hash');
+    global.KHash = require('../nodejs/crypto/Hash');
     global.Transaction = require('../transaction/Transaction');
 }
 
@@ -17,7 +17,7 @@ class BlockBody {
         if (!obj)
             return obj;
 
-        const transactions = obj.transactions.map(it => Transaction.clone(it));
+        const transactions = obj.transactions.map(tx => Transaction.clone(tx));
         return new BlockBody(transactions);
     }
 
@@ -41,7 +41,7 @@ class BlockBody {
 
     hash() {
         if (!this._hash) {
-            this._hash = KHash.sha256(this.serialize());
+            this._hash = new Hash(KHash.sha256(this.serialize()));
         }
 
         return this._hash;

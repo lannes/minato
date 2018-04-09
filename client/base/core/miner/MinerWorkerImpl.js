@@ -1,5 +1,5 @@
 class MinerWorkerImpl {
-    static mine(input, difficult, minNonce, maxNonce) {
+    mine(input, difficult, minNonce, maxNonce) {
         input.writePos = input.byteLength;
 
         for (let nonce = minNonce; nonce < maxNonce; nonce++) {

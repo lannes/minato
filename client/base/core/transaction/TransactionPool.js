@@ -1,11 +1,14 @@
 if (typeof require !== 'undefined') {
     global.KBuffer = require('../../util/Buffer');
     global.Transaction = require('./Transaction');
+    global.Observable = require('../../util/Observable');
 }
 
-class TransactionPool {
-    constructor(transactions) {
-        this._transactions = transactions;
+class TransactionPool extends Observable {
+    constructor() {
+        super();
+
+        this._transactions = [];
     }
 
     static clone(obj) {
@@ -57,7 +60,7 @@ class TransactionPool {
 
     _containsTxIn(txIns, txIn) {
         const tmp = txIns.find(
-            tx => txIn.txOutIndex === tx.txOutIndex && ArrayUtils.equals(txIn.txOutId, tx.txOutId)
+            tx => txIn.txOutIndex === tx.txOutIndex && txIn.txOutId.equals(tx.txOutId)
         );
         return tmp !== undefined;
     }
@@ -89,7 +92,7 @@ class TransactionPool {
 
     hasTxIn(txIn, unspentTxOuts) {
         const foundTxIn = unspentTxOuts.find((tx) => {
-            return ArrayUtils.equals(tx.txOutId, txIn.txOutId) && tx.txOutIndex === txIn.txOutIndex;
+            return tx.txOutId.equals(txIn.txOutId) && tx.txOutIndex === txIn.txOutIndex;
         });
 
         return foundTxIn !== undefined;
@@ -108,6 +111,7 @@ class TransactionPool {
 
         if (invalidTxs.length > 0) {
             this._transactions = this._transactions.filter(tx => !invalidTxs.includes(tx));
+            this.notify('transactions-ready', this);
         }
     }
 }

@@ -1,5 +1,7 @@
-class UnspentTransactionOutputPool {
+class UnspentTransactionOutputPool extends Observable {
     constructor() {
+        super();
+
         this._transactions = Transaction.process(GenesisConfig.GENESIS_BLOCK.transactions, [], 0);
     }
 
