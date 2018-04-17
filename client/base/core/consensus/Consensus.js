@@ -14,9 +14,10 @@ const SyncType = {
 };
 
 class Consensus extends BaseConsensus {
-    constructor(blockchain, pool, uTxOPool) {
+    constructor(blockchain, pool, uTxOPool, node) {
         super(blockchain, pool, uTxOPool);
 
+        this._node = node;
         this.isSync = true;
         this._syncing = false;
 
@@ -24,7 +25,8 @@ class Consensus extends BaseConsensus {
             if (unspentTxOuts !== null) {
                 this._uTxOPool.update(unspentTxOuts);
                 this._mempool.update(unspentTxOuts);
-                this.notify('broadcast', this._blocks([this._blockchain.headHash]));
+
+                this._node.broadcast(this._head());
             }
         });
     }
@@ -51,6 +53,15 @@ class Consensus extends BaseConsensus {
         return message.serialize();
     }
 
+    _getHead() {
+        return this._send(new GetHeadMessage());
+    }
+
+    _head() {
+        const blocks = [this._blockchain.head];
+        return this._send(new BlocksMessage(blocks));
+    }
+
     _getBlocks() {
         const locators = this._blockchain.getBlockLocators();
         return this._send(new GetBlocksMessage(locators));
@@ -67,7 +78,7 @@ class Consensus extends BaseConsensus {
             }
         }
         */
-        
+
         const blocks = this._blockchain.getBlocks(startBlock, this._blockchain.height - startBlock.height);
         return this._send(new BlocksMessage(blocks));
     }
@@ -85,7 +96,8 @@ class Consensus extends BaseConsensus {
         if (unspentTxOuts !== null) {
             this._uTxOPool.update(unspentTxOuts);
             this._mempool.update(unspentTxOuts);
-            this.notify('broadcast', this._blocks([this._blockchain.headHash]));
+
+            this._node.broadcast(this._head());
             return true;
         }
 
@@ -99,24 +111,24 @@ class Consensus extends BaseConsensus {
     _checkReceivedBlocks(id, blocks) {
         if (blocks.length === 0) {
             if (this.isSync) {
-                this.notify('sync', { 'id': id, 'state': SyncType.SYNCHRONIZE_COMPLETED, 'block': null });
+                this._node.sync({ 'id': id, 'state': SyncType.SYNCHRONIZE_COMPLETED, 'block': null });
                 this.isSync = false;
             }
             return;
         }
 
-        this.notify('balance', this._getBalance());
+        this._node.postMessage('balance', this._getBalance());
 
         const headReceived = blocks[blocks.length - 1];
 
         const head = this._blockchain.head;
         if (headReceived.height <= head.height) {
             if (this.isSync) {
-                this.notify('sync', { 'id': id, 'state': SyncType.SYNCHRONIZE_COMPLETED, 'block': null });
+                this._node.sync({ 'id': id, 'state': SyncType.SYNCHRONIZE_COMPLETED, 'block': null });
                 this.isSync = false;
             }
-            
-            this.notify('height', this._blockchain.height + 1);
+
+            this._node.postMessage('height', this._blockchain.height + 1);
             return;
         }
 
@@ -124,26 +136,25 @@ class Consensus extends BaseConsensus {
             this._blockchain.pushBlock(headReceived, this._uTxOPool.transactions);
 
             if (this.isSync) {
-                this.notify('sync', { 'id': id, 'state': SyncType.SYNCHRONIZE_COMPLETED, 'block': headReceived });
+                this._node.sync({ 'id': id, 'state': SyncType.SYNCHRONIZE_COMPLETED, 'block': headReceived });
                 this.isSync = false;
             }
         } else if (blocks.length === 1) {
-            this.notify('broadcast', this._getBlocks());
+            this._node.broadcast(this._getBlocks());
 
             this.isSync = true;
-            this.notify('sync', { 'id': id, 'state': SyncType.SYNCHRONIZE_STARTED });
+            this._node.sync({ 'id': id, 'state': SyncType.SYNCHRONIZE_STARTED });
         } else {
-            this.notify('sync', { 'id': id, 'state': SyncType.DOWNLOAD_BLOCKCHAIN_FINISHED });
+            this._node.sync({ 'id': id, 'state': SyncType.DOWNLOAD_BLOCKCHAIN_FINISHED });
 
             this._addBlocks(blocks);
-            this.notify('balance', this._getBalance());
+            this._node.postMessage('balance', this._getBalance());
 
-            this.notify('sync', { 'id': id, 'state': SyncType.DOWNLOAD_TRANSACTION_STARTED });
-
-            this.notify('broadcast', this._getPool());
+            this._node.postMessage('sync', { 'id': id, 'state': SyncType.DOWNLOAD_TRANSACTION_STARTED });
+            this._node.broadcast(this._getPool());
         }
 
-        this.notify('height', this._blockchain.height + 1);
+        this._node.postMessage('height', this._blockchain.height + 1);
     }
 
     process(id, raw) {
@@ -152,9 +163,12 @@ class Consensus extends BaseConsensus {
         let message = MessageFactory.parse(buf);
 
         switch (type) {
+            case Message.Type.GET_HEAD:
+                this._node.send(id, this._head());
+                break;
             case Message.Type.GET_BLOCKS: {
                 const locators = message.locators;
-                this.notify('send', [id, this._blocks(locators)]);
+                this._node.send(id, this._blocks(locators));
                 break;
             }
             case Message.Type.BLOCKS: {
@@ -166,10 +180,10 @@ class Consensus extends BaseConsensus {
             }
                 break;
             case Message.Type.GET_POOL:
-                this.notify('send', [id, this._pool()]);
+                this._node.send(id, this._pool());
                 break;
             case Message.Type.POOL: {
-                this.notify('sync', { 'id': id, 'state': SyncType.DOWNLOAD_TRANSACTION_FINISHED });
+                this._node.sync({ 'id': id, 'state': SyncType.DOWNLOAD_TRANSACTION_FINISHED });
 
                 const transactions = message.transactions;
                 if (transactions === null) {
@@ -185,19 +199,19 @@ class Consensus extends BaseConsensus {
                     }
                 }
 
-                this.notify('sync', { 'id': id, 'state': SyncType.SYNCHRONIZE_COMPLETED, 'block': null });
+                this._node.sync({ 'id': id, 'state': SyncType.SYNCHRONIZE_COMPLETED, 'block': null });
             }
                 break;
         }
     }
 
     start(id) {
-        this.notify('send', [id, this._getBlocks()]);
+        this._node.send(id, this._getHead());
     }
 
     transfer(address, amount) {
         this.sendTransaction(Address.fromBase64(address), amount);
-        this.notify('broadcast', this._pool());
+        this._node.broadcast(this._pool());
     }
 }
 

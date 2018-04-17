@@ -253,7 +253,7 @@ class Transaction {
 
     signTxIn(privateKey, unspentTxOuts) {
         const dataToSign = this._id.value;
-        const signature = KElliptic.sign(privateKey, dataToSign);
+        const signature = new Uint8Array(KElliptic.sign(privateKey, dataToSign));
 
         for (let index = 0; index < this._txIns.length; index++) {
             const txIn = this._txIns[index];

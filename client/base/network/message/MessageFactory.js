@@ -17,6 +17,7 @@ class MessageFactory {
 }
 
 MessageFactory.CLASSES = {};
+MessageFactory.CLASSES[Message.Type.GET_HEAD] = GetHeadMessage;
 MessageFactory.CLASSES[Message.Type.GET_BLOCKS] = GetBlocksMessage;
 MessageFactory.CLASSES[Message.Type.BLOCKS] = BlocksMessage;
 MessageFactory.CLASSES[Message.Type.GET_POOL] = GetPoolMessage;

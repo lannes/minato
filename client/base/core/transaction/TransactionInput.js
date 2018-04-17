@@ -84,8 +84,7 @@ class TransactionInput {
     }
 
     get serializeContentSize() {
-        return 1 /* txtOutIdPresent */
-            + this._txOutId.serializeSize /* txtOutId */
+        return this._txOutId.serializeSize /* txtOutId */
             + 4 /* txtOutIndex */;
     }
 

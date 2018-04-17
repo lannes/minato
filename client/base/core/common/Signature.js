@@ -10,8 +10,9 @@ class Signature {
             if (!(value instanceof Uint8Array))
                 throw Error('Invalid type');
 
-            if (value.length !== Signature.SERIALIZE_SIZE)
-                throw Error('Invalid length');
+            // FIXME length of signature is not fix (70, 71, 72)
+            //if (value.length !== Signature.SERIALIZE_SIZE)
+            //    throw Error('Invalid length');
         }
 
         this._value = value;
@@ -85,7 +86,7 @@ class Signature {
     }
 }
 
-Signature.SERIALIZE_SIZE = 65;
+Signature.SERIALIZE_SIZE = 72;
 
 if (typeof module !== 'undefined')
     module.exports = Signature;

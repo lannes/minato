@@ -13,8 +13,8 @@ class PoolMessage extends Message {
     serialize(buf) {
         buf = buf || new KBuffer(this.serializeSize);
         super.serialize(buf);
-        buf.writeUint16(this._transactions.length);
 
+        buf.writeUint16(this._transactions.length);
         for (const tx of this._transactions) {
             tx.serialize(buf);
         }

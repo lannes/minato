@@ -9,12 +9,18 @@ class Message {
 
     serialize(buf) {
         buf = buf || new KBuffer(this.serializeSize);
+        if (buf.writePos !== 0)
+            throw Error('Message.serialize() requires buf.writePos == 0');
+
         buf.writeUint8(this._type);
         buf.writeUint32(this.serializeSize);
         return buf;
     }
 
     static deserialize(buf) {
+        if (buf.readPos !== 0)
+            throw Error('Message.deserialize() requires buf.readPos == 0');
+
         const type = buf.readUint8();
         buf.readUint32();
         return new Message(type);
@@ -53,7 +59,8 @@ class Message {
 
 Message.Type = {
     SIGNAL: 0,
-    GET_BLOCKS: 1,
+    GET_HEAD: 1,
+    GET_BLOCKS: 2,
     BLOCKS: 3,
     GET_POOL: 4,
     POOL: 5

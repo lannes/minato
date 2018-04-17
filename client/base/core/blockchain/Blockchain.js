@@ -150,6 +150,9 @@ class Blockchain extends BaseChain {
 
         const newUnspentTxOuts = this.verifyBlocks(newBlocks, unspentTxOuts);
         if (newUnspentTxOuts !== null) {
+            this._blocks = newBlocks;
+
+            /*
             const chainHeight = this.height;
             for (let i = 0; i < newBlocks.length; i++) {
                 const blockHeight = newBlocks[i].height;
@@ -159,6 +162,7 @@ class Blockchain extends BaseChain {
                     this._blocks.push(newBlocks[i]);
                 }
             }
+            */
 
             return newUnspentTxOuts;
         }

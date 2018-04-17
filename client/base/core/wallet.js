@@ -64,7 +64,7 @@ class Wallet {
         if (leftOverAmount === 0) {
             return [txOut1];
         } else {
-            const leftOverTx = new TransactionOuput(myAddress, leftOverAmount);
+            const leftOverTx = new TransactionOutput(myAddress, leftOverAmount);
             return [txOut1, leftOverTx];
         }
     }

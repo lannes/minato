@@ -11,7 +11,7 @@ importScripts(
     '../../base/util/Buffer.js?v=0.2',
     '../../base/util/Observable.js?v=0.2',
     '../../base/util/Synchronizer.js?v=0.1',
-    '../../base/core/common/Signature.js?v=0.1',    
+    '../../base/core/common/Signature.js?v=0.1',
     '../../base/core/common/Address.js?v=0.1',
     '../../base/core/common/Hash.js?v=0.1',
     '../../base/core/transaction/TransactionInput.js?v=0.1',
@@ -27,6 +27,7 @@ importScripts(
     '../../base/core/blockchain/BaseChain.js?v=0.1',
     '../../base/core/blockchain/Blockchain.js?v=0.2',
     '../../base/network/message/Message.js?v=0.1',
+    '../../base/network/message/GetHeadMessage.js?v=0.1',
     '../../base/network/message/GetBlocksMessage.js?v=0.1',
     '../../base/network/message/BlocksMessage.js?v=0.1',
     '../../base/network/message/GetPoolMessage.js?v=0.1',
@@ -48,52 +49,60 @@ class KNodeWorker {
         this._pool = new TransactionPool();
         this._uTxOPool = new UnspentTransactionOutputPool();
 
-        this._consensus = new Consensus(this._blockchain, this._pool, this._uTxOPool);
+        this._consensus = new Consensus(this._blockchain, this._pool, this._uTxOPool, this);
 
         this._miner = new Miner(this._blockchain, this._pool, this._uTxOPool);
 
         this._miner.on('hashrate', (value) => this._send({
             'cmd': 'hashrate', 'msg': value
         }));
+    }
 
-        this._consensus.on('sync', (data) => {
-            switch (data['state']) {
-                case SyncType.SYNCHRONIZE_STARTED:
-                    this._miner.stopWork();
-                    break;
-                case SyncType.DOWNLOAD_BLOCKCHAIN_FINISHED:
-                    break;
-                case SyncType.CONSENSUS_FINISHED:
-                    break;
-                case SyncType.DOWNLOAD_TRANSACTION_STARTED:
-                    break;
-                case SyncType.DOWNLOAD_BLOCKCHAIN_FINISHED:
-                    break;
-                case SyncType.SYNCHRONIZE_COMPLETED:
-                    this._miner.startWork();
-                    break;
-            }
+    sync(data) {
+        switch (data['state']) {
+            case SyncType.SYNCHRONIZE_STARTED:
+                console.log('SYNCHRONIZE_STARTED');
+                this._miner.stopWork();
+                break;
+            case SyncType.DOWNLOAD_BLOCKCHAIN_FINISHED:
+                console.log('DOWNLOAD_BLOCKCHAIN_FINISHED');
+                break;
+            case SyncType.CONSENSUS_FINISHED:
+                console.log('CONSENSUS_FINISHED');
+                break;
+            case SyncType.DOWNLOAD_TRANSACTION_STARTED:
+                console.log('DOWNLOAD_TRANSACTION_STARTED');
+                break;
+            case SyncType.DOWNLOAD_BLOCKCHAIN_FINISHED:
+                console.log('DOWNLOAD_BLOCKCHAIN_FINISHED');
+                break;
+            case SyncType.SYNCHRONIZE_COMPLETED:
+                console.log('SYNCHRONIZE_COMPLETED');
+                this._miner.startWork();
+                break;
+        }
 
-            this._send({
-                'cmd': 'sync', 'msg': data
-            });
+        this._send({
+            'cmd': 'sync', 'msg': data
         });
+    }
 
-        this._consensus.on('balance', (amount) => this._send({
-            'cmd': 'balance', 'msg': amount
-        }));
+    postMessage(type, data) {
+        this._send({
+            'cmd': type, 'msg': data
+        });
+    }
 
-        this._consensus.on('height', (height) => this._send({
-            'cmd': 'height', 'msg': height
-        }));
-
-        this._consensus.on('send', (data) => this._send({
-            'cmd': 'network', 'msg': data
-        }));
-
-        this._consensus.on('broadcast', (data) => this._send({
+    broadcast(data) {
+        this._send({
             'cmd': 'network', 'msg': [0, data]
-        }));
+        });
+    }
+
+    send(id, data) {
+        this._send({
+            'cmd': 'network', 'msg': [id, data]
+        });
     }
 
     _send(message) {
