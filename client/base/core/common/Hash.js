@@ -1,3 +1,8 @@
+if (typeof require !== 'undefined') {
+    global.KBuffer = require('../util/Buffer');
+    global.ArrayUtils = require('../util/ArrayUtils');
+}
+
 class Hash {
     constructor(value) {
         if (value !== null) {
@@ -29,6 +34,10 @@ class Hash {
 
     get value() {
         return this._value;
+    }
+
+    subarray(begin, end) {
+        return this._value.subarray(begin, end);
     }
 
     serialize(buf) {

@@ -56,7 +56,7 @@ class TransactionInput {
         this._signature.serialize(buf);
         this._txOutId.serialize(buf);
         buf.writeUint32(this._txOutIndex);
-        
+
         return buf;
     }
 
@@ -100,9 +100,8 @@ class TransactionInput {
 
         const address = referencedUTxOut.address;
         const publicKey = KElliptic.importPublicKey(address.value);
-        if (!KElliptic.verify(publicKey, this._signature, id)) {
-            console.log('invalid txIn signature: %s txId: %s address: %s',
-                this._signature, id, referencedUTxOut.address);
+        if (!this._signature.verify(publicKey, id.value)) {
+            console.log(`invalid txIn signature: ${this._signature.hex} txId: ${id.hex} address: ${referencedUTxOut.address.hex}`);
             return false;
         }
 

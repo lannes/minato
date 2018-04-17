@@ -7,7 +7,7 @@ if (typeof require !== 'undefined') {
 
 class BlockBody {
     constructor(transactions) {
-        if (!Array.isArray(transactions) || transactions.some(it => !(it instanceof Transaction)))
+        if (!Array.isArray(transactions) || transactions.some(tx => !(tx instanceof Transaction)))
             throw Error('Invalid transactions');
 
         this._transactions = transactions;
@@ -69,7 +69,7 @@ class BlockBody {
     }
 
     get serializeSize() {
-        let size = 2; /* size of transactions */
+        let size = 2; /* length of transactions */
 
         for (const tx of this._transactions) {
             size += tx.serializeSize;

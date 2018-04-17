@@ -18,6 +18,10 @@ class Observable {
         delete this._listeners.get(type)[id];
     }
 
+    _offAll() {
+        this._listeners.clear();
+    }
+    
     notify(type, ...args) {
         const promises = [];
 

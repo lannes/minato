@@ -14,8 +14,8 @@ class ArrayUtils {
             && array1.every((value, i) => value === array2[i]);
     }
 
-    static toAscii(buffer) {
-        return String.fromCharCode.apply(null, new Uint8Array(buffer));
+    static toAscii(array) {
+        return String.fromCharCode.apply(null, new Uint8Array(array));
     }
 
     static fromAscii(string) {

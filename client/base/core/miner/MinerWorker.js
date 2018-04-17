@@ -57,12 +57,12 @@ class MinerWorker extends MinerWorkerImpl {
         this._mineBlock(nonceRange);
     }
 
-    _mineBlock(nonceRange) {
+    async _mineBlock(nonceRange) {
         const block = this._block;
         let blockHeader = new KBuffer(block.header.serialize());
 
         if (this._miningEnabled) {
-            let result = this.mine(blockHeader, this._difficult, nonceRange.minNonce, nonceRange.maxNonce);
+            let result = await this.mine(blockHeader, this._difficult, nonceRange.minNonce, nonceRange.maxNonce);
             if (result) {
                 this._observable.notify('share', { block: block, nonce: result.nonce, hash: result.hash });
                 return;

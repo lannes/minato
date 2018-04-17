@@ -32,25 +32,12 @@ sudo yum install epel-release
 sudo yum install nginx
 
 sudo systemctl start nginx
+sudo systemctl restart nginx
+sudo systemctl reload nginx
 
 sudo firewall-cmd --permanent --zone=public --add-service=http 
 sudo firewall-cmd --permanent --zone=public --add-service=https
 sudo firewall-cmd --reload
-
-(
-    CentOS 6:
-
-    sudo service nginx stop 
-    sudo service nginx start  
-    sudo service nginx reload 
-    sudo service nginx restart
-
-    sudo iptables -I INPUT -p tcp -m tcp --dport 80 -j ACCEPT
-    sudo iptables -I INPUT -p tcp -m tcp --dport 443 -j ACCEPT
-
-    sudo service iptables save
-    sudo service iptables restart
-)
 ```
 * Test config
 ```sh
@@ -145,6 +132,11 @@ http {
 ```
 ## **6. SETUP SSL**
 * GoDaddy
+    * Domains\My Domains\minato.zone\DNS Management
+    * Records
+        |Type  |Name  |Value    |TLS    |
+        |------|:----:|:-------:|-------|
+        |A     |@     |x.x.x.x  |1 Hour |
 
 * Let’s Encrypt
 https://www.digitalocean.com/community/tutorials/how-to-secure-nginx-with-let-s-encrypt-on-centos-7
@@ -170,15 +162,9 @@ IMPORTANT NOTES:
 ```
 * CERT RENEW
 ```sh
+sudo crontab -e
 01 1 * * 0 /usr/bin/certbot renew >> /var/log/ssl-renew.log 
 06 1 * * 0 /usr/bin/systemctl nginx reload
-
-(
-    CentOS 6:
-
-    01 1 * * 0 /usr/bin/certbot renew >> /var/log/ssl-renew.log
-    06 1 * * 0 /sbin/service nginx reload
-)
 ```
 * NGINX
 ```nginx

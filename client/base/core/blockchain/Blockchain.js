@@ -93,12 +93,12 @@ class Blockchain extends BaseChain {
     verifyBlocks(blocks, unspentTxOuts) {
         //const blockHeight = blocks[0].height;
         //if (blockHeight === 0) {
-            if (!this.verifyGenesis(blocks[0]))
-                return null;
+        if (!this.verifyGenesis(blocks[0]))
+            return null;
         /*} else {
             const blocksHeight = blocks[blocks.length - 1].height;
             if (this.height < blocksHeight) {
-                if (!Block.verifyNewBlock(blocks[blocksHeight - this.height + 1], this.head))
+                if (!blocks[blocksHeight - this.height + 1].isImmediateSuccessorOf(this.head))
                     return null;
 
                 blocks = blocks.slice(blocksHeight - this.height + 1);
@@ -110,7 +110,7 @@ class Blockchain extends BaseChain {
         let newUnspentTxOuts = Transaction.process(blocks[0].transactions, [], 0);
 
         for (let i = 1; i < blocks.length; i++) {
-            if (!Block.verifyNewBlock(blocks[i], blocks[i - 1])) {
+            if (!blocks[i].isImmediateSuccessorOf(blocks[i - 1]) || !blocks[i].verify()) {
                 console.log('invalid block in blockchain');
                 return null;
             }
@@ -130,7 +130,7 @@ class Blockchain extends BaseChain {
     }
 
     _pushBlock(block, unspentTxOuts) {
-        if (!Block.verifyNewBlock(block, this.head))
+        if (!block.isImmediateSuccessorOf(this.head) || !block.verify())
             return null;
 
         const newUnspentTxOuts = Transaction.process(block.transactions, unspentTxOuts, block.height);

@@ -62,6 +62,23 @@ class BlockHeader {
         return BlockUtils.isProofOfWork(this.hash().value, this._difficulty);
     }
 
+    isImmediateSuccessorOf(prevHeader) {
+        if (this.height !== prevHeader.height + 1) {
+            return false;
+        }
+
+        if (this.timestamp < prevHeader.timestamp) {
+            return false;
+        }
+
+        const prevHash = prevHeader.hash();
+        if (!this.prevHash.equals(prevHash)) {
+            return false;
+        }
+
+        return true;
+    }
+
     get height() {
         return this._height;
     }

@@ -70,6 +70,18 @@ class Address {
     static fromBase64(base64) {
         return new Address(ArrayUtils.fromBase64(base64));
     }
+
+    get hex() {
+        return ArrayUtils.toHex(this._value);
+    }
+    
+    static fromHex(hex) {
+        return new Address(ArrayUtils.fromHex(hex));
+    }
+
+    static fromHash(hash) {
+        return new Address(hash.subarray(0, Address.SERIALIZE_SIZE));
+    }
 }
 
 Address.SERIALIZE_SIZE = 65;

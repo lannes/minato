@@ -1,3 +1,9 @@
+if (typeof require !== 'undefined') {
+    global.KBuffer = require('../util/Buffer');
+    global.ArrayUtils = require('../util/ArrayUtils');
+    global.KElliptic = require('../../crypto/elliptic');
+}
+
 class Signature {
     constructor(value) {
         if (value !== null) {
@@ -29,6 +35,10 @@ class Signature {
 
     get value() {
         return this._value;
+    }
+
+    verify(publicKey, data) {
+        return KElliptic.verify(publicKey, this._value, data);
     }
 
     serialize(buf) {
@@ -64,6 +74,14 @@ class Signature {
 
     static fromBase64(base64) {
         return new Signature(ArrayUtils.fromBase64(base64));
+    }
+
+    get hex() {
+        return ArrayUtils.toHex(this._value);
+    }
+
+    static fromHex(hex) {
+        return new Hash(ArrayUtils.fromHex(hex));
     }
 }
 

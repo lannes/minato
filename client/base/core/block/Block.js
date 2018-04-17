@@ -93,16 +93,6 @@ class Block {
         return this._header.serializeSize + this._body.serializeSize;
     }
 
-    verify() {
-        if (!this._header.verifyProofOfWork())
-            return false;
-
-        if (!this._verifyBody())
-            return false;
-
-        return true;
-    }
-
     _verifyBody() {
         if (!this._body.verify())
             return false;
@@ -115,27 +105,30 @@ class Block {
         return true;
     }
 
-    static verifyTimestamp(newBlock, prevBlock) {
-        return (prevBlock.timestamp - 60 < newBlock.timestamp)
-            && newBlock.timestamp - 60 < getCurrentTimestamp();
+    _verify(timeNow) {
+        if (this.timestamp >= timeNow + 60)
+            return false;
+
+        if (!this._header.verifyProofOfWork())
+            return false;
+
+        if (!this._verifyBody())
+            return false;
+
+        return true;
     }
 
-    static verifyNewBlock(newBlock, prevBlock) {
-        if (newBlock.height - 1 !== prevBlock.height) {
+    verify() {
+        const timeNow = Math.round(new Date().getTime() / 1000);
+        if (!this._verify(timeNow))
             return false;
-        }
 
-        if (!newBlock.prevHash.equals(prevBlock.hash())) {
-            return false;
-        }
+        return true;
+    }
 
-        if (!Block.verifyTimestamp(newBlock, prevBlock)) {
+    isImmediateSuccessorOf(prevBlock) {
+        if (!this._header.isImmediateSuccessorOf(prevBlock.header))
             return false;
-        }
-
-        if (!newBlock.verify()) {
-            return false;
-        }
 
         return true;
     }

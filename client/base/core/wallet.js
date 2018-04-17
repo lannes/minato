@@ -97,11 +97,11 @@ class Wallet {
         const { includedUnspentTxOuts, leftOverAmount } = Wallet.findTxOutsForAmount(amount, myUnspentTxOuts);
 
         const unsignedTxIns = includedUnspentTxOuts.map((tx) => {
-            return new TransactionInput(null, tx.txOutId, tx.txOutIndex);
+            return new TransactionInput(new Signature(null), tx.txOutId, tx.txOutIndex);
         });
 
         const tx = new Transaction(
-            null,
+            new Hash(null),
             unsignedTxIns,
             Wallet.createTxOuts(receiverAddress, myAddress, amount, leftOverAmount)
         );

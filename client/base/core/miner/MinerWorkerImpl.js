@@ -1,17 +1,21 @@
 class MinerWorkerImpl {
     mine(input, difficult, minNonce, maxNonce) {
-        input.writePos = input.byteLength;
+        return new Promise((resolve, reject) => {
 
-        for (let nonce = minNonce; nonce < maxNonce; nonce++) {
-            input.writePos -= 4;
-            input.writeUint32(nonce);
+            input.writePos = input.byteLength;
 
-            let hash = KHash.sha256(input);
-            if (BlockUtils.isProofOfWork(hash, difficult)) {
-                return { hash: hash, nonce: nonce };
+            for (let nonce = minNonce; nonce < maxNonce; nonce++) {
+                input.writePos -= 4;
+                input.writeUint32(nonce);
+
+                let hash = KHash.sha256(input);
+                if (BlockUtils.isProofOfWork(hash, difficult)) {
+                    resolve({ hash: hash, nonce: nonce });
+                    return;
+                }
             }
-        }
 
-        return null;
+            resolve(null);
+        });
     }
 }

@@ -52,6 +52,7 @@ class Message {
 }
 
 Message.Type = {
+    SIGNAL: 0,
     GET_BLOCKS: 1,
     BLOCKS: 3,
     GET_POOL: 4,

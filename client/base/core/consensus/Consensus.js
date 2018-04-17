@@ -34,7 +34,7 @@ class Consensus extends BaseConsensus {
             address,
             amount,
             Wallet.getPrivateFromWallet(),
-            this._uTxOPool.transaction,
+            this._uTxOPool.transactions,
             this._mempool.transactions
         );
 

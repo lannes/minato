@@ -205,9 +205,8 @@ class Transaction {
 
     static hasDuplicates(txIns) {
         //const groups = txIns.countBy((txIn: TxIn) => txIn.txOutId + txIn.txOutIndex);
-        // ERROR: FIXME
         const groups = txIns.reduce((a, b) => {
-            let key = b.txOutId + b.txOutIndex;
+            let key = b.txOutId.hex + b.txOutIndex;
             a[key] = a[key] ? a[key] += 1 : 1;
             return a;
         }, {});
@@ -271,7 +270,8 @@ class Transaction {
                 throw Error();
             }
 
-            this._txIns[index]._signature = signature;
+            // FIX ME
+            this._txIns[index]._signature._value = signature;
         }
     }
 
