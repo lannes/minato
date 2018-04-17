@@ -1,7 +1,7 @@
 importScripts(
     '../crypto/sha256.js?v=0.1',
     '../crypto/hash.js?v=0.1',
-    '../crypto/elliptic.min.js?v=0.1',
+    '../crypto/axlsign.js?v=0.1',
     '../../base/crypto/elliptic.js?v=0.1',
     '../../base/util/common.js?v=0.1',
     '../../base/util/db.js?v=0.1',
@@ -112,8 +112,7 @@ class KNodeWorker {
     async _init() {
         console.log('MINATO VERSION 0.0.2');
 
-        //await KDatabase.delete('hokage');
-        await KDatabase.open('hokage', 1, () => {
+        await KDatabase.open('hokage4', 1, () => {
             KDatabase.createStore('blockchain', 'index');
             KDatabase.createStore('transaction', 'id');
             KDatabase.createStore('wallet');

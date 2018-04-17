@@ -1,49 +1,22 @@
-// ECDSA - Elliptic Curve Digital Signature Algorithm
-// NIST recommended curve P-256, also known as secp256r1.
-
-let EC = null;
+// Ed25519-like signatures with X25519 keys, Axolotl-style.
 
 if (typeof require !== 'undefined') {
-    const ec = require('elliptic').ec;
-    EC = new ec('secp256k1');
-
-    global.KBuffer = require('../util/buffer');
 } else {
-    EC = new elliptic.ec('secp256k1');
 }
 
 class KElliptic {
     static generateKeyPair() {
-        const keyPair = EC.genKeyPair();
-        return {
-            private: keyPair.getPrivate(),
-            public: keyPair.getPublic()
-        };
+        const seed = self.crypto.getRandomValues(new Uint8Array(32));
+        const keys = axlsign.generateKeyPair(seed);
+        return keys;
     }
 
-    static generatePublicData(publicKey) {
-        return publicKey.encode('bin');
+    static sign(privateKey, msg) {
+        return axlsign.sign(privateKey, msg);
     }
 
-    static generatePrivateData(privateKey) {
-        return privateKey.toArray();
-    }
-
-    static importPublicKey(publicData) {
-        //return EC.keyFromPublic(Array.from(publicData));
-        return EC.keyFromPublic(publicData);
-    }
-
-    static importPrivateKey(privateData) {
-        return EC.keyFromPrivate(privateData, 'bin');
-    }
-
-    static sign(privateKey, data) {
-        return privateKey.sign(data).toDER();
-    }
-
-    static verify(publicKey, signature, data) {
-        return publicKey.verify(data, signature);
+    static verify(publicKey, signature, msg) {
+        return axlsign.verify(publicKey, msg, signature);
     }
 }
 

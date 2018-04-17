@@ -98,8 +98,7 @@ class TransactionInput {
         }
 
         const address = referencedUTxOut.address;
-        const publicKey = KElliptic.importPublicKey(address.value);
-        if (!this._signature.verify(publicKey, id.value)) {
+        if (!this._signature.verify(address.value, id.value)) {
             console.log(`invalid txIn signature: ${this._signature.hex} txId: ${id.hex} address: ${referencedUTxOut.address.hex}`);
             return false;
         }

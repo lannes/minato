@@ -13,33 +13,31 @@ class Wallet {
     }
 
     static getPrivateFromWallet() {
-        return minato.privateKey;
+        return minato.private;
     }
 
     static getPublicFromWallet() {
-        return new Address(new Uint8Array(minato.address));
+        return new Address(new Uint8Array(minato.public));
     }
 
     static async initWallet() {
         const wallet = await KDatabase.getAll('wallet');
         if (wallet.length === 1) {
-            minato.privateKey = KElliptic.importPrivateKey(wallet[0][0]);
-            minato.address = wallet[0][1];
+            minato.private = wallet[0][0];
+            minato.public = wallet[0][1];
             return;
         }
 
-        const keyPair = KElliptic.generateKeyPair();
-        const privateData = KElliptic.generatePrivateData(keyPair.private);
-        const publicData = KElliptic.generatePublicData(keyPair.public);
+        const keys = KElliptic.generateKeyPair();
 
-        minato.privateKey = KElliptic.importPrivateKey(keyPair.private);
-        minato.address = publicData;
+        minato.private = keys.private;
+        minato.public = keys.public;
 
-        await KDatabase.add('wallet', [privateData, publicData]);
+        await KDatabase.add('wallet', [keys.private, keys.public]);
     }
 
     static async deleteWallet() {
-        await KDatabase.delete('hokage');
+        await KDatabase.delete('hokage4');
     }
 
     static findTxOutsForAmount(amount, unspentTxOuts) {
@@ -55,7 +53,7 @@ class Wallet {
             }
         }
 
-        throw new Error('not enough coins to send transaction');
+        throw Error('not enough coins to send transaction');
     }
 
     static createTxOuts(receiverAddress, myAddress, amount, leftOverAmount) {

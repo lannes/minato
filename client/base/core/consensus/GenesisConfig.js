@@ -1,13 +1,14 @@
-
+//const keys = KElliptic.generateKeyPair();
+//console.log(ArrayUtils.toBase64(keys.public));
 
 GenesisConfig = {};
 GenesisConfig.BASE_AMOUNT = 50;
 GenesisConfig.GENESIS_AMOUNT = 1000000000;
 GenesisConfig.GENESIS_TRANSACTION = new Transaction(
-    Hash.fromHex('b33585bd8f9d99d3a90752dc25d1779c5c9c9af61abd94d6dc2a52908b2d662c'),
+    Hash.fromHex('078abd96498fbf8e46830d672385a42b568b7501b4abc2163599b3b39fdec3ca'),
     [new TransactionInput(new Signature(null), new Hash(null), 0)],
     [new TransactionOutput(
-        Address.fromBase64('BNM8vQ50sW72R+ZBRbjuidz8l0ppmh1BK9yjeUZISsGgVYb7ZWbtbWeU9ibZ7sHBdrn7HeKEs4pYcGJ+PI8paOo='),
+        Address.fromBase64('aW68vgBk2VuDW1ralVScF+rhPMRDRIV5FUbZKZPPd2g='),
         GenesisConfig.GENESIS_AMOUNT)
     ]
 );
@@ -15,14 +16,14 @@ GenesisConfig.GENESIS_BLOCK = new Block(
     new BlockHeader(
         0,
         new Hash(null),
-        Hash.fromHex('cfb8acc53564d6e6ab52a6a19b4838303bf7306a16e935675e4a2f3f18253ea5'),
+        Hash.fromHex('102113b1622da21fa972ed94717de78d90602ce16412ed3ee80e3d7166c45f6a'),
         1519493046,
         0,
-        1
+        2
     ),
     new BlockBody([GenesisConfig.GENESIS_TRANSACTION])
 );
-GenesisConfig.GENESIS_HASH = Hash.fromHex('e398c67160737ffdbb30d5859163618f4c9e1efd749bbf0086e2f2a3af49e83e');
+GenesisConfig.GENESIS_HASH = Hash.fromHex('e78136ea3c366cb3c6aa469f0030931051751d97f92ba55a558f658e39cc6c19');
 
 console.log(GenesisConfig.GENESIS_TRANSACTION.getId().hex);
 console.log((new BlockBody([GenesisConfig.GENESIS_TRANSACTION])).hash().hex);

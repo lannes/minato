@@ -10,9 +10,8 @@ class Signature {
             if (!(value instanceof Uint8Array))
                 throw Error('Invalid type');
 
-            // FIXME length of signature is not fix (70, 71, 72)
-            //if (value.length !== Signature.SERIALIZE_SIZE)
-            //    throw Error('Invalid length');
+            if (value.length !== Signature.SERIALIZE_SIZE)
+                throw Error('Invalid length');
         }
 
         this._value = value;
@@ -38,8 +37,8 @@ class Signature {
         return this._value;
     }
 
-    verify(publicKey, data) {
-        return KElliptic.verify(publicKey, this._value, data);
+    verify(publicKey, msg) {
+        return KElliptic.verify(publicKey, this._value, msg);
     }
 
     serialize(buf) {
@@ -86,7 +85,7 @@ class Signature {
     }
 }
 
-Signature.SERIALIZE_SIZE = 72;
+Signature.SERIALIZE_SIZE = 64;
 
 if (typeof module !== 'undefined')
     module.exports = Signature;

@@ -84,7 +84,7 @@ class Address {
     }
 }
 
-Address.SERIALIZE_SIZE = 65;
+Address.SERIALIZE_SIZE = 32;
 
 if (typeof module !== 'undefined')
     module.exports = Address;

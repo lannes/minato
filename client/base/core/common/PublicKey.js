@@ -66,7 +66,7 @@ class PublicKey {
     }
 }
 
-PublicKey.SERIALIZE_SIZE = 65;
+PublicKey.SERIALIZE_SIZE = 32;
 
 if (typeof module !== 'undefined')
     module.exports = PublicKey;
