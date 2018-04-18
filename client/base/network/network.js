@@ -2,6 +2,7 @@
 if (typeof require !== 'undefined') {
     global.WebSocket = require('ws');
     global.webrtc = require('wrtc');
+    global.WebRtcDataChannel = require('./webrtc/WebRtcDataChannel');
 
     global.RTCPeerConnection = webrtc.RTCPeerConnection;
     global.RTCSessionDescription = webrtc.RTCSessionDescription;

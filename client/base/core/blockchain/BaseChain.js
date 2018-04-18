@@ -1,7 +1,11 @@
+if (typeof require !== 'undefined') {
+    global.Observable = require('../..//util/Observable');
+    global.GenesisConfig = require('../consensus/GenesisConfig');
+}
+
 class BaseChain extends Observable {
     constructor() {
         super();
-
     }
 
     getBlockLocators() {
@@ -33,3 +37,6 @@ class BaseChain extends Observable {
         return locators;
     }
 }
+
+if (typeof module !== 'undefined')
+    module.exports = BaseChain;

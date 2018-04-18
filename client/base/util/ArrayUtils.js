@@ -1,5 +1,7 @@
 if (typeof require !== 'undefined') {
     global.StringUtils = require('./StringUtils');
+    global.atob = require('atob');
+    global.btoa = require('btoa');
 }
 
 class ArrayUtils {
@@ -25,7 +27,7 @@ class ArrayUtils {
         }
         return buf;
     }
-    
+
     static toHex(array) {
         if (!array)
             return '';
@@ -55,7 +57,7 @@ class ArrayUtils {
             c => c.charCodeAt(0)
         );
     }
-    
+
     static randomElement(array) {
         return array[Math.floor(Math.random() * array.length)];
     }

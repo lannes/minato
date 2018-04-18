@@ -1,3 +1,8 @@
+
+if (typeof require !== 'undefined') {
+    global.BlockUtils = require('../block/BlockUtils');
+}
+
 class MinerWorkerImpl {
     mine(input, difficult, minNonce, maxNonce) {
         return new Promise((resolve, reject) => {
@@ -19,3 +24,6 @@ class MinerWorkerImpl {
         });
     }
 }
+
+if (typeof module !== 'undefined')
+    module.exports = MinerWorkerImpl;

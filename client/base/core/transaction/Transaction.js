@@ -1,11 +1,14 @@
 if (typeof require !== 'undefined') {
     global.KBuffer = require('../../util/Buffer');
-    global.KHash = require('../nodejs/crypto/hash');
+    global.KHash = require('../../../nodejs/crypto/Hash');
     global.KElliptic = require('../../crypto/elliptic');
-    global.TransactionInput = require('../transaction/TransactionInput');
-    global.TransactionOut = require('../transaction/TransactionOutput');
-    global.UnspentTransactionOutput = require('../transaction/UnspentTransactionOutput');
-    global.Block = require('../block/Block');
+    global.Hash = require('../common/Hash');
+    global.Address = require('../common/Address');
+    global.Signature = require('../common/Signature');
+    global.GenesisConfig = require('../consensus/GenesisConfig');
+    global.TransactionInput = require('./TransactionInput');
+    global.TransactionOutput = require('./TransactionOutput');
+    global.UnspentTransactionOutput = require('./UnspentTransactionOutput');
 }
 
 class Transaction {
@@ -265,7 +268,7 @@ class Transaction {
             }
             const referencedAddress = referencedUnspentTxOut.address;
 
-            if (!Wallet.getPublicFromWallet().equals(referencedAddress)) {
+            if (!Wallet.address.equals(referencedAddress)) {
                 console.log('key that does not match the address that is referenced in txIn');
                 throw Error();
             }

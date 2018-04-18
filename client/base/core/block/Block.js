@@ -1,6 +1,4 @@
 if (typeof require !== 'undefined') {
-    global.Hash = require('../nodejs/crypto/Hash');
-    global.Transaction = require('../transaction/Transaction');
     global.BlockHeader = require('./BlockHeader');
     global.BlockBody = require('./BlockBody');
     global.KBuffer = require('../../util/Buffer');

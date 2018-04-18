@@ -1,6 +1,6 @@
 if (typeof require !== 'undefined') {
-    global.KBuffer = require('../util/Buffer');
-    global.ArrayUtils = require('../util/ArrayUtils');
+    global.KBuffer = require('../../util/Buffer');
+    global.ArrayUtils = require('../../util/ArrayUtils');
     global.KElliptic = require('../../crypto/elliptic');
 }
 

@@ -61,8 +61,7 @@ class PublicKey {
     }
 
     toPeerId() {
-        return new PeerId(this.hash().value);
-        //return new PeerId(this.hash().subarray(0, 16));
+        return new PeerId(this.hash().subarray(0, 16));
     }
 }
 

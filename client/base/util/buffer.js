@@ -1,5 +1,6 @@
 if (typeof require !== 'undefined') {
     global.NumberUtils = require('./NumberUtils');
+    global.ArrayUtils = require('./ArrayUtils');
 }
 
 class KBuffer extends Uint8Array {

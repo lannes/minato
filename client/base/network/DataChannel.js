@@ -1,6 +1,8 @@
 if (typeof require !== 'undefined') {
     global.Observable = require('../util/Observable');
     global.KBuffer = require('../util/Buffer');
+    global.NumberUtils = require('../util/NumberUtils');
+    global.Message = require('./message/Message');
 }
 
 class DataChannel extends Observable {
@@ -87,7 +89,7 @@ class DataChannel extends Observable {
                 this.notify('message', msg);
             }
         } catch (e) {
-            this._error(`Error occurred while parsing incoming message, ${e.message}`);
+            this._error(`DataChannel: Error occurred while parsing incoming message, ${e.message}`);
         }
     }
 

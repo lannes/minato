@@ -1,5 +1,6 @@
 if (typeof require !== 'undefined') {
     global.Observable = require('../../util/Observable');
+    global.MinerWorkerImpl = require('./MinerWorkerImpl');
 }
 
 class MinerWorker extends MinerWorkerImpl {

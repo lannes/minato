@@ -1,3 +1,9 @@
+if (typeof require !== 'undefined') {
+    global.Transaction = require('./Transaction');
+    global.GenesisConfig = require('../consensus/GenesisConfig');
+    global.Observable = require('../../util/Observable');
+}
+
 class UnspentTransactionOutputPool extends Observable {
     constructor() {
         super();
@@ -13,3 +19,6 @@ class UnspentTransactionOutputPool extends Observable {
         this._transactions = transactions;
     }
 }
+
+if (typeof module !== 'undefined')
+    module.exports = UnspentTransactionOutputPool;

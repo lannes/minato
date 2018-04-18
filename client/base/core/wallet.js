@@ -5,39 +5,33 @@ if (typeof require !== 'undefined') {
     global.TransactionOuput = require('./transaction/TransactionOutput');
 }
 
-var minato = minato || {};
-
 class Wallet {
     constructor() {
 
     }
 
-    static getPrivateFromWallet() {
-        return minato.private;
+    static get privateKey() {
+        return Wallet.keys.private;
     }
 
-    static getPublicFromWallet() {
-        return new Address(new Uint8Array(minato.public));
+    static get publicKey() {
+        return Wallet.keys.public;
     }
 
-    static async initWallet() {
+    static get address() {
+        return new Address(Wallet.keys.public);
+    }
+
+    static async init() {
         const wallet = await KDatabase.getAll('wallet');
         if (wallet.length === 1) {
-            minato.private = wallet[0][0];
-            minato.public = wallet[0][1];
+            Wallet.keys.private = wallet[0][0];
+            Wallet.keys.public = wallet[0][1];
             return;
         }
 
-        const keys = KElliptic.generateKeyPair();
-
-        minato.private = keys.private;
-        minato.public = keys.public;
-
-        await KDatabase.add('wallet', [keys.private, keys.public]);
-    }
-
-    static async deleteWallet() {
-        await KDatabase.delete('hokage4');
+        Wallet.keys = KElliptic.generateKeyPair();
+        await KDatabase.add('wallet', [Wallet.keys.private, Wallet.keys.public]);
     }
 
     static findTxOutsForAmount(amount, unspentTxOuts) {
@@ -57,23 +51,23 @@ class Wallet {
     }
 
     static createTxOuts(receiverAddress, myAddress, amount, leftOverAmount) {
-        const txOut1 = new TransactionOutput(receiverAddress, amount);
+        const txOut = new TransactionOutput(receiverAddress, amount);
 
         if (leftOverAmount === 0) {
-            return [txOut1];
+            return [txOut];
         } else {
             const leftOverTx = new TransactionOutput(myAddress, leftOverAmount);
-            return [txOut1, leftOverTx];
+            return [txOut, leftOverTx];
         }
     }
 
     static filterTxPoolTxs(unspentTxOuts, transactionPool) {
         const txIns = transactionPool.reduce((sum, tx) => sum.concat(tx.txIns), []);
 
-        const removable = [];
+        let removable = [];
         for (const unspentTxOut of unspentTxOuts) {
             const txIn = txIns.find((tx) => {
-                return tx.txOutIndex === unspentTxOut.txOutIndex && ArrayUtils.equals(tx.txOutId, unspentTxOut.txOutId);
+                return tx.txOutIndex === unspentTxOut.txOutIndex && tx.txOutId.equals(unspentTxOut.txOutId);
             });
 
             if (txIn === undefined) {
@@ -86,7 +80,7 @@ class Wallet {
     }
 
     static createTransaction(receiverAddress, amount, privateKey, unspentTxOuts, txPool) {
-        const myAddress = Wallet.getPublicFromWallet();
+        const myAddress = Wallet.address;
         const myUnspentTxOutsA = unspentTxOuts.filter((tx) => tx.address.equals(myAddress));
 
         const myUnspentTxOuts = Wallet.filterTxPoolTxs(myUnspentTxOutsA, txPool);
@@ -111,6 +105,8 @@ class Wallet {
         return tx;
     }
 }
+
+Wallet.keys = {};
 
 if (typeof module !== 'undefined')
     module.exports = Wallet;

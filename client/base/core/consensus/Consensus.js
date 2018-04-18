@@ -1,7 +1,7 @@
 if (typeof require !== 'undefined') {
     global.Wallet = require('../Wallet');
-    global.Observable = require('../util/Observable');
-    global.MessageFactory = require('../network/message/MessageFactory');
+    global.BaseConsensus = require('./BaseConsensus');
+    global.MessageFactory = require('../../network/message/MessageFactory');
 }
 
 const SyncType = {
@@ -35,7 +35,7 @@ class Consensus extends BaseConsensus {
         const tx = Wallet.createTransaction(
             address,
             amount,
-            Wallet.getPrivateFromWallet(),
+            Wallet.privateKey,
             this._uTxOPool.transactions,
             this._mempool.transactions
         );

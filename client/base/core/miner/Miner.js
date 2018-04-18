@@ -84,7 +84,7 @@ class Miner extends Observable {
     }
 
     _getNextBody() {
-        const address = Wallet.getPublicFromWallet();
+        const address = Wallet.address;
 
         const rewardTx = Transaction.createReward(address, this._blockchain.height + 1);
         const transactions = [rewardTx].concat(this._mempool.transactions);

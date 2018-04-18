@@ -1,7 +1,8 @@
 if (typeof require !== 'undefined') {
-    global.KBuffer = require('../../util/buffer');
+    global.KBuffer = require('../../util/Buffer');
     global.Hash = require('../common/Hash');
-    global.KHash = require('../nodejs/crypto/Hash');
+    global.KHash = require('../../../nodejs/crypto/Hash');
+    global.BlockUtils = require('./BlockUtils');
 }
 
 class BlockHeader {

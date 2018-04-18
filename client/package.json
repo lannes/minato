@@ -8,7 +8,8 @@
   "dependencies": {
     "leveldown": "^3.0.0",
     "levelup": "^2.0.2",
-    "elliptic": "^6.4.0",
+    "atob": "^2.1.0",
+    "btoa": "^1.2.1",
     "ws": "^5.1.0",
     "wrtc": "^0.0.67"
   },

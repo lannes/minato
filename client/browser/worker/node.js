@@ -1,7 +1,7 @@
 importScripts(
     '../crypto/sha256.js?v=0.1',
     '../crypto/hash.js?v=0.1',
-    '../crypto/axlsign.js?v=0.1',
+    '../../base/crypto/axlsign.js?v=0.1',
     '../../base/crypto/elliptic.js?v=0.1',
     '../../base/util/common.js?v=0.1',
     '../../base/util/db.js?v=0.1',
@@ -118,10 +118,10 @@ class KNodeWorker {
             KDatabase.createStore('wallet');
         });
 
-        await Wallet.initWallet();
+        await Wallet.init();
 
         this._send({
-            'cmd': 'init', 'msg': Wallet.getPublicFromWallet().base64
+            'cmd': 'init', 'msg': Wallet.address.base64
         });
     }
 

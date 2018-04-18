@@ -2,7 +2,7 @@
 if (typeof require !== 'undefined') {
     global.KBuffer = require('../../util/Buffer');
     global.NumberUtils = require('../../util/NumberUtils');
-    global.Address = require('../Address');
+    global.Address = require('../common/Address');
 }
 
 class TransactionOutput {

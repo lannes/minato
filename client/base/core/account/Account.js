@@ -13,12 +13,12 @@ class Account {
     }
 
     static getMyBalance(unspentTxOuts) {
-        const address = Wallet.getPublicFromWallet();
+        const address = Wallet.address;
         return Account.getBalance(address, unspentTxOuts);
     }
 
     static getMyUnspentTransactionOutputs(unspentTxOuts) {
-        return Account.findUnspentTxOuts(Wallet.getPublicFromWallet(), unspentTxOuts);
+        return Account.findUnspentTxOuts(Wallet.address, unspentTxOuts);
     }
 }
 

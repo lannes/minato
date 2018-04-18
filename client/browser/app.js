@@ -144,13 +144,7 @@ class KApp {
 
         this.network.onmessage = (id, message) => {
             //console.log(`received from: ${id} ${message}`);
-
-            try {
-                this.node.postMessage({ 'cmd': 'network', 'id': id, 'type': 'data', 'msg': message });
-            } catch (e) {
-                console.log(e);
-                console.log(message);
-            }
+            this.node.postMessage({ 'cmd': 'network', 'id': id, 'type': 'data', 'msg': message });
         };
 
         this.network.onclose = (id, connections) => {

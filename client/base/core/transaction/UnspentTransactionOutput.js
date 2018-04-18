@@ -1,3 +1,4 @@
+
 class UnspentTransactionOutput {
     constructor(txOutId, txOutIndex, address, amount) {
         if (!(txOutId instanceof Hash))

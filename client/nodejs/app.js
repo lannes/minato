@@ -1,10 +1,12 @@
 
 const KNetwork = require('../base/network/network');
+const KNode = require('./Node');
 
 class KApp {
     constructor() {
-        this.network = null;
-        this.isMining = false;
+        this._node = new KNode();
+        this._network = null;
+        this._isMining = false;
 
         this._initNetwork();
     }
@@ -13,14 +15,14 @@ class KApp {
     }
 
     mining() {
-        if (this.isMining) {
+        if (this._isMining) {
         } else {
         }
     }
 
     stop() {
-        if (this.network)
-            this.network.disconnect();
+        if (this._network)
+            this._network.disconnect();
     }
 
     transfer(address, amount) {
@@ -37,33 +39,26 @@ class KApp {
             ]
         };
 
-        this.network = new KNetwork(signalingServer, configuration);
+        this._network = new KNetwork(signalingServer, configuration);
 
-        this.network.onconnect = (id) => {
+        this._network.onconnect = (id) => {
             console.log('id: ' + id);
         }
 
-        this.network.onopen = (id, connections) => {
+        this._network.onopen = (id, connections) => {
             console.log(connections);
             //this.node.postMessage({ 'cmd': 'network', 'id': id, 'type': 'open' });
         };
 
-        this.network.onprogress = (id, percent) => {
+        this._network.onprogress = (id, percent) => {
         };
 
-        this.network.onmessage = (id, message) => {
+        this._network.onmessage = (id, message) => {
             console.log('received from: ' + id + ' ' + message);
-
-            try {
-                let data = JSON.parse(message);
-                //this.node.postMessage({ 'cmd': 'network', 'id': id, 'type': 'data', 'msg': data });
-            } catch (e) {
-                console.log(e);
-                console.log(message);
-            }
+            this._node.onmessage({ 'cmd': 'network', 'id': id, 'type': 'data', 'msg': data });
         };
 
-        this.network.onclose = (id, connections) => {
+        this._network.onclose = (id, connections) => {
             console.log(connections);
         }
     }

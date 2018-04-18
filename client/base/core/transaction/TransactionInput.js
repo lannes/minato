@@ -2,7 +2,7 @@ if (typeof require !== 'undefined') {
     global.KBuffer = require('../../util/Buffer');
     global.Hash = require('../common/Hash');
     global.Signature = require('../common/Signature');
-    global.KElliptic = require('../crypto/elliptic');
+    global.KElliptic = require('../../crypto/Elliptic');
 }
 
 class TransactionInput {

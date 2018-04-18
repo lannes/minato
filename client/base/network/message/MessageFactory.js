@@ -1,5 +1,10 @@
 if (typeof require !== 'undefined') {
     global.Message = require('./Message');
+    global.GetHeadMessage = require('./GetHeadMessage');
+    global.GetBlocksMessage = require('./GetBlocksMessage');
+    global.BlocksMessage = require('./BlocksMessage');
+    global.GetPoolMessage = require('./GetPoolMessage');
+    global.PoolMessage = require('./PoolMessage');
 }
 
 class MessageFactory {

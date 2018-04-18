@@ -1,8 +1,8 @@
 if (typeof require !== 'undefined') {
-    global.KBuffer = require('../../util/Buffer');
-    global.Block = require('../block/Block');
-    global.Wallet = require('../Wallet');
+    global.BaseChain = require('./BaseChain');
     global.Transaction = require('../transaction/Transaction');
+    global.Synchronizer = require('../../util/Synchronizer');
+    global.GenesisConfig = require('../consensus/GenesisConfig');
 }
 
 class Blockchain extends BaseChain {
