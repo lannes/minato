@@ -4,7 +4,7 @@ const KNode = require('./Node');
 
 class KApp {
     constructor() {
-        this._node = new KNode();
+        this._node = null;
         this._network = null;
         this._isMining = false;
 
@@ -40,6 +40,7 @@ class KApp {
         };
 
         this._network = new KNetwork(signalingServer, configuration);
+        this._node = new KNode(this._network);
 
         this._network.onconnect = (id) => {
             console.log('id: ' + id);
@@ -47,15 +48,14 @@ class KApp {
 
         this._network.onopen = (id, connections) => {
             console.log(connections);
-            //this.node.postMessage({ 'cmd': 'network', 'id': id, 'type': 'open' });
+            this._node.onmessage({ 'cmd': 'network', 'id': id, 'type': 'open' });
         };
 
         this._network.onprogress = (id, percent) => {
         };
 
         this._network.onmessage = (id, message) => {
-            console.log('received from: ' + id + ' ' + message);
-            this._node.onmessage({ 'cmd': 'network', 'id': id, 'type': 'data', 'msg': data });
+            this._node.onmessage({ 'cmd': 'network', 'id': id, 'type': 'data', 'msg': message });
         };
 
         this._network.onclose = (id, connections) => {

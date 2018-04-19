@@ -8,17 +8,17 @@ if (typeof require !== 'undefined') {
 class BlockHeader {
     constructor(height, prevHash, bodyHash, timestamp, difficulty, nonce) {
         if (!NumberUtils.isUint32(height))
-            throw Error('Invalid height');
+            throw Error('BlockHeader: Malformed height');
         if (!(prevHash instanceof Hash))
-            throw Error('Invalid prevhash');
+            throw Error('BlockHeader: Malformed prevhash');
         if (!(bodyHash instanceof Hash))
-            throw Error('Invalid bodyHash');
+            throw Error('BlockHeader: Malformed bodyHash');
         if (!NumberUtils.isUint32(timestamp))
-            throw Error('Invalid timestamp');
+            throw Error('BlockHeader: Malformed timestamp');
         if (!NumberUtils.isUint32(difficulty))
-            throw Error('Invalid difficulty');
+            throw Error('BlockHeader: Malformed difficulty');
         if (!NumberUtils.isUint32(nonce))
-            throw Error('Invalid nonce');
+            throw Error('BlockHeader: Malformed nonce');
 
         this._height = height;
         this._prevHash = prevHash;

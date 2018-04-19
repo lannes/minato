@@ -122,6 +122,12 @@ class DataChannel extends Observable {
     _sendChunk(msg) {
         throw Error('Not implemented');
     }
+
+    get readyState() {
+        throw Error('Not implemented');
+    }
+
+    
 }
 
 DataChannel.CHUNK_SIZE_MAX = 16 * 1024;

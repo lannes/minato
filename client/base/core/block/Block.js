@@ -7,9 +7,9 @@ if (typeof require !== 'undefined') {
 class Block {
     constructor(header, body) {
         if (!(header instanceof BlockHeader))
-            throw Error('Invalid header');
+            throw Error('Block: Malformed header');
         if (!(body instanceof BlockBody))
-            throw Error('Invalid body');
+            throw Error('Block: Malformed body');
 
         this._header = header;
         this._body = body;

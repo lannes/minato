@@ -14,11 +14,11 @@ if (typeof require !== 'undefined') {
 class Transaction {
     constructor(id, txIns, txOuts) {
         if (!(id instanceof Hash))
-            throw Error('Invalid id');
+            throw Error('Transaction: Malformed id');
         if (!Array.isArray(txIns) || txIns.some(tx => !(tx instanceof TransactionInput)))
-            throw Error('Invalid transactions input');
+            throw Error('Transaction: Malformed transactions input');
         if (!Array.isArray(txOuts) || txOuts.some(tx => !(tx instanceof TransactionOutput)))
-            throw Error('Invalid transactions output');
+            throw Error('Transaction: Malformed transactions output');
 
         this._id = id;
         this._txIns = txIns;
@@ -42,6 +42,12 @@ class Transaction {
             && this._txIns.every((tx, i) => tx.equals(obj.txIns[i]))
             && this._txOuts.length === obj.txOuts.length
             && this._txOuts.every((tx, i) => tx.equals(obj.txOuts[i]));
+    }
+
+    toString() {
+        return `{`
+            + `id: ${this._id.hex}`
+            + `}`;
     }
 
     get id() {
@@ -194,7 +200,7 @@ class Transaction {
             return false;
         }
 
-        if (blockIndex !== 0 && this._txOuts[0].amount !== GenesisConfig.BASE_AMOUNT) {
+        if (blockIndex !== 0 && this._txOuts[0].amount !== GenesisConfig.MINING_REWARD) {
             return false;
         }
 
@@ -206,18 +212,17 @@ class Transaction {
         return true;
     }
 
-    static hasDuplicates(txIns) {
-        //const groups = txIns.countBy((txIn: TxIn) => txIn.txOutId + txIn.txOutIndex);
-        const groups = txIns.reduce((a, b) => {
-            let key = b.txOutId.hex + b.txOutIndex;
-            a[key] = a[key] ? a[key] += 1 : 1;
-            return a;
-        }, {});
+    static verifyDouble(transactions) {
+        let counts = {};
 
-        for (let key in groups) {
-            if (groups[key] > 1) {
-                console.log('duplicate txIn: ' + key);
-                return true;
+        for (const tx of transactions) {
+            for (const txIns of tx.txIns) {
+                const key = txIns.txOutId.hex + txIns.txOutIndex;
+                counts[key] = (counts[key] || 0) + 1;
+                if (counts[key] > 1) {
+                    console.log(`duplicate ${txIns.txOutId.hex} ${txIns.txOutIndex}`);
+                    return true;
+                }
             }
         }
 
@@ -231,23 +236,30 @@ class Transaction {
             return false;
         }
 
-        // check for duplicate txIns. Each txIn can be included only once
-        const txIns = transactions.reduce((arr, tx) => arr.concat(tx.txIns), []);
-
-        if (Transaction.hasDuplicates(txIns)) {
+        if (Transaction.verifyDouble(transactions)) {
             return false;
         }
 
-        // all but coinbase transactions
         const normalTransactions = transactions.slice(1);
         return normalTransactions.every((tx) => tx.verify(unspentTxOuts));
+    }
+
+    static createFee(address, blockIndex) {
+        const transaction = new Transaction(
+            new Hash(null),
+            [new TransactionInput(new Signature(null), new Hash(null), blockIndex)],
+            [new TransactionOutput(address, GenesisConfig.FEE_PER_TRANSACTION)]
+        );
+
+        transaction._id = transaction.getId();
+        return transaction;
     }
 
     static createReward(address, blockIndex) {
         const transaction = new Transaction(
             new Hash(null),
             [new TransactionInput(new Signature(null), new Hash(null), blockIndex)],
-            [new TransactionOutput(address, GenesisConfig.BASE_AMOUNT)]
+            [new TransactionOutput(address, GenesisConfig.MINING_REWARD)]
         );
 
         transaction._id = transaction.getId();

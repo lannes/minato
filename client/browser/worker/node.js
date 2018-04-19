@@ -1,9 +1,8 @@
 importScripts(
-    '../crypto/sha256.js?v=0.1',
-    '../crypto/hash.js?v=0.1',
-    '../../base/crypto/axlsign.js?v=0.1',
-    '../../base/crypto/elliptic.js?v=0.1',
-    '../../base/util/common.js?v=0.1',
+    '../crypto/Sha256.js?v=0.1',
+    '../crypto/Hash.js?v=0.1',
+    '../../base/crypto/Axlsign.js?v=0.1',
+    '../../base/crypto/Elliptic.js?v=0.1',
     '../../base/util/db.js?v=0.1',
     '../../base/util/StringUtils.js?v=0.1',
     '../../base/util/NumberUtils.js?v=0.1',

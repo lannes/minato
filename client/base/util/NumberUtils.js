@@ -27,7 +27,7 @@ class NumberUtils {
 NumberUtils.UINT8_MAX = 255;
 NumberUtils.UINT16_MAX = 65535;
 NumberUtils.UINT32_MAX = 4294967295;
-NumberUtils.UINT64_MAX = Number.MAX_SAFE_INTEGER;
+NumberUtils.UINT64_MAX = Number.MAX_SAFE_INTEGER; // NodeJS 9,007,199,254,740,991
 
 if (typeof module !== 'undefined')
     module.exports = NumberUtils;

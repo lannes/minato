@@ -5,7 +5,7 @@ if (typeof require !== 'undefined') {
 
 class MinerWorkerImpl {
     mine(input, difficult, minNonce, maxNonce) {
-        return new Promise((resolve, reject) => {
+        return new Promise((resolve) => {
 
             input.writePos = input.byteLength;
 

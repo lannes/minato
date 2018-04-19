@@ -48,9 +48,9 @@ class KBuffer extends Uint8Array {
     }
 
     read(length) {
-        const array = this.subarray(this._readPos, this._readPos + length);
+        const value = this.subarray(this._readPos, this._readPos + length);
         this._readPos += length;
-        return array;
+        return new Uint8Array(value);
     }
 
     write(array) {
@@ -89,16 +89,21 @@ class KBuffer extends Uint8Array {
     }
 
     readUint64() {
-        const number = this._view.getFloat64(this._readPos);
-        if (!NumberUtils.isUint64(number))
-            throw new Error('Malformed value');
+        const value = this._view.getUint32(this._readPos) * Math.pow(2, 32) + this._view.getUint32(this._readPos + 4);
+
+        if (!NumberUtils.isUint64(value))
+            throw Error(`readUint64: Malformed value ${value} (pos: ${this._readPos})`);
+
         this._readPos += 8;
-        return number;
+        return value;
     }
 
-    writeUint64(number) {
-        if (!NumberUtils.isUint64(number)) throw new Error('Malformed value');
-        this._view.setFloat64(this._writePos, number);
+    writeUint64(value) {
+        if (!NumberUtils.isUint64(value))
+            throw Error(`writeUint64: Malformed value ${value}`);
+
+        this._view.setUint32(this._writePos, Math.floor(value / Math.pow(2, 32)));
+        this._view.setUint32(this._writePos + 4, value);
         this._writePos += 8;
     }
 

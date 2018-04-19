@@ -10,7 +10,7 @@ class HeaderChain {
             || !Array.isArray(headers)
             || !NumberUtils.isUint16(headers.length)
             || headers.some(h => !(h instanceof BlockHeader)))
-            throw Error('Invalid headers');
+            throw Error('HeaderChain: Malformed headers');
 
         this._headers = headers;
     }

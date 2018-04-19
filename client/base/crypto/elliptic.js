@@ -8,7 +8,7 @@ if (typeof require !== 'undefined') {
 class KElliptic {
     static generateKeyPair() {
         let seed = null;
-        if (crypto) {
+        if (typeof require !== 'undefined') {
             seed = crypto.randomBytes(32);
         } else {
             seed = self.crypto.getRandomValues(new Uint8Array(32));

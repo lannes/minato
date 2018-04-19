@@ -1,13 +1,3 @@
-process.on('uncaughtException', (err) => {
-    const message = err.message;
-    if (message &&
-        (message.startsWith('connect E') ||
-            message === 'Cannot read property \'aborted\' of null'))
-        return;
-
-    console.error(`Uncaught exception: ${message || err}`, err);
-});
-
 const Blockchain = require('../base/core/blockchain/Blockchain');
 const TransactionPool = require('../base/core/transaction/TransactionPool');
 const UnspentTransactionOutputPool = require('../base/core/transaction/UnspentTransactionOutputPool');
@@ -17,7 +7,9 @@ const Wallet = require('../base/core/Wallet');
 const KDatabase = require('./util/db');
 
 class KNode {
-    constructor() {
+    constructor(network) {
+        this._network = network;
+
         this._blockchain = new Blockchain();
         this._pool = new TransactionPool();
         this._uTxOPool = new UnspentTransactionOutputPool();
@@ -78,8 +70,19 @@ class KNode {
         });
     }
 
-    _send(message) {
-        
+    _send(data) {
+        if (data['cmd'] !== 'network')
+            return;
+
+        if (data['msg'].length !== 2)
+            return;
+
+        const id = data['msg'][0];
+        const msg = data['msg'][1];
+        if (id === 0)
+            this._network.broadcast(msg);
+        else
+            this._network.send(id, msg);
     }
 
     async _init() {
@@ -94,8 +97,7 @@ class KNode {
         await Wallet.init();
     }
 
-    async onmessage(event) {
-        const data = event.data;
+    async onmessage(data) {
         switch (data['cmd']) {
             case 'init':
                 await this._init();

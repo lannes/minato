@@ -14,10 +14,11 @@ if (typeof require !== 'undefined') {
 //console.log(ArrayUtils.toBase64(keys.public));
 
 GenesisConfig = {};
-GenesisConfig.BASE_AMOUNT = 50;
+GenesisConfig.MINING_REWARD = 50;
+GenesisConfig.FEE_PER_TRANSACTION = 1;
 GenesisConfig.GENESIS_AMOUNT = 1000000000;
 GenesisConfig.GENESIS_TRANSACTION = new Transaction(
-    Hash.fromHex('078abd96498fbf8e46830d672385a42b568b7501b4abc2163599b3b39fdec3ca'),
+    Hash.fromHex('b21dd2e4b3b8ffc3f9ab30cefe5753bf100ee56a92f1780d426e52bde417ebe6'),
     [new TransactionInput(new Signature(null), new Hash(null), 0)],
     [new TransactionOutput(
         Address.fromBase64('aW68vgBk2VuDW1ralVScF+rhPMRDRIV5FUbZKZPPd2g='),
@@ -28,16 +29,16 @@ GenesisConfig.GENESIS_BLOCK = new Block(
     new BlockHeader(
         0,
         new Hash(null),
-        Hash.fromHex('102113b1622da21fa972ed94717de78d90602ce16412ed3ee80e3d7166c45f6a'),
+        Hash.fromHex('a097a52475c5dd3f4307d25c37295dc844562c46a95fad098e9bee78c5cfbb96'),
         1519493046,
         0,
-        2
+        0
     ),
     new BlockBody([GenesisConfig.GENESIS_TRANSACTION])
 );
-GenesisConfig.GENESIS_HASH = Hash.fromHex('e78136ea3c366cb3c6aa469f0030931051751d97f92ba55a558f658e39cc6c19');
+GenesisConfig.GENESIS_HASH = Hash.fromHex('9a58ba3a2024863f6a4f2bffb44c11327fdce0368432b07dd9a895c490101490');
 
-/*
+
 console.log(GenesisConfig.GENESIS_TRANSACTION.getId().hex);
 console.log((new BlockBody([GenesisConfig.GENESIS_TRANSACTION])).hash().hex);
 
@@ -56,7 +57,7 @@ for (let nonce = 0; nonce < 100000; nonce++) {
 }
 
 console.log(GenesisConfig.GENESIS_BLOCK.verify());
-*/
+
 
 if (typeof module !== 'undefined')
     module.exports = GenesisConfig;

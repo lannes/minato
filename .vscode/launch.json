@@ -8,7 +8,7 @@
             "type": "node",
             "request": "launch",
             "name": "Launch Program",
-            "program": "${workspaceFolder}/bin/main.js",
+            "program": "${workspaceFolder}/client/nodejs/App.js",
             //"preLaunchTask": "compile",
             "outFiles": [
                 "${workspaceFolder}/bin/**/*.js"

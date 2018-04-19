@@ -8,11 +8,11 @@ if (typeof require !== 'undefined') {
 class TransactionOutput {
     constructor(address, amount) {
         if (!(address instanceof Address))
-            throw Error('Invalid Address');
+            throw Error('TransactionOutput: Malformed Address');
         if (!NumberUtils.isUint64(amount))
-            throw Error('Invalid Amount');
+            throw Error(`TransactionOutput: Malformed Amount ${amount}`);
         if (amount < 0)
-            throw Error('Invalid Amount');
+            throw Error(`TransactionOutput: Invalid Amount ${amount}`);
 
         this._address = address;
         this._amount = amount;

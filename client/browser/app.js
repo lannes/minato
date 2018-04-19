@@ -31,7 +31,7 @@ class KApp {
         this.network = null;
         this.isMining = false;
 
-        this.node = new Worker('./browser/worker/node.js');
+        this.node = new Worker('./browser/worker/Node.js?v=0.1');
 
         this.node.onmessage = this._onmessage.bind(this);
 

@@ -1,5 +1,6 @@
 if (typeof require !== 'undefined') {
     global.Wallet = require('../Wallet');
+    global.Account = require('../account/Account');
     global.BaseConsensus = require('./BaseConsensus');
     global.MessageFactory = require('../../network/message/MessageFactory');
 }
@@ -159,11 +160,11 @@ class Consensus extends BaseConsensus {
 
     process(id, raw) {
         const buf = new KBuffer(raw);
-        let type = MessageFactory.peekType(buf);
-        let message = MessageFactory.parse(buf);
-
+        const type = MessageFactory.peekType(buf);
+        const message = MessageFactory.parse(buf);
+        
         switch (type) {
-            case Message.Type.GET_HEAD:
+            case Message.Type.GET_HEAD:                
                 this._node.send(id, this._head());
                 break;
             case Message.Type.GET_BLOCKS: {

@@ -4,6 +4,8 @@ if (typeof require !== 'undefined') {
 
 class Message {
     constructor(type) {
+        if (!NumberUtils.isUint8(type))
+            throw Error('Message: Malformed type');
         this._type = type;
     }
 

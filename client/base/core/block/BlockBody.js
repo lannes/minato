@@ -8,7 +8,7 @@ if (typeof require !== 'undefined') {
 class BlockBody {
     constructor(transactions) {
         if (!Array.isArray(transactions) || transactions.some(tx => !(tx instanceof Transaction)))
-            throw Error('Invalid transactions');
+            throw Error('BlockBody: Malformed transactions');
 
         this._transactions = transactions;
     }

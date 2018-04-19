@@ -37,6 +37,10 @@ class Signature {
         return this._value;
     }
 
+    static create(privateKey, msg) {
+        return new Signature(KElliptic.sign(privateKey, msg));
+    }
+
     verify(publicKey, msg) {
         return KElliptic.verify(publicKey, this._value, msg);
     }

@@ -8,13 +8,13 @@ if (typeof require !== 'undefined') {
 class TransactionInput {
     constructor(signature, txOutId, txOutIndex) {
         if (!(signature instanceof Signature))
-            throw Error('Invalid signature');
+            throw Error('TransactionInput: Malformed signature');
 
         if (!(txOutId instanceof Hash))
-            throw Error('Invalid txOutId');
+            throw Error('TransactionInput: Malformed txOutId');
 
-        if (typeof txOutIndex !== 'number')
-            throw Error('Invalid txOutIndex');
+        if (!NumberUtils.isUint32(txOutIndex))
+            throw Error('TransactionInput: Malformed txOutIndex');
 
         this._signature = signature;
         this._txOutId = txOutId;
@@ -90,10 +90,10 @@ class TransactionInput {
 
     verify(id, unspentTxOuts) {
         const referencedUTxOut = unspentTxOuts.find(
-            (tx) => tx.txOutId.equals(this._txOutId) && tx.txOutIndex === this._txOutIndex
+            (utxo) => utxo.txOutId.equals(this._txOutId) && utxo.txOutIndex === this._txOutIndex
         );
         if (referencedUTxOut == null) {
-            console.log('referenced txOut not found: ');
+            console.log(`referenced txOut not found: ${this._txOutId.hex} ${this._txOutIndex}`);
             return false;
         }
 

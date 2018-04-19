@@ -76,7 +76,7 @@ class Miner extends Observable {
         const height = this._blockchain.height + 1;
         const prevHash = this._blockchain.headHash;
         const bodyHash = body.hash();
-        const timestamp = getCurrentTimestamp();
+        const timestamp = Math.round(new Date().getTime() / 1000);
         const difficulty = this._blockchain.difficulty;
         const nonce = 0;
 
@@ -87,6 +87,11 @@ class Miner extends Observable {
         const address = Wallet.address;
 
         const rewardTx = Transaction.createReward(address, this._blockchain.height + 1);
+        
+        if (this._mempool.transactions.length > 0) {
+
+        }
+
         const transactions = [rewardTx].concat(this._mempool.transactions);
 
         return new BlockBody(transactions);

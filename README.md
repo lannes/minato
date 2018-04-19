@@ -39,9 +39,18 @@ sudo firewall-cmd --permanent --zone=public --add-service=http
 sudo firewall-cmd --permanent --zone=public --add-service=https
 sudo firewall-cmd --reload
 ```
+* SELinux restricting access
+```
+getenforce
+setenforce Permissive
+```
 * Test config
 ```sh
 sudo nginx -t
+```
+* Check error
+```sh
+cat /var/log/nginx/error.log
 ```
 ## **5. RUN APP**
 * Source code
@@ -60,25 +69,25 @@ sudo nginx -t
 ```    
 * Setup files on server
 ```
-+ /home/minato/client
++ /home/ttpm/minato/client
 |   + base
 |   + browser
 |   + nodejs
 |   + index.html
 |   + package.json
-+ /home/minato/server
++ /home/ttpm/minato/server
 |   + signal
 |   + package.json
 ```
 * signalserver (port 3002)
 ```sh
-cd /home/minato/server
+cd /home/ttpm/minato/server
 npm install
 pm2 start ./signal/app.js --name signalserver
 ```
 * nodejs client
 ```sh
-cd /home/minato/client
+cd /home/ttpm/minato/client
 npm install
 pm2 start ./nodejs/app.js --name blockchain
 ```
@@ -99,7 +108,7 @@ http {
 
     server {
         listen       80;
-        root         /home/minato/client;
+        root         /home/ttpm/minato/client;
         index        index.html;
 
         location / {
@@ -131,13 +140,14 @@ http {
 }
 ```
 ## **6. SETUP SSL**
-* GoDaddy
-    * Domains\My Domains\minato.zone\DNS Management
-    * Records
-        |Type  |Name  |Value    |TLS    |
-        |------|:----:|:-------:|-------|
-        |A     |@     |x.x.x.x  |1 Hour |
+* GoDaddy 
+```
+Domains\My Domains\minato.zone\DNS Management\Records
 
+|Type  |Name  |Value    |TLS    |
+|------|:----:|:-------:|-------|
+|A     |@     |x.x.x.x  |1 Hour |
+```
 * Let’s Encrypt
 https://www.digitalocean.com/community/tutorials/how-to-secure-nginx-with-let-s-encrypt-on-centos-7
 ```sh
@@ -148,7 +158,7 @@ wget https://dl.eff.org/certbot-auto
 chmod a+x certbot-auto
 ln -s /usr/bin/certbot-auto /usr/bin/certbot
 
-certbot certonly -a webroot --webroot-path=/home/minato/client -d minato.zone -d www.minato.zone
+certbot certonly -a webroot --webroot-path=/home/ttpm/minato/client -d minato.zone -d www.minato.zone
 
 IMPORTANT NOTES:
  - Congratulations! Your certificate and chain have been saved at:
