@@ -1,7 +1,7 @@
 
 if (typeof require !== 'undefined') {
-    global.KBuffer = require('../../util/Buffer');
-    global.NumberUtils = require('../../util/NumberUtils');
+    global.KBuffer = require('../../utils/Buffer');
+    global.NumberUtils = require('../../utils/NumberUtils');
     global.Address = require('../common/Address');
 }
 

@@ -1,7 +1,7 @@
 if (typeof require !== 'undefined') {
-    global.KBuffer = require('../../util/Buffer');
+    global.KBuffer = require('../../utils/Buffer');
+    global.Observable = require('../../utils/Observable');
     global.Transaction = require('./Transaction');
-    global.Observable = require('../../util/Observable');
 }
 
 class TransactionPool extends Observable {

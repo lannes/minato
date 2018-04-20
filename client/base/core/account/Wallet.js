@@ -1,8 +1,8 @@
 if (typeof require !== 'undefined') {
-    global.KElliptic = require('../crypto/elliptic');
-    global.KDatabase = require('../../nodejs/util/db');
-    global.Transaction = require('./transaction/Transaction');
-    global.TransactionOuput = require('./transaction/TransactionOutput');
+    global.KElliptic = require('../../crypto/Elliptic');
+    global.KDatabase = require('../../../nodejs/utils/Database');
+    global.Transaction = require('../transaction/Transaction');
+    global.TransactionOuput = require('../transaction/TransactionOutput');
 }
 
 class Wallet {

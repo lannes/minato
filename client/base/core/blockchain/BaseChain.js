@@ -1,5 +1,5 @@
 if (typeof require !== 'undefined') {
-    global.Observable = require('../..//util/Observable');
+    global.Observable = require('../../utils/Observable');
     global.GenesisConfig = require('../consensus/GenesisConfig');
 }
 

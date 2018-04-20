@@ -1,5 +1,5 @@
 if (typeof require !== 'undefined') {
-    global.KBuffer = require('../../util/Buffer');
+    global.KBuffer = require('../../utils/Buffer');
 }
 
 class Message {

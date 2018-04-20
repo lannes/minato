@@ -1,6 +1,6 @@
 if (typeof require !== 'undefined') {
     global.Message = require('./Message');
-    global.KBuffer = require('../../util/Buffer');
+    global.KBuffer = require('../../utils/Buffer');
     global.Block = require('../../core/block/Block');
 }
 

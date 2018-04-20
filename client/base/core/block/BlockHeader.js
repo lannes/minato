@@ -1,5 +1,5 @@
 if (typeof require !== 'undefined') {
-    global.KBuffer = require('../../util/Buffer');
+    global.KBuffer = require('../../utils/Buffer');
     global.Hash = require('../common/Hash');
     global.KHash = require('../../../nodejs/crypto/Hash');
     global.BlockUtils = require('./BlockUtils');

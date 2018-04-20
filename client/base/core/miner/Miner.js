@@ -1,6 +1,6 @@
 
 if (typeof require !== 'undefined') {
-    global.Observable = require('../../util/Observable');
+    global.Observable = require('../../utils/Observable');
     global.MinerWorker = require('./MinerWorker');
 }
 
@@ -48,7 +48,10 @@ class Miner extends Observable {
     }
 
     async _onWorkerShare(obj) {
-        this._hashCount += this._worker.noncesPerRun;
+        if (obj.block)
+            this._hashCount += obj.nonce;
+        else
+            this._hashCount += this._worker.noncesPerRun;
         if (obj.block && obj.block.prevHash.equals(this._blockchain.headHash)) {
             if (BlockUtils.isProofOfWork(obj.hash, obj.block.difficulty) && !this._submittingBlock) {
                 obj.block.header.nonce = obj.nonce;
@@ -87,7 +90,7 @@ class Miner extends Observable {
         const address = Wallet.address;
 
         const rewardTx = Transaction.createReward(address, this._blockchain.height + 1);
-        
+
         if (this._mempool.transactions.length > 0) {
 
         }

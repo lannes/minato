@@ -1,10 +1,17 @@
+if (typeof require !== 'undefined') {
+    global.Hash = require('../common/Hash');
+    global.Address = require('../common/Address');
+    global.NumberUtils = require('../../utils/NumberUtils');
+}
 
 class UnspentTransactionOutput {
     constructor(txOutId, txOutIndex, address, amount) {
         if (!(txOutId instanceof Hash))
-            throw Error('Invalid txOutId');
+            throw Error('UnspentTransactionOutput: Malformed txOutId');
         if (!(address instanceof Address))
-            throw Error('Invalid addess');
+            throw Error('UnspentTransactionOutput: Malformed addess');
+        if (!NumberUtils.isUint64(amount))
+            throw Error(`TransactionOutput: Malformed Amount ${amount}`);
 
         this._txOutId = txOutId;
         this._txOutIndex = txOutIndex;

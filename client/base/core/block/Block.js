@@ -1,7 +1,7 @@
 if (typeof require !== 'undefined') {
     global.BlockHeader = require('./BlockHeader');
     global.BlockBody = require('./BlockBody');
-    global.KBuffer = require('../../util/Buffer');
+    global.KBuffer = require('../../utils/Buffer');
 }
 
 class Block {

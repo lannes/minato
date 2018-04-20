@@ -1,8 +1,8 @@
 
 const KNetwork = require('../base/network/network');
-const KNode = require('./Node');
+const Node = require('./Node');
 
-class KApp {
+class App {
     constructor() {
         this._node = null;
         this._network = null;
@@ -40,7 +40,7 @@ class KApp {
         };
 
         this._network = new KNetwork(signalingServer, configuration);
-        this._node = new KNode(this._network);
+        this._node = new Node(this._network);
 
         this._network.onconnect = (id) => {
             console.log('id: ' + id);
@@ -64,5 +64,5 @@ class KApp {
     }
 }
 
-const app = new KApp();
+const app = new App();
 

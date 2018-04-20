@@ -1,7 +1,7 @@
 if (typeof require !== 'undefined') {
-    global.Observable = require('../util/Observable');
-    global.KBuffer = require('../util/Buffer');
-    global.NumberUtils = require('../util/NumberUtils');
+    global.Observable = require('../utils/Observable');
+    global.KBuffer = require('../utils/Buffer');
+    global.NumberUtils = require('../utils/NumberUtils');
     global.Message = require('./message/Message');
 }
 
@@ -127,7 +127,7 @@ class DataChannel extends Observable {
         throw Error('Not implemented');
     }
 
-    
+
 }
 
 DataChannel.CHUNK_SIZE_MAX = 16 * 1024;

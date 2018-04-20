@@ -1,5 +1,5 @@
 if (typeof require !== 'undefined') {
-    global.Observable = require('../../util/Observable');
+    global.Observable = require('../../utils/Observable');
 }
 
 class BaseConsensus extends Observable {

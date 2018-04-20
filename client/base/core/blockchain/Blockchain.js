@@ -1,7 +1,7 @@
 if (typeof require !== 'undefined') {
     global.BaseChain = require('./BaseChain');
     global.Transaction = require('../transaction/Transaction');
-    global.Synchronizer = require('../../util/Synchronizer');
+    global.Synchronizer = require('../../utils/Synchronizer');
     global.GenesisConfig = require('../consensus/GenesisConfig');
 }
 

@@ -1,7 +1,7 @@
 if (typeof require !== 'undefined') {
     global.Transaction = require('./Transaction');
     global.GenesisConfig = require('../consensus/GenesisConfig');
-    global.Observable = require('../../util/Observable');
+    global.Observable = require('../../utils/Observable');
 }
 
 class UnspentTransactionOutputPool extends Observable {

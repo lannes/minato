@@ -1,5 +1,5 @@
 if (typeof require !== 'undefined') {
-    global.Wallet = require('../Wallet');
+    global.Wallet = require('./Wallet');
 }
 
 class Account {

@@ -1,6 +1,6 @@
 if (typeof require !== 'undefined') {
-    global.KBuffer = require('../../util/Buffer');
-    global.ArrayUtils = require('../../util/ArrayUtils');
+    global.KBuffer = require('../../utils/Buffer');
+    global.ArrayUtils = require('../../utils/ArrayUtils');
 }
 
 class Hash {

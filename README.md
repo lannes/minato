@@ -89,7 +89,7 @@ pm2 start ./signal/app.js --name signalserver
 ```sh
 cd /home/ttpm/minato/client
 npm install
-pm2 start ./nodejs/app.js --name blockchain
+pm2 start ./nodejs/App.js --name blockchain
 ```
 * browser client
 ```sh

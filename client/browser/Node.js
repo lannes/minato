@@ -1,48 +1,48 @@
 importScripts(
-    '../crypto/Sha256.js?v=0.1',
-    '../crypto/Hash.js?v=0.1',
-    '../../base/crypto/Axlsign.js?v=0.1',
-    '../../base/crypto/Elliptic.js?v=0.1',
-    '../../base/util/db.js?v=0.1',
-    '../../base/util/StringUtils.js?v=0.1',
-    '../../base/util/NumberUtils.js?v=0.1',
-    '../../base/util/ArrayUtils.js?v=0.1',
-    '../../base/util/Buffer.js?v=0.2',
-    '../../base/util/Observable.js?v=0.2',
-    '../../base/util/Synchronizer.js?v=0.1',
-    '../../base/core/common/Signature.js?v=0.1',
-    '../../base/core/common/Address.js?v=0.1',
-    '../../base/core/common/Hash.js?v=0.1',
-    '../../base/core/transaction/TransactionInput.js?v=0.1',
-    '../../base/core/transaction/TransactionOutput.js?v=0.1',
-    '../../base/core/transaction/UnspentTransactionOutput.js?v=0.1',
-    '../../base/core/transaction/UnspentTransactionOutputPool.js?v=0.1',
-    '../../base/core/transaction/Transaction.js?v=0.2',
-    '../../base/core/transaction/TransactionPool.js?v=0.2',
-    '../../base/core/block/BlockBody.js?v=0.1',
-    '../../base/core/block/BlockHeader.js?v=0.1',
-    '../../base/core/block/Block.js?v=0.1',
-    '../../base/core/block/BlockUtils.js?v=0.1',
-    '../../base/core/blockchain/BaseChain.js?v=0.1',
-    '../../base/core/blockchain/Blockchain.js?v=0.2',
-    '../../base/network/message/Message.js?v=0.1',
-    '../../base/network/message/GetHeadMessage.js?v=0.1',
-    '../../base/network/message/GetBlocksMessage.js?v=0.1',
-    '../../base/network/message/BlocksMessage.js?v=0.1',
-    '../../base/network/message/GetPoolMessage.js?v=0.1',
-    '../../base/network/message/PoolMessage.js?v=0.1',
-    '../../base/network/message/MessageFactory.js?v=0.1',
-    '../../base/core/account/Account.js?v=0.1',
-    '../../base/core/consensus/GenesisConfig.js?v=0.1',
-    '../../base/core/consensus/BaseConsensus.js?v=0.1',
-    '../../base/core/consensus/Consensus.js?v=0.1',
-    '../../base/core/miner/MinerWorkerImpl.js?v=0.1',
-    '../../base/core/miner/MinerWorker.js?v=0.1',
-    '../../base/core/miner/Miner.js?v=0.1',
-    '../../base/core/Wallet.js?v=0.2'
+    'crypto/Sha256.js?v=0.1',
+    'crypto/Hash.js?v=0.1',
+    '../base/crypto/Axlsign.js?v=0.1',
+    '../base/crypto/Elliptic.js?v=0.1',
+    '../base/utils/Database.js?v=0.1',
+    '../base/utils/StringUtils.js?v=0.1',
+    '../base/utils/NumberUtils.js?v=0.1',
+    '../base/utils/ArrayUtils.js?v=0.1',
+    '../base/utils/Buffer.js?v=0.1',
+    '../base/utils/Observable.js?v=0.1',
+    '../base/utils/Synchronizer.js?v=0.1',
+    '../base/core/common/Signature.js?v=0.1',
+    '../base/core/common/Address.js?v=0.1',
+    '../base/core/common/Hash.js?v=0.1',
+    '../base/core/transaction/TransactionInput.js?v=0.1',
+    '../base/core/transaction/TransactionOutput.js?v=0.1',
+    '../base/core/transaction/UnspentTransactionOutput.js?v=0.1',
+    '../base/core/transaction/UnspentTransactionOutputPool.js?v=0.1',
+    '../base/core/transaction/Transaction.js?v=0.2',
+    '../base/core/transaction/TransactionPool.js?v=0.2',
+    '../base/core/block/BlockBody.js?v=0.1',
+    '../base/core/block/BlockHeader.js?v=0.1',
+    '../base/core/block/Block.js?v=0.1',
+    '../base/core/block/BlockUtils.js?v=0.1',
+    '../base/core/blockchain/BaseChain.js?v=0.1',
+    '../base/core/blockchain/Blockchain.js?v=0.2',
+    '../base/network/message/Message.js?v=0.1',
+    '../base/network/message/GetHeadMessage.js?v=0.1',
+    '../base/network/message/GetBlocksMessage.js?v=0.1',
+    '../base/network/message/BlocksMessage.js?v=0.1',
+    '../base/network/message/GetPoolMessage.js?v=0.1',
+    '../base/network/message/PoolMessage.js?v=0.1',
+    '../base/network/message/MessageFactory.js?v=0.1',
+    '../base/core/account/Account.js?v=0.1',
+    '../base/core/consensus/GenesisConfig.js?v=0.1',
+    '../base/core/consensus/BaseConsensus.js?v=0.1',
+    '../base/core/consensus/Consensus.js?v=0.1',
+    '../base/core/miner/MinerWorkerImpl.js?v=0.1',
+    '../base/core/miner/MinerWorker.js?v=0.1',
+    '../base/core/miner/Miner.js?v=0.1',
+    '../base/core/account/Wallet.js?v=0.1'
 );
 
-class KNodeWorker {
+class Node {
     constructor() {
         this._blockchain = new Blockchain();
         this._pool = new TransactionPool();
@@ -158,9 +158,9 @@ class KNodeWorker {
     }
 }
 
-const nodeWorker = new KNodeWorker();
+const node = new Node();
 self.onmessage = async (event) => {
-    await nodeWorker.onmessage(event);
+    await node.onmessage(event);
 }
 
 self.onerror = (e) => {

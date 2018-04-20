@@ -1,5 +1,5 @@
 if (typeof require !== 'undefined') {
-    global.Wallet = require('../Wallet');
+    global.Wallet = require('../account/Wallet');
     global.Account = require('../account/Account');
     global.BaseConsensus = require('./BaseConsensus');
     global.MessageFactory = require('../../network/message/MessageFactory');

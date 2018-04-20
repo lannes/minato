@@ -1,7 +1,7 @@
 if (typeof require !== 'undefined') {
-    global.KBuffer = require('../../util/Buffer');
-    global.ArrayUtils = require('../../util/ArrayUtils');
-    global.KElliptic = require('../../crypto/elliptic');
+    global.KBuffer = require('../../utils/Buffer');
+    global.ArrayUtils = require('../../utils/ArrayUtils');
+    global.KElliptic = require('../../crypto/Elliptic');
 }
 
 class Signature {

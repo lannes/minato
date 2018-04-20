@@ -26,39 +26,39 @@ if (typeof (window.Worker) === 'undefined') {
     alert('No Web Worker support');
 }
 
-class KApp {
+class App {
     constructor() {
-        this.network = null;
-        this.isMining = false;
+        this._network = null;
+        this._isMining = false;
 
-        this.node = new Worker('./browser/worker/Node.js?v=0.1');
+        this._node = new Worker('./browser/Node.js?v=0.1');
 
-        this.node.onmessage = this._onmessage.bind(this);
+        this._node.onmessage = this._onmessage.bind(this);
 
-        this.node.onerror = (event) => {
+        this._node.onerror = (event) => {
             console.log(event);
         };
     }
 
     start() {
-        this.node.postMessage({ 'cmd': 'init' });
+        this._node.postMessage({ 'cmd': 'init' });
     }
 
     mining() {
-        if (this.isMining) {
-            this.node.postMessage({ 'cmd': 'pause' });
+        if (this._isMining) {
+            this._node.postMessage({ 'cmd': 'pause' });
         } else {
-            this.node.postMessage({ 'cmd': 'mine' });
+            this._node.postMessage({ 'cmd': 'mine' });
         }
     }
 
     stop() {
-        if (this.network)
-            this.network.disconnect();
+        if (this._network)
+            this._network.disconnect();
     }
 
     transfer(address, amount) {
-        this.node.postMessage({ 'cmd': 'sendTransaction', 'address': address, 'amount': amount });
+        this._node.postMessage({ 'cmd': 'sendTransaction', 'address': address, 'amount': amount });
     }
 
     _onmessage(event) {
@@ -108,9 +108,9 @@ class KApp {
                 const id = data['msg'][0];
                 const msg = data['msg'][1];
                 if (id === 0)
-                    this.network.broadcast(msg);
+                    this._network.broadcast(msg);
                 else
-                    this.network.send(id, msg);
+                    this._network.send(id, msg);
             }
                 break;
         }
@@ -127,27 +127,27 @@ class KApp {
             ]
         };
 
-        this.network = new KNetwork(signalingServer, configuration);
+        this._network = new KNetwork(signalingServer, configuration);
 
-        this.network.onconnect = (id) => {
+        this._network.onconnect = (id) => {
             $('#id').text('id: ' + id);
         }
 
-        this.network.onopen = (id, connections) => {
+        this._network.onopen = (id, connections) => {
             $('#lblConnections').text(connections);
-            this.node.postMessage({ 'cmd': 'network', 'id': id, 'type': 'open' });
+            this._node.postMessage({ 'cmd': 'network', 'id': id, 'type': 'open' });
         };
 
-        this.network.onprogress = (id, percent) => {
+        this._network.onprogress = (id, percent) => {
             $('#barDownload').css('width', percent + '%').attr('aria-valuenow', percent).text(percent + '%');
         };
 
-        this.network.onmessage = (id, message) => {
+        this._network.onmessage = (id, message) => {
             //console.log(`received from: ${id} ${message}`);
-            this.node.postMessage({ 'cmd': 'network', 'id': id, 'type': 'data', 'msg': message });
+            this._node.postMessage({ 'cmd': 'network', 'id': id, 'type': 'data', 'msg': message });
         };
 
-        this.network.onclose = (id, connections) => {
+        this._network.onclose = (id, connections) => {
             $('#lblConnections').text(connections);
         }
     }

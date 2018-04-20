@@ -3,10 +3,10 @@ const TransactionPool = require('../base/core/transaction/TransactionPool');
 const UnspentTransactionOutputPool = require('../base/core/transaction/UnspentTransactionOutputPool');
 const Consensus = require('../base/core/consensus/Consensus');
 const Miner = require('../base/core/miner/Miner');
-const Wallet = require('../base/core/Wallet');
-const KDatabase = require('./util/db');
+const Wallet = require('../base/core/account/Wallet');
+const KDatabase = require('./utils/Database');
 
-class KNode {
+class Node {
     constructor(network) {
         this._network = network;
 
@@ -131,4 +131,4 @@ class KNode {
 
 }
 
-module.exports = KNode;
+module.exports = Node;
