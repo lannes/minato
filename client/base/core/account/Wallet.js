@@ -1,10 +1,3 @@
-if (typeof require !== 'undefined') {
-    global.KElliptic = require('../../crypto/Elliptic');
-    global.KDatabase = require('../../../nodejs/utils/Database');
-    global.Transaction = require('../transaction/Transaction');
-    global.TransactionOuput = require('../transaction/TransactionOutput');
-}
-
 class Wallet {
     constructor() {
 
@@ -108,5 +101,3 @@ class Wallet {
 
 Wallet.keys = {};
 
-if (typeof module !== 'undefined')
-    module.exports = Wallet;

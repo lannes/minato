@@ -1,66 +1,32 @@
-importScripts(
-    'crypto/Sha256.js?v=0.1',
-    'crypto/Hash.js?v=0.1',
-    '../base/crypto/Axlsign.js?v=0.1',
-    '../base/crypto/Elliptic.js?v=0.1',
-    '../base/utils/Database.js?v=0.1',
-    '../base/utils/StringUtils.js?v=0.1',
-    '../base/utils/NumberUtils.js?v=0.1',
-    '../base/utils/ArrayUtils.js?v=0.1',
-    '../base/utils/Buffer.js?v=0.1',
-    '../base/utils/Observable.js?v=0.1',
-    '../base/utils/Synchronizer.js?v=0.1',
-    '../base/core/common/Signature.js?v=0.1',
-    '../base/core/common/Address.js?v=0.1',
-    '../base/core/common/Hash.js?v=0.1',
-    '../base/core/transaction/TransactionInput.js?v=0.1',
-    '../base/core/transaction/TransactionOutput.js?v=0.1',
-    '../base/core/transaction/UnspentTransactionOutput.js?v=0.1',
-    '../base/core/transaction/UnspentTransactionOutputPool.js?v=0.1',
-    '../base/core/transaction/Transaction.js?v=0.2',
-    '../base/core/transaction/TransactionPool.js?v=0.2',
-    '../base/core/block/BlockBody.js?v=0.1',
-    '../base/core/block/BlockHeader.js?v=0.1',
-    '../base/core/block/Block.js?v=0.1',
-    '../base/core/block/BlockUtils.js?v=0.1',
-    '../base/core/blockchain/BaseChain.js?v=0.1',
-    '../base/core/blockchain/Blockchain.js?v=0.2',
-    '../base/network/message/Message.js?v=0.1',
-    '../base/network/message/GetHeadMessage.js?v=0.1',
-    '../base/network/message/GetBlocksMessage.js?v=0.1',
-    '../base/network/message/BlocksMessage.js?v=0.1',
-    '../base/network/message/GetPoolMessage.js?v=0.1',
-    '../base/network/message/PoolMessage.js?v=0.1',
-    '../base/network/message/MessageFactory.js?v=0.1',
-    '../base/core/account/Account.js?v=0.1',
-    '../base/core/consensus/GenesisConfig.js?v=0.1',
-    '../base/core/consensus/BaseConsensus.js?v=0.1',
-    '../base/core/consensus/Consensus.js?v=0.1',
-    '../base/core/miner/MinerWorkerImpl.js?v=0.1',
-    '../base/core/miner/MinerWorker.js?v=0.1',
-    '../base/core/miner/Miner.js?v=0.1',
-    '../base/core/account/Wallet.js?v=0.1'
-);
-
-class Node {
+class Node extends Observable {
     constructor() {
+        super();
+
+        this._network = null;
         this._blockchain = new Blockchain();
         this._pool = new TransactionPool();
         this._uTxOPool = new UnspentTransactionOutputPool();
 
         this._consensus = new Consensus(this._blockchain, this._pool, this._uTxOPool, this);
+        this._consensus.on('balance', data => {
+            const balance = formatNumber(data);
+            $('#lblBalance').text(balance);
+            $('#lblAmount').text(balance);
+        });
+        this._consensus.on('height', data => $('#lblBlock').text(formatNumber(data)));
 
         this._miner = new Miner(this._blockchain, this._pool, this._uTxOPool);
-
-        this._miner.on('hashrate', (value) => this._send({
-            'cmd': 'hashrate', 'msg': value
-        }));
+        this._miner.on('hashrate', (data) => {
+            const hashrate = formatHashRate(data) + 'H/s';
+            $('#lblMyHashrate').text(hashrate);
+        });
     }
 
     sync(data) {
         switch (data['state']) {
             case SyncType.SYNCHRONIZE_STARTED:
                 console.log('SYNCHRONIZE_STARTED');
+                $('#pgDownload').show();
                 this._miner.stopWork();
                 break;
             case SyncType.DOWNLOAD_BLOCKCHAIN_FINISHED:
@@ -77,35 +43,25 @@ class Node {
                 break;
             case SyncType.SYNCHRONIZE_COMPLETED:
                 console.log('SYNCHRONIZE_COMPLETED');
+                $('#pgDownload').hide();
                 this._miner.startWork();
                 break;
         }
 
-        this._send({
-            'cmd': 'sync', 'msg': data
-        });
-    }
-
-    postMessage(type, data) {
-        this._send({
-            'cmd': type, 'msg': data
-        });
+        this.notify('sync', data);
     }
 
     broadcast(data) {
-        this._send({
-            'cmd': 'network', 'msg': [0, data]
-        });
+        this._network.broadcast(data);
     }
 
     send(id, data) {
-        this._send({
-            'cmd': 'network', 'msg': [id, data]
-        });
+        this._network.send(id, data);
     }
 
-    _send(message) {
-        self.postMessage(message);
+    async start() {
+        await this._init();
+        this.connect();
     }
 
     async _init() {
@@ -119,50 +75,50 @@ class Node {
 
         await Wallet.init();
 
-        this._send({
-            'cmd': 'init', 'msg': Wallet.address.base64
-        });
+        $('#lblAccount').text(Wallet.address.base64);
     }
 
-    async onmessage(event) {
-        const data = event.data;
-        switch (data['cmd']) {
-            case 'init':
-                await this._init();
-                break;
-            case 'state':
-                break;
-            case 'mine':
-            case 'pause':
-                break;
-            case 'sendTransaction':
-                this._consensus.transfer(data['address'], data['amount']);
-                break;
-            case 'network':
-                switch (data['type']) {
-                    case 'open':
-                        this._consensus.start(data['id']);
-                        break;
-                    case 'data':
-                        this._consensus.process(data['id'], data['msg']);
-                        break;
-                }
-                break;
-            case 'stop':
-                this.close();
-                break;
-            default:
-                console.log(data);
-                break;
+    connect() {
+        let signalingServer = 'ws://localhost:3002';
+        if (location.host != 'localhost:8080')
+            signalingServer = 'wss://' + location.host + '/minato';
+
+        const configuration = {
+            'iceServers': [
+                { 'urls': 'stun:stun.l.google.com:19302' }
+            ]
+        };
+
+        this._network = new KNetwork(signalingServer, configuration);
+        this._network.onconnect = (id) => this.notify('id', id);
+
+        this._network.onopen = (id, connections) => {
+            $('#id').text('id: ' + id);
+            $('#lblConnections').text(connections);
+            this._consensus.start(id);
+        };
+
+        this._network.onprogress = (id, percent) => {
+            $('#barDownload').css('width', percent + '%').attr('aria-valuenow', percent).text(percent + '%');
+        };
+
+        this._network.onmessage = (id, message) => {
+            //console.log(`received from: ${id} ${message}`);
+            this._consensus.process(id, message);
+        };
+
+        this._network.onclose = (id, connections) => {
+            $('#lblConnections').text(connections);
         }
     }
+
+    transfer(address, amount) {
+        this._consensus.transfer(address, amount);
+    }
+
+    stop() {
+        if (this._network)
+            this._network.disconnect();
+    }
 }
 
-const node = new Node();
-self.onmessage = async (event) => {
-    await node.onmessage(event);
-}
-
-self.onerror = (e) => {
-    console.log(e.message + " (" + e.filename + ":" + e.lineno + ")");
-}

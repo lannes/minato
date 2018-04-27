@@ -1,9 +1,3 @@
-if (typeof require !== 'undefined') {
-    global.Hash = require('../common/Hash');
-    global.Address = require('../common/Address');
-    global.NumberUtils = require('../../utils/NumberUtils');
-}
-
 class UnspentTransactionOutput {
     constructor(txOutId, txOutIndex, address, amount) {
         if (!(txOutId instanceof Hash))
@@ -52,7 +46,3 @@ class UnspentTransactionOutput {
         return this._amount;
     }
 }
-
-if (typeof module !== 'undefined')
-    module.exports = UnspentTransactionOutput;
-

@@ -1,7 +1,3 @@
-if (typeof require !== 'undefined') {
-    global.Observable = require('../../utils/Observable');
-}
-
 class BaseConsensus extends Observable {
     constructor(blockchain, pool, uTxOPool) {
         super();
@@ -14,7 +10,16 @@ class BaseConsensus extends Observable {
     _getBlocks() {
 
     }
-}
 
-if (typeof module !== 'undefined')
-    module.exports = BaseConsensus;
+    get blockchain() {
+        return this._blockchain;
+    }
+
+    get mempool() {
+        return this._mempool;
+    }
+
+    get uTxOPool() {
+        return this._uTxOPool;
+    }
+}

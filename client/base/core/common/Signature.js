@@ -1,9 +1,3 @@
-if (typeof require !== 'undefined') {
-    global.KBuffer = require('../../utils/Buffer');
-    global.ArrayUtils = require('../../utils/ArrayUtils');
-    global.KElliptic = require('../../crypto/Elliptic');
-}
-
 class Signature {
     constructor(value) {
         if (value !== null) {
@@ -90,6 +84,3 @@ class Signature {
 }
 
 Signature.SERIALIZE_SIZE = 64;
-
-if (typeof module !== 'undefined')
-    module.exports = Signature;

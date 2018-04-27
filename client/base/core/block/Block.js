@@ -1,9 +1,3 @@
-if (typeof require !== 'undefined') {
-    global.BlockHeader = require('./BlockHeader');
-    global.BlockBody = require('./BlockBody');
-    global.KBuffer = require('../../utils/Buffer');
-}
-
 class Block {
     constructor(header, body) {
         if (!(header instanceof BlockHeader))
@@ -131,7 +125,3 @@ class Block {
         return true;
     }
 }
-
-
-if (typeof module !== 'undefined')
-    module.exports = Block;

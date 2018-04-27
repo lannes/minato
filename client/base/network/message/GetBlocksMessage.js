@@ -1,9 +1,3 @@
-if (typeof require !== 'undefined') {
-    global.Message = require('./Message');
-    global.KBuffer = require('../../utils/Buffer');
-    global.Block = require('../../core/block/Block');
-}
-
 class GetBlocksMessage extends Message {
     constructor(locators) {
         super(Message.Type.GET_BLOCKS);
@@ -50,6 +44,3 @@ class GetBlocksMessage extends Message {
         return this._locators;
     }
 }
-
-if (typeof module !== 'undefined')
-    module.exports = GetBlocksMessage;

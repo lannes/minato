@@ -1,7 +1,3 @@
-if (typeof require !== 'undefined') {
-    global.Wallet = require('./Wallet');
-}
-
 class Account {
     static findUnspentTxOuts(address, unspentTxOuts) {
         return unspentTxOuts.filter((tx) => tx.address.equals(address));
@@ -21,9 +17,6 @@ class Account {
         return Account.findUnspentTxOuts(Wallet.address, unspentTxOuts);
     }
 }
-
-if (typeof module !== 'undefined')
-    module.exports = Account;
 
 
 

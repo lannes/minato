@@ -1,10 +1,3 @@
-if (typeof require !== 'undefined') {
-    global.KBuffer = require('../../utils/Buffer');
-    global.Hash = require('../common/Hash');
-    global.KHash = require('../../../nodejs/crypto/Hash');
-    global.BlockUtils = require('./BlockUtils');
-}
-
 class BlockHeader {
     constructor(height, prevHash, bodyHash, timestamp, difficulty, nonce) {
         if (!NumberUtils.isUint32(height))
@@ -149,6 +142,3 @@ class BlockHeader {
             + 4 /* nonce */;
     }
 }
-
-if (typeof module !== 'undefined')
-    module.exports = BlockHeader;

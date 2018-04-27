@@ -1,19 +1,24 @@
+class MinerWorkerImpl extends IWorker.Stub(MinerWorker) {
+    constructor() {
+        super();
+        this._superInit = super.init;
+    }
 
-if (typeof require !== 'undefined') {
-    global.BlockUtils = require('../block/BlockUtils');
-}
+    async init(name) {
+        await this._superInit.call(this, name);
+    }
 
-class MinerWorkerImpl {
-    mine(input, difficult, minNonce, maxNonce) {
+    multiMine(input, difficult, minNonce, maxNonce) {
+        let buffer = new KBuffer(input);
         return new Promise((resolve) => {
 
-            input.writePos = input.byteLength;
+            buffer.writePos = buffer.byteLength;
 
             for (let nonce = minNonce; nonce < maxNonce; nonce++) {
-                input.writePos -= 4;
-                input.writeUint32(nonce);
+                buffer.writePos -= 4;
+                buffer.writeUint32(nonce);
 
-                let hash = KHash.sha256(input);
+                let hash = KHash.sha256(buffer);
                 if (BlockUtils.isProofOfWork(hash, difficult)) {
                     resolve({ hash: hash, nonce: nonce });
                     return;
@@ -25,5 +30,5 @@ class MinerWorkerImpl {
     }
 }
 
-if (typeof module !== 'undefined')
-    module.exports = MinerWorkerImpl;
+IWorker.prepareForWorkerUse(MinerWorker, new MinerWorkerImpl());
+

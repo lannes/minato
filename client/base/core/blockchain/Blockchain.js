@@ -1,10 +1,3 @@
-if (typeof require !== 'undefined') {
-    global.BaseChain = require('./BaseChain');
-    global.Transaction = require('../transaction/Transaction');
-    global.Synchronizer = require('../../utils/Synchronizer');
-    global.GenesisConfig = require('../consensus/GenesisConfig');
-}
-
 class Blockchain extends BaseChain {
     constructor() {
         super();
@@ -173,6 +166,3 @@ class Blockchain extends BaseChain {
 
 Blockchain.BLOCK_GENERATION_INTERVAL = 60;
 Blockchain.DIFFICULTY_ADJUSTMENT_INTERVAL = 10;
-
-if (typeof module !== 'undefined')
-    module.exports = Blockchain;

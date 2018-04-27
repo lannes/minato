@@ -1,7 +1,3 @@
-if (typeof require !== 'undefined') {
-    global.DataChannel = require('../DataChannel');
-}
-
 class WebRtcDataChannel extends DataChannel {
     constructor(channel) {
         super();
@@ -37,6 +33,3 @@ class WebRtcDataChannel extends DataChannel {
         return DataChannel.ReadyState.fromString(this._channel.readyState);
     }
 }
-
-if (typeof module !== 'undefined')
-    module.exports = WebRtcDataChannel;

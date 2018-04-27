@@ -1,16 +1,3 @@
-if (typeof require !== 'undefined') {
-    global.KBuffer = require('../../utils/Buffer');
-    global.KHash = require('../../../nodejs/crypto/Hash');
-    global.KElliptic = require('../../crypto/elliptic');
-    global.Hash = require('../common/Hash');
-    global.Address = require('../common/Address');
-    global.Signature = require('../common/Signature');
-    global.GenesisConfig = require('../consensus/GenesisConfig');
-    global.TransactionInput = require('./TransactionInput');
-    global.TransactionOutput = require('./TransactionOutput');
-    global.UnspentTransactionOutput = require('./UnspentTransactionOutput');
-}
-
 class Transaction {
     constructor(id, txIns, txOuts) {
         if (!(id instanceof Hash))
@@ -321,6 +308,3 @@ class Transaction {
         return Transaction.updateUnspentTxOuts(transactions, unspentTxOuts);
     }
 }
-
-if (typeof module !== 'undefined')
-    module.exports = Transaction;

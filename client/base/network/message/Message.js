@@ -1,7 +1,3 @@
-if (typeof require !== 'undefined') {
-    global.KBuffer = require('../../utils/Buffer');
-}
-
 class Message {
     constructor(type) {
         if (!NumberUtils.isUint8(type))
@@ -67,6 +63,3 @@ Message.Type = {
     GET_POOL: 4,
     POOL: 5
 };
-
-if (typeof module !== 'undefined')
-    module.exports = Message;

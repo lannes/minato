@@ -1,15 +1,3 @@
-if (typeof require !== 'undefined') {
-    global.Hash = require('../common/Hash');
-    global.Signature = require('../common/Signature');
-    global.Address = require('../common/Address');
-    global.Transaction = require('../transaction/Transaction');
-    global.TransactionInput = require('../transaction/TransactionInput');
-    global.TransactionOutput = require('../transaction/TransactionOutput');
-    global.Block = require('../block/Block');
-    global.BlockHeader = require('../block/BlockHeader');
-    global.BlockBody = require('../block/BlockBody');
-}
-
 //const keys = KElliptic.generateKeyPair();
 //console.log(ArrayUtils.toBase64(keys.public));
 
@@ -57,9 +45,3 @@ for (let nonce = 0; nonce < 100000; nonce++) {
 }
 
 console.log(GenesisConfig.GENESIS_BLOCK.verify());
-
-
-if (typeof module !== 'undefined')
-    module.exports = GenesisConfig;
-
-

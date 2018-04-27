@@ -1,9 +1,3 @@
-if (typeof require !== 'undefined') {
-    global.StringUtils = require('./StringUtils');
-    global.atob = require('atob');
-    global.btoa = require('btoa');
-}
-
 class ArrayUtils {
     static equals(array1, array2) {
         if (array1 === null && array2 === null)
@@ -80,7 +74,5 @@ class ArrayUtils {
     }
 }
 
-if (typeof module !== 'undefined')
-    module.exports = ArrayUtils;
 
 

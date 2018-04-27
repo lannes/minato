@@ -1,8 +1,12 @@
 {
   "name": "minato",
-  "version": "0.0.2",
+  "version": "0.1.0",
   "description": "",
+  "private": true,
   "scripts": {
+    "prepare": "gulp build-nodejs",
+    "build": "gulp build",
+    "web": "gulp default",
     "start": "node ./nodejs/app.js"
   },
   "dependencies": {
@@ -14,7 +18,12 @@
     "wrtc": "^0.0.67"
   },
   "devDependencies": {
-    "@types/node": "^9.6.0",
-    "@types/ws": "^4.0.1"
+    "@types/node": "^9.6.6",
+    "@types/ws": "^4.0.1",
+    "gulp": "^3.9.1",
+    "gulp-concat": "^2.6.1",
+    "gulp-connect": "^5.5.0",
+    "gulp-sourcemaps": "^2.6.4",
+    "gulp-uglify-es": "^1.0.1"
   }
 }

@@ -1,4 +1,4 @@
-**CENTOS 7**
+# **ENV: CENTOS 7**
 
 ## **1. PORT SSH**
 ```sh
@@ -39,11 +39,6 @@ sudo firewall-cmd --permanent --zone=public --add-service=http
 sudo firewall-cmd --permanent --zone=public --add-service=https
 sudo firewall-cmd --reload
 ```
-* SELinux restricting access
-```
-getenforce
-setenforce Permissive
-```
 * Test config
 ```sh
 sudo nginx -t
@@ -51,6 +46,11 @@ sudo nginx -t
 * Check error
 ```sh
 cat /var/log/nginx/error.log
+```
+* SELinux restricting access
+```
+getenforce
+setenforce Permissive
 ```
 ## **5. RUN APP**
 * Source code
@@ -60,19 +60,29 @@ cat /var/log/nginx/error.log
 |   + browser
 |   + nodejs
 |   + index.html
+|   + gulpfile.js
 |   + package.json
 + server
 |   + signal (for webrtc)
-|   + web (for test browser at localhost, need compile from typescript to js)
 |   + package.json
 |   + tsconfig.json (typescript config)
-```    
+```
+* Build client
+```
+cd /minato/client
+npm run-script build
+```
+* Test client (localhost)
+```
+npm run-script web
+``` 
 * Setup files on server
 ```
 + /home/ttpm/minato/client
-|   + base
-|   + browser
-|   + nodejs
+|   + dist
+|   |   + node.js
+|   |   + web.js
+|   |   + worker.js
 |   + index.html
 |   + package.json
 + /home/ttpm/minato/server
@@ -89,7 +99,7 @@ pm2 start ./signal/app.js --name signalserver
 ```sh
 cd /home/ttpm/minato/client
 npm install
-pm2 start ./nodejs/App.js --name blockchain
+pm2 start ./nodejs/node.js --name blockchain
 ```
 * browser client
 ```sh

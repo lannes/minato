@@ -1,12 +1,3 @@
-if (typeof require !== 'undefined') {
-    global.Message = require('./Message');
-    global.GetHeadMessage = require('./GetHeadMessage');
-    global.GetBlocksMessage = require('./GetBlocksMessage');
-    global.BlocksMessage = require('./BlocksMessage');
-    global.GetPoolMessage = require('./GetPoolMessage');
-    global.PoolMessage = require('./PoolMessage');
-}
-
 class MessageFactory {
     static peekType(buf) {
         return Message.peekType(buf);
@@ -27,6 +18,3 @@ MessageFactory.CLASSES[Message.Type.GET_BLOCKS] = GetBlocksMessage;
 MessageFactory.CLASSES[Message.Type.BLOCKS] = BlocksMessage;
 MessageFactory.CLASSES[Message.Type.GET_POOL] = GetPoolMessage;
 MessageFactory.CLASSES[Message.Type.POOL] = PoolMessage;
-
-if (typeof module !== 'undefined')
-    module.exports = MessageFactory;

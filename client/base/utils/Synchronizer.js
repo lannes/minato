@@ -45,6 +45,3 @@ class Synchronizer {
         return this._working;
     }
 }
-
-if (typeof module !== 'undefined')
-    module.exports = Synchronizer;

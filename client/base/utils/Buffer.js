@@ -1,8 +1,3 @@
-if (typeof require !== 'undefined') {
-    global.NumberUtils = require('./NumberUtils');
-    global.ArrayUtils = require('./ArrayUtils');
-}
-
 class KBuffer extends Uint8Array {
     constructor(arrayOrLength) {
         super(arrayOrLength);
@@ -118,6 +113,3 @@ class KBuffer extends Uint8Array {
         this._writePos += 8;
     }
 }
-
-if (typeof module !== 'undefined')
-    module.exports = KBuffer;

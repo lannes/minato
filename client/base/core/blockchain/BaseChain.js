@@ -1,8 +1,3 @@
-if (typeof require !== 'undefined') {
-    global.Observable = require('../../utils/Observable');
-    global.GenesisConfig = require('../consensus/GenesisConfig');
-}
-
 class BaseChain extends Observable {
     constructor() {
         super();
@@ -37,6 +32,3 @@ class BaseChain extends Observable {
         return locators;
     }
 }
-
-if (typeof module !== 'undefined')
-    module.exports = BaseChain;

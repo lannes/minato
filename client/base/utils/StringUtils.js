@@ -18,7 +18,3 @@ class StringUtils {
         return true;
     }
 }
-
-
-if (typeof module !== 'undefined')
-    module.exports = StringUtils;

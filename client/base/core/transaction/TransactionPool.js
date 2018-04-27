@@ -1,9 +1,3 @@
-if (typeof require !== 'undefined') {
-    global.KBuffer = require('../../utils/Buffer');
-    global.Observable = require('../../utils/Observable');
-    global.Transaction = require('./Transaction');
-}
-
 class TransactionPool extends Observable {
     constructor() {
         super();
@@ -115,6 +109,3 @@ class TransactionPool extends Observable {
         }
     }
 }
-
-if (typeof module !== 'undefined')
-    module.exports = TransactionPool;

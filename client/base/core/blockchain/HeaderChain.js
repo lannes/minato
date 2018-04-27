@@ -1,9 +1,3 @@
-if (typeof require !== 'undefined') {
-    global.KBuffer = require('../../util/Buffer');
-    global.NumberUtils = require('../../util/NumberUtils');
-    global.BlockHeader = require('../block/BlockHeader');
-}
-
 class HeaderChain {
     constructor(heades) {
         if (!headers
@@ -72,6 +66,3 @@ class HeaderChain {
         return this._headers.reduce((sum, header) => sum + Math.pow(2, header.difficulty), 0);
     }
 }
-
-if (typeof module !== 'undefined')
-    module.exports = HeaderChain;

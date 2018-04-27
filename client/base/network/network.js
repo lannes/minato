@@ -1,16 +1,3 @@
-
-if (typeof require !== 'undefined') {
-    global.WebSocket = require('ws');
-    global.webrtc = require('wrtc');
-    global.WebRtcDataChannel = require('./webrtc/WebRtcDataChannel');
-
-    global.RTCPeerConnection = webrtc.RTCPeerConnection;
-    global.RTCSessionDescription = webrtc.RTCSessionDescription;
-    global.RTCIceCandidate = webrtc.RTCIceCandidate;
-} else {
-    window.WebSocket = window.WebSocket || window.MozWebSocket;
-}
-
 //const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
 //const isFirefox = typeof InstallTrigger !== 'undefined';
 
@@ -261,6 +248,3 @@ class KNetwork {
         delete this.pcs[id];
     }
 }
-
-if (typeof module !== 'undefined')
-    module.exports = KNetwork;

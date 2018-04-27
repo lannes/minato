@@ -1,10 +1,3 @@
-if (typeof require !== 'undefined') {
-    global.Wallet = require('../account/Wallet');
-    global.Account = require('../account/Account');
-    global.BaseConsensus = require('./BaseConsensus');
-    global.MessageFactory = require('../../network/message/MessageFactory');
-}
-
 const SyncType = {
     SYNCHRONIZE_STARTED: 0,
     DOWNLOAD_BLOCKCHAIN_FINISHED: 1,
@@ -118,7 +111,7 @@ class Consensus extends BaseConsensus {
             return;
         }
 
-        this._node.postMessage('balance', this._getBalance());
+        this.notify('balance', this._getBalance());
 
         const headReceived = blocks[blocks.length - 1];
 
@@ -129,7 +122,7 @@ class Consensus extends BaseConsensus {
                 this.isSync = false;
             }
 
-            this._node.postMessage('height', this._blockchain.height + 1);
+            this.notify('height', this._blockchain.height + 1);
             return;
         }
 
@@ -149,22 +142,22 @@ class Consensus extends BaseConsensus {
             this._node.sync({ 'id': id, 'state': SyncType.DOWNLOAD_BLOCKCHAIN_FINISHED });
 
             this._addBlocks(blocks);
-            this._node.postMessage('balance', this._getBalance());
+            this.notify('balance', this._getBalance());
 
-            this._node.postMessage('sync', { 'id': id, 'state': SyncType.DOWNLOAD_TRANSACTION_STARTED });
+            this._node.sync({ 'id': id, 'state': SyncType.DOWNLOAD_TRANSACTION_STARTED });
             this._node.broadcast(this._getPool());
         }
 
-        this._node.postMessage('height', this._blockchain.height + 1);
+        this.notify('height', this._blockchain.height + 1);
     }
 
     process(id, raw) {
         const buf = new KBuffer(raw);
         const type = MessageFactory.peekType(buf);
         const message = MessageFactory.parse(buf);
-        
+
         switch (type) {
-            case Message.Type.GET_HEAD:                
+            case Message.Type.GET_HEAD:
                 this._node.send(id, this._head());
                 break;
             case Message.Type.GET_BLOCKS: {
@@ -215,6 +208,3 @@ class Consensus extends BaseConsensus {
         this._node.broadcast(this._pool());
     }
 }
-
-if (typeof module !== 'undefined')
-    module.exports = Consensus;

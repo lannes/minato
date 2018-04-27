@@ -40,6 +40,3 @@ class Observable {
         return null;
     }
 }
-
-if (typeof module !== 'undefined')
-    module.exports = Observable;

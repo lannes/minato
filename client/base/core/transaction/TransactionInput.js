@@ -1,10 +1,3 @@
-if (typeof require !== 'undefined') {
-    global.KBuffer = require('../../utils/Buffer');
-    global.Hash = require('../common/Hash');
-    global.Signature = require('../common/Signature');
-    global.KElliptic = require('../../crypto/Elliptic');
-}
-
 class TransactionInput {
     constructor(signature, txOutId, txOutIndex) {
         if (!(signature instanceof Signature))
@@ -106,7 +99,3 @@ class TransactionInput {
         return true;
     }
 }
-
-if (typeof module !== 'undefined')
-    module.exports = TransactionInput;
-

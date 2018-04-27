@@ -1,11 +1,3 @@
-if (typeof require !== 'undefined') {
-    global.KBuffer = require('../../util/Buffer');
-    global.ArrayUtils = require('../../util/ArrayUtils');
-    global.Address = require('./Address');
-    global.Hash = require('./Hash');
-    global.PeerId = require('../../network/address/PeerId');
-}
-
 class PublicKey {
     constructor(value) {
         if (!(value instanceof Uint8Array))
@@ -66,6 +58,3 @@ class PublicKey {
 }
 
 PublicKey.SERIALIZE_SIZE = 32;
-
-if (typeof module !== 'undefined')
-    module.exports = PublicKey;

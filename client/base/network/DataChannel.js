@@ -1,10 +1,3 @@
-if (typeof require !== 'undefined') {
-    global.Observable = require('../utils/Observable');
-    global.KBuffer = require('../utils/Buffer');
-    global.NumberUtils = require('../utils/NumberUtils');
-    global.Message = require('./message/Message');
-}
-
 class DataChannel extends Observable {
     constructor() {
         super();
@@ -156,6 +149,3 @@ DataChannel.ReadyState.fromString = function (str) {
             throw Error('Invalid string');
     }
 };
-
-if (typeof module !== 'undefined')
-    module.exports = DataChannel;

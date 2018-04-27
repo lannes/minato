@@ -1,8 +1,3 @@
-if (typeof require !== 'undefined') {
-    global.KBuffer = require('../../utils/Buffer');
-    global.ArrayUtils = require('../../utils/ArrayUtils');
-}
-
 class Address {
     constructor(value) {
         if (value !== null) {
@@ -85,6 +80,3 @@ class Address {
 }
 
 Address.SERIALIZE_SIZE = 32;
-
-if (typeof module !== 'undefined')
-    module.exports = Address;

@@ -1,9 +1,4 @@
 
-if (typeof require !== 'undefined') {
-    global.Observable = require('../../utils/Observable');
-    global.MinerWorker = require('./MinerWorker');
-}
-
 class Miner extends Observable {
     constructor(blockchain, pool, uTxOPool) {
         super();
@@ -28,9 +23,19 @@ class Miner extends Observable {
 
         this._submittingBlock = false;
 
-        this._worker = new MinerWorker();
-        this._worker.on('share', (obj) => this._onWorkerShare(obj));
-        this._worker.on('no-share', (obj) => this._onWorkerShare(obj));
+        this._workerPool = new MinerWorkerPool();
+
+        if (typeof navigator === 'object' && navigator.hardwareConcurrency) {
+            this.threads = Math.ceil(navigator.hardwareConcurrency / 2);
+        } else if (PlatformUtils.isNodeJs()) {
+            const cores = require('os').cpus().length;
+            this.threads = Math.ceil(cores / 2);
+        } else {
+            this.threads = 1;
+        }
+
+        this._workerPool.on('share', (obj) => this._onWorkerShare(obj));
+        this._workerPool.on('no-share', (obj) => this._onWorkerShare(obj));
 
         this._blockchain.on('push-block', (obj) => {
             this._startWork();
@@ -40,18 +45,23 @@ class Miner extends Observable {
     }
 
     get working() {
-        return this._hashrateWorker;
+        return !!this._hashrateWorker;
     }
 
     get hashrate() {
         return this._hashrate;
     }
 
+    get threads() {
+        return this._workerPool.poolSize;
+    }
+
+    set threads(threads) {
+        this._workerPool.poolSize = threads;
+    }
+
     async _onWorkerShare(obj) {
-        if (obj.block)
-            this._hashCount += obj.nonce;
-        else
-            this._hashCount += this._worker.noncesPerRun;
+        this._hashCount += this._workerPool.noncesPerRun;
         if (obj.block && obj.block.prevHash.equals(this._blockchain.headHash)) {
             if (BlockUtils.isProofOfWork(obj.hash, obj.block.difficulty) && !this._submittingBlock) {
                 obj.block.header.nonce = obj.nonce;
@@ -60,9 +70,10 @@ class Miner extends Observable {
                     this._submittingBlock = true;
 
                     const unspentTxOuts = await this._blockchain.pushBlock(obj.block, this._uTxOPool.transactions);
-                    if (unspentTxOuts !== null) {
+                    if (unspentTxOuts === null) {
                         this._submittingBlock = false;
                         this._startWork();
+                        return;
                     } else {
                         this._submittingBlock = false;
                     }
@@ -151,7 +162,7 @@ class Miner extends Observable {
         this._startWork();
     }
 
-    _startWork() {
+    async _startWork() {
         if (!this.working || this._restarting) {
             return;
         }
@@ -161,7 +172,7 @@ class Miner extends Observable {
         this._mempoolChanged = false;
 
         const block = this._getNextBlock();
-        this._worker.startMiningOnBlock(block, block.difficulty);
+        this._workerPool.startMiningOnBlock(block, block.difficulty);
 
         this._restarting = false;
     }
@@ -181,14 +192,10 @@ class Miner extends Observable {
         this._lastElapsed = [];
         this._totalElapsed = 0;
 
-        this._worker.stop();
+        this._workerPool.stop();
         this.notify('stop', this);
     }
 }
 
 Miner.MIN_TIME_ON_BLOCK = 10000;
 Miner.MOVING_AVERAGE_MAX_SIZE = 10;
-
-if (typeof module !== 'undefined')
-    module.exports = Miner;
-

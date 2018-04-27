@@ -1,10 +1,4 @@
 // Ed25519-like signatures with X25519 keys, Axolotl-style.
-
-if (typeof require !== 'undefined') {
-    global.axlsign = require('./axlsign');
-    global.crypto = require('crypto');
-}
-
 class KElliptic {
     static generateKeyPair() {
         let seed = null;
@@ -27,5 +21,3 @@ class KElliptic {
     }
 }
 
-if (typeof module !== 'undefined')
-    module.exports = KElliptic;

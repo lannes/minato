@@ -1,10 +1,3 @@
-
-if (typeof require !== 'undefined') {
-    global.KBuffer = require('../../utils/Buffer');
-    global.NumberUtils = require('../../utils/NumberUtils');
-    global.Address = require('../common/Address');
-}
-
 class TransactionOutput {
     constructor(address, amount) {
         if (!(address instanceof Address))
@@ -61,6 +54,3 @@ class TransactionOutput {
             + 8 /* amount */;
     }
 }
-
-if (typeof module !== 'undefined')
-    module.exports = TransactionOutput;

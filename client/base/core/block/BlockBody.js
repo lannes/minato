@@ -1,10 +1,3 @@
-
-if (typeof require !== 'undefined') {
-    global.KBuffer = require('../../utils/Buffer');
-    global.KHash = require('../../../nodejs/crypto/Hash');
-    global.Transaction = require('../transaction/Transaction');
-}
-
 class BlockBody {
     constructor(transactions) {
         if (!Array.isArray(transactions) || transactions.some(tx => !(tx instanceof Transaction)))
@@ -78,6 +71,3 @@ class BlockBody {
         return size;
     }
 }
-
-if (typeof module !== 'undefined')
-    module.exports = BlockBody;

@@ -1,9 +1,3 @@
-if (typeof require !== 'undefined') {
-    global.Message = require('./Message');
-    global.KBuffer = require('../../utils/Buffer');
-    global.Block = require('../../core/transaction/Transaction');
-}
-
 class PoolMessage extends Message {
     constructor(transactions) {
         super(Message.Type.POOL);
@@ -44,6 +38,3 @@ class PoolMessage extends Message {
         return this._transactions;
     }
 }
-
-if (typeof module !== 'undefined')
-    module.exports = PoolMessage;

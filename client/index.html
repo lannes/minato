@@ -44,25 +44,17 @@
         }
     </style>
 
-    <script src="base/utils/NumberUtils.js?v=0.1"></script>
-    <script src="base/utils/ArrayUtils.js?v=0.1"></script>
-    <script src="base/utils/Buffer.js?v=0.1"></script>
-    <script src="base/utils/Observable.js?v=0.1"></script>
-    <script src="base/network/message/Message.js?v=0.1"></script>
-    <script src="base/network/DataChannel.js?v=0.1"></script>
-    <script src="base/network/webrtc/WebRtcDataChannel.js?v=0.1"></script>
-    <script src="base/network/network.js?v=0.3"></script>
-    <script src="browser/App.js?v=0.3"></script>
+    <script src="dist/web.js?v=0.1"></script>
     <script>
-        let app = new App();
+        let node = new Node();
 
         $(function () {
             $('#pgDownload').hide();
 
-            app.start();
+            node.start();
 
             $('#btnMining').click(() => {
-                app.mining();
+                node.mining();
             });
 
             $('#btnSend').click(() => {
@@ -84,7 +76,7 @@
                 if (amount <= 0)
                     return;
 
-                app.transfer(address, amount);
+                node.transfer(address, amount);
                 $('#dlgWallet').modal('hide');
             });
 
@@ -99,7 +91,7 @@
         });
 
         window.onbeforeunload = () => {
-            app.stop();
+            node.stop();
         }
     </script>
 </head>
@@ -159,7 +151,7 @@
             </div>
         </div>
     </div>
-<!--
+    <!--
     <div class="form-group">
         <label class="control-label col-sm-2"></label>
         <div class="col-sm-5">
