@@ -65,7 +65,7 @@ class Node extends Observable {
     }
 
     async _init() {
-        console.log('MINATO VERSION 0.0.2');
+        console.log('MINATO VERSION 0.1.0');
 
         await KDatabase.open('hokage4', 1, () => {
             KDatabase.createStore('blockchain', 'index');

@@ -17,7 +17,7 @@ class Wallet {
 
     static async init() {
         const wallet = await KDatabase.getAll('wallet');
-        if (wallet.length === 1) {
+        if (wallet && wallet.length === 1) {
             Wallet.keys.private = wallet[0][0];
             Wallet.keys.public = wallet[0][1];
             return;

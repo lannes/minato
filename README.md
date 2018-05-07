@@ -74,7 +74,7 @@ npm run-script build
 ```
 * Test client (localhost)
 ```
-npm run-script web
+npm run-script browser
 ``` 
 * Setup files on server
 ```

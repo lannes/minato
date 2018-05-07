@@ -11,13 +11,14 @@ class WebRtcDataChannel extends DataChannel {
     }
 
     _onMessage(msg) {
-        /*if (msg instanceof Blob) {
+        if (msg instanceof Blob) {
             const reader = new FileReader();
             reader.onloadend = () => super._onMessage(reader.result);
             reader.readAsArrayBuffer(msg);
         } else {
             super._onMessage(msg);
-        }*/
+        }
+        
         super._onMessage(msg);
     }
 

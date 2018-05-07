@@ -1,13 +1,18 @@
-const levelup = require('levelup');
-const leveldown = require('leveldown');
-
 let db = null;
 
 class KDatabase {
     static open(dbName) {
-        db = levelup(leveldown(dbName), (err, db) => {
-            if (err)
-                throw err;
+        return new Promise((resolve) => {
+            //db = levelup(leveldown(dbName), { valueEncoding: 'json' }, (err, database) => {
+            db = levelup(leveldown(dbName), (err, database) => {
+                if (err) {
+                    console.log(`open error: ${err}`);
+                    resolve(null);
+                    return;
+                }
+
+                resolve(database);
+            });
         });
     }
 
@@ -17,9 +22,9 @@ class KDatabase {
 
     static get(storeName, keyValue) {
         return new Promise((resolve) => {
-            db.get(storeName + '~' + keyValue + '~', (err, value) => {
+            db.get(`${storeName}~${keyValue}~`, (err, value) => {
                 if (err) {
-                    console.log('db get error: ', err);
+                    console.log(`db get error: ${err}`);
                     resolve(null);
                     return;
                 }
@@ -32,27 +37,24 @@ class KDatabase {
     static getAll(storeName) {
         return new Promise((resolve) => {
             let array = new Array();
-
-            return new Promise((resolve) => {
-                db.createReadStream({ start: storeName + '~', end: storeName + '~~' })
-                    .on('data', (data) => {
-                        array.push(data);
-                    })
-                    .on('error', (err) => {
-                        console.log(`getAll(${storeName}: `, err);
-                    })
-                    .on('end', () => {
-                        resolve(array);
-                    });
-            });
+            db.createReadStream({ start: storeName + '~', end: storeName + '~~' })
+                .on('data', (data) => {
+                    array.push(data.value);
+                })
+                .on('error', (err) => {
+                    console.log(`getAll(${storeName}: ${err}`);
+                })
+                .on('end', () => {
+                    resolve(array);
+                });
         });
     }
 
-    static add(storeName, obj) {
+    static add(storeName, obj, keyValue = '') {
         return new Promise((resolve) => {
             db.put(storeName + '~' + keyValue + '~', obj, (err) => {
                 if (err) {
-                    console.log(`add(${storeName}: `, err);
+                    console.log(`add(${storeName}: ${err}`);
                     return resolve(false);
                 }
 

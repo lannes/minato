@@ -10,14 +10,14 @@ const formatHashRate = (n) => {
     if (isNaN(n))
         return '0 ';
 
-    if (n < 1000)
+    if (n < 1e3)
         return n + ' ';
 
-    if (n < 1000000)
-        return (n / 1024).toFixed(2) + ' k';
+    if (n < 1e6)
+        return (n / 1e3).toFixed(2) + ' k';
 
-    if (n < 1000000000)
-        return (n / 1048576).toFixed(2) + ' m';
+    if (n < 1e9)
+        return (n / 1e6).toFixed(2) + ' m';
 
-    return (n / 1073741824).toFixed(2) + ' g';
+    return (n / 1e9).toFixed(2) + ' g';
 }

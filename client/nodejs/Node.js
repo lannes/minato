@@ -1,3 +1,5 @@
+const axlsign = module.exports;
+
 class Node extends Observable {
     constructor() {
         super();
@@ -62,17 +64,13 @@ class Node extends Observable {
     }
 
     async _init() {
-        console.log('MINATO VERSION 0.0.2');
+        console.log('MINATO VERSION 0.1.0');
 
-        await KDatabase.open('hokage4', 1, () => {
-            KDatabase.createStore('blockchain', 'index');
-            KDatabase.createStore('transaction', 'id');
-            KDatabase.createStore('wallet');
-        });
+        await KDatabase.open('hokage4');
 
         await Wallet.init();
 
-        $('#lblAccount').text(Wallet.address.base64);
+        console.log(Wallet.address.base64);
     }
 
     connect() {
@@ -115,5 +113,8 @@ class Node extends Observable {
     }
 }
 
-const node = new Node();
-node.start();
+(async () => {
+    const node = new Node();
+
+    await node.start();
+})();

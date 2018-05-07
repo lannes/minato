@@ -4,26 +4,31 @@
   "description": "",
   "private": true,
   "scripts": {
-    "prepare": "gulp build-nodejs",
     "build": "gulp build",
-    "web": "gulp default",
-    "start": "node ./nodejs/app.js"
+    "nodejs": "gulp build-nodejs",
+    "browser": "gulp default",
+    "start": "node ./nodejs/app.js",
+    "test-node": "jasmine",
+    "test-browser": "gulp test"
   },
   "dependencies": {
-    "leveldown": "^3.0.0",
-    "levelup": "^2.0.2",
-    "atob": "^2.1.0",
+    "atob": "^2.1.1",
     "btoa": "^1.2.1",
-    "ws": "^5.1.0",
-    "wrtc": "^0.0.67"
+    "leveldown": "^3.0.2",
+    "levelup": "^2.0.2",
+    "wrtc": "^0.0.67",
+    "ws": "^5.1.0"
   },
   "devDependencies": {
-    "@types/node": "^9.6.6",
+    "@types/node": "^9.6.12",
     "@types/ws": "^4.0.1",
     "gulp": "^3.9.1",
     "gulp-concat": "^2.6.1",
     "gulp-connect": "^5.5.0",
+    "gulp-jasmine": "^4.0.0",
     "gulp-sourcemaps": "^2.6.4",
-    "gulp-uglify-es": "^1.0.1"
+    "gulp-uglify-es": "^1.0.1",
+    "gulp-jasmine-livereload-task": "^0.11.0",
+    "jasmine": "^3.1.0"
   }
 }
