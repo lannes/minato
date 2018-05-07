@@ -76,7 +76,7 @@ class Node extends Observable {
     }
 
     connect() {
-        let signalingServer = 'ws://localhost:3002';
+        const signalingServer = 'ws://localhost:3002';
 
         const configuration = {
             'iceServers': [
@@ -115,3 +115,5 @@ class Node extends Observable {
     }
 }
 
+const node = new Node();
+node.start();

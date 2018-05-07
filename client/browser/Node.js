@@ -90,10 +90,9 @@ class Node extends Observable {
         };
 
         this._network = new KNetwork(signalingServer, configuration);
-        this._network.onconnect = (id) => this.notify('id', id);
+        this._network.onconnect = id => $('#id').text('id: ' + id);
 
         this._network.onopen = (id, connections) => {
-            $('#id').text('id: ' + id);
             $('#lblConnections').text(connections);
             this._consensus.start(id);
         };
