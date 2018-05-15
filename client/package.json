@@ -25,7 +25,6 @@
     "gulp": "^3.9.1",
     "gulp-concat": "^2.6.1",
     "gulp-connect": "^5.5.0",
-    "gulp-jasmine": "^4.0.0",
     "gulp-sourcemaps": "^2.6.4",
     "gulp-uglify-es": "^1.0.1",
     "gulp-jasmine-livereload-task": "^0.11.0",

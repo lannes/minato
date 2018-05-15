@@ -59,6 +59,10 @@ setenforce Permissive
 |   + base
 |   + browser
 |   + nodejs
+|   + spec
+|   |   + support
+|   |   |   + jasmine.json
+|   + test
 |   + index.html
 |   + gulpfile.js
 |   + package.json
@@ -92,13 +96,13 @@ npm run-script browser
 * signalserver (port 3002)
 ```sh
 cd /home/ttpm/minato/server
-npm install
+npm install --production
 pm2 start ./signal/app.js --name signalserver
 ```
 * nodejs client
 ```sh
 cd /home/ttpm/minato/client
-npm install
+npm install --production
 pm2 start ./nodejs/node.js --name blockchain
 ```
 * browser client
@@ -159,7 +163,6 @@ Domains\My Domains\minato.zone\DNS Management\Records
 |A     |@     |x.x.x.x  |1 Hour |
 ```
 * Let’s Encrypt
-https://www.digitalocean.com/community/tutorials/how-to-secure-nginx-with-let-s-encrypt-on-centos-7
 ```sh
 export LC_ALL=C
 
