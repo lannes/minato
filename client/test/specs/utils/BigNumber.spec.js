@@ -35,6 +35,10 @@ describe("BigNumber", () => {
         expect(a.sub(b).toString()).toEqual('0');
 
         expect(x.sub(y).toString()).toEqual((156083999 - 30998789).toString());
+
+        const a1 = new BigNumber('41418456048005639864974238890271849696605172030151526454492446');
+        const b1 = new BigNumber('484975157177710342494716926626447514974484083994735770500857856');
+        expect(a1.sub(b1).toString()).toEqual('443556701129704702629742687736175665277878911964584244046365410');
     });
 
     it('mul', () => {
@@ -44,7 +48,7 @@ describe("BigNumber", () => {
     });
 
     it('fromHex', () => {
-        const hex = (156083999).toString(16);
+        const hex = '0x' + (156083999).toString(16);
 
         const bg = BigNumber.fromHex(hex);
         expect(bg.toString()).toEqual('156083999');
@@ -62,11 +66,11 @@ describe("BigNumber", () => {
 
     it('bin', () => {
         const bn0 = new BigNumber(23);
-        expect(bn0.bin.toString()).toEqual('10111');
+        expect(bn0.bin).toEqual('10111');
 
-        expect(x.bin.toString()).toEqual('1001010011011010011100011111');
-        expect(y.bin.toString()).toEqual('1110110010000000100000101');
-        expect(z.bin.toString()).toEqual('10000000000000000000000000000000000000000000000001011110100000000');
+        expect(x.bin).toEqual('1001010011011010011100011111');
+        expect(y.bin).toEqual('1110110010000000100000101');
+        expect(z.bin).toEqual('10000000000000000000000000000000000000000000000001011110100000000');
 
         const bn1 = new BigNumber('484975157177710342494716926626447514974484083994735770500857856');
         expect(bn1.bin).toEqual('10010110111001101000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000');
@@ -115,6 +119,13 @@ describe("BigNumber", () => {
         expect(bg1.shiftRight(2).bin).toEqual('101000010');
         expect(bg1.shiftRight(3).bin).toEqual('10100001');
         expect(bg1.shiftRight(4).bin).toEqual('1010000');
+        expect(bg1.shiftRight(5).bin).toEqual('101000');
+        expect(bg1.shiftRight(6).bin).toEqual('10100');
+        expect(bg1.shiftRight(7).bin).toEqual('1010');
+        expect(bg1.shiftRight(8).bin).toEqual('101');
+        expect(bg1.shiftRight(9).bin).toEqual('10');
+        expect(bg1.shiftRight(10).bin).toEqual('1');
+        expect(bg1.shiftRight(11).bin).toEqual('0');
 
         const bg2 = new BigNumber('18446744073709600000');
         expect(bg2.shiftRight(1).toString()).toEqual('9223372036854800000');

@@ -145,9 +145,24 @@ class BigNumber {
     }
 
     static fromHex(s) {
+        if (s.length < 2)
+            throw Error('Malformed length');
+
+        if (s[0] !== '0' || s[1] !== 'x')
+            throw Error('Malformed format');
+
+        let st = s.substr(2);
+
+        let pos = 0;
+        while (st[pos] === '0')
+            pos++;
+
+        if (pos > 0)
+            st = st.substr(pos);
+
         let bufS = [];
-        for (let i = 0; i < s.length; i++) {
-            const bin = BigNumber.HEX_BIN[s[i]];
+        for (let i = 0; i < st.length; i++) {
+            const bin = BigNumber.HEX_BIN[st[i]];
             for (let j = 0; j < bin.length; j++)
                 bufS.push(parseInt(bin[j]));
         }
@@ -156,9 +171,13 @@ class BigNumber {
         return new BigNumber(bufT);
     }
 
+    get bits() {
+        return BigNumber._bits(this._buf);
+    }
+
     /**
-     * Count number of bits in a buffer
-     * @param {Array<Number>} buf 
+     * Count number of bits in a compressed buffer
+     * @param {Array<Number>} buf a compressed buffer
      * @return {Number} number of bits
      */
     static _bits(buf) {
@@ -177,11 +196,17 @@ class BigNumber {
     }
 
     /**
-     * Compress a buffer to a smaller buffer
+     * Compress a binary buffer to a smaller buffer
      * @param {Array<Number>} buf binary buffer
-     * @return {Array<Number>} a compress buffer
+     * @return {Array<Number>} a compressed buffer
      */
     static compress(buf) {
+        if (buf.length === 0)
+            throw Error('Malformed length');
+
+        if (buf.length === 1 && buf[0] === 0)
+            return [0];
+
         let result = [];
         let size = Math.floor(buf.length / BigNumber.EXPONENT);
         for (let i = 0; i < size; i++) {
@@ -209,9 +234,15 @@ class BigNumber {
     /**
      * Decompress a buffer
      * @param {Array<Number>} buf a buffer compressed
-     * @return a buffer uncompress
+     * @return a binary buffer
      */
     static decompress(buf) {
+        if (buf.length === 0)
+            throw Error('Malformed length');
+
+        if (buf.length === 1 && buf[0] === 0)
+            return [0];
+
         let result = [];
         let i = 0;
         for (; i < buf.length - 1; i++) {
@@ -451,12 +482,12 @@ class BigNumber {
             buf[i] = difference;
         }
 
-        let p = buf.length - 1;
-        while (buf[p] === 0)
-            p--;
+        let pos = buf.length - 1;
+        while (buf[pos] === 0)
+            pos--;
 
-        if (p < buf.length - 1)
-            buf = buf.slice(0, p - (buf.length - 1));
+        if (pos < buf.length - 1)
+            buf = buf.slice(0, pos - (buf.length - 1));
 
         if (buf.length === 0)
             buf.push(0);
@@ -621,10 +652,10 @@ class BigNumber {
 
         let result = [];
 
-        let i = 0;
-        while (i < q) {
+        let count = 0;
+        while (count < q) {
             result.push(0);
-            i++;
+            count++;
         }
 
         if (r > 0) {
@@ -670,20 +701,20 @@ class BigNumber {
         const r = n % BigNumber.EXPONENT;
 
         let result = [];
-        if (r > 0) {
-            let e = (buf[0] >> r) & (BigNumber.BASE - 1);
-            if (e > 0)
-                result.push(e);
-
-            for (let i = 1; i < buf.length; i++) {
-                e = ((buf[i] >> r) & (BigNumber.BASE - 1)) | (buf[i + 1] >> (BigNumber.EXPONENT - r));
-                result.push(e);
-            }
-        } else {
-            for (let i = q; i < buf.length; i++) {
-                result.push(buf[i]);
-            }
+        for (let i = q; i < buf.length; i++) {
+            result.push(buf[i]);
         }
+
+        if (r > 0) {
+            for (let i = 0; i < result.length - 1; i++) {
+                result[i] = (result[i] >> r) | ((result[i + 1] << (BigNumber.EXPONENT - r)) & (BigNumber.BASE - 1));
+            }
+
+            result[result.length - 1] = result[result.length - 1] >> r;
+        }
+
+        if (result.length === 0)
+            result.push(0);
 
         return result;
     }
@@ -696,6 +727,17 @@ class BigNumber {
             return BigNumber.clone(this);
 
         const buf = BigNumber._shiftRight(this._buf, n);
+        return new BigNumber(buf);
+    }
+
+    xor(n) {
+        let buf = [];
+        for (let i = 0; i < this._buf.length; i++) {
+            buf[i] = this._buf[i];
+        }
+
+        buf[0] = this._buf[0] | n;
+
         return new BigNumber(buf);
     }
 
@@ -747,7 +789,3 @@ BigNumber.HEX_BIN = {
 BigNumber.FACTOR = 2;
 BigNumber.EXPONENT = 25; // 2^25 * 2^25 < MAX_SAFE_INTEGER
 BigNumber.BASE = Math.pow(BigNumber.FACTOR, BigNumber.EXPONENT);
-
-const target = new BigNumber('484975157177710342494716926626447514974484083994735770500857856');
-
-console.log(target.hex);

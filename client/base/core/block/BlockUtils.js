@@ -1,4 +1,4 @@
-
+const TARGET_TIMESPAN = 1209600;
 
 class BlockUtils {
 
@@ -15,14 +15,29 @@ class BlockUtils {
         return (count === difficulty);
     }
 
-    static getTargetFromBits(bits) {
-        const shift = bits >> 24;
-        const value = new BigNumber(bits & 0x007fffff);
+    static getTargetFromBits(nBits) {
+        const shift = nBits >> 24;
+        const value = new BigNumber(nBits & 0x007fffff);
         return value.shiftLeft(8 * (shift - 3));
     }
 
+    static getBitsFromTarget(target) {
+        const bitLength = target.bits + 1;
+        const size = Math.floor((bitLength + 7) / 8);
+        const value = target.shiftRight(8 * (size - 3));
+        return value.xor(size << 24);
+    }
+
+    static changeTarget(prevBits, startingTimeSecs, prevTimeSecs) {
+        const oldTarget = BlockUtils.getTargetFromBits(prevBits);
+        const timeSpanSeconds = prevTimeSecs - startingTimeSecs;
+        let newTarget = oldTarget;
+        newTarget *= timeSpanSeconds;
+        newTarget /= TARGET_TIMESPAN;
+        return newTarget;
+    }
+
     static getDifficulty(nBits) {
-        // 0x00ffff * 2**(8*(0x1d - 3))
         let nShift = (nBits >> 24) & 0xff;
         let dDiff = parseFloat(0x0000ffff) / parseFloat(nBits & 0x00ffffff);
         while (nShift < 29) {
