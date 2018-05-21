@@ -9,6 +9,43 @@ describe("BigNumber", () => {
         expect(z.toString()).toEqual('18446744073709600000');
     });
 
+    it('compare', () => {
+        const a = new BigNumber(-1);
+        const b = new BigNumber(-5);
+        expect(a.compare(b)).toBeGreaterThan(0);
+        expect(b.compare(a)).toBeLessThan(0);
+
+        const c = new BigNumber(-1.5);
+        const d = new BigNumber(-1.4);
+        expect(c.compare(d)).toBeLessThan(0);
+        expect(d.compare(c)).toBeGreaterThan(0);
+
+        const e = new BigNumber(1.5);
+        const f = new BigNumber(1.4);
+        expect(e.compare(f)).toBeGreaterThan(0);
+        expect(f.compare(e)).toBeLessThan(0);
+
+        const g = new BigNumber(-1.5);
+        const h = new BigNumber(1.4);
+        expect(g.compare(h)).toBeLessThan(0);
+        expect(h.compare(g)).toBeGreaterThan(0);
+
+        const i = new BigNumber(1.5);
+        const j = new BigNumber(-1.4);
+        expect(i.compare(j)).toBeGreaterThan(0);
+        expect(j.compare(i)).toBeLessThan(0);
+
+        const k = new BigNumber(1.5);
+        const l = new BigNumber(-1.5);
+        expect(k.compare(l)).toBeGreaterThan(0);
+        expect(l.compare(k)).toBeLessThan(0);
+
+        const m = new BigNumber(0);
+        const n = new BigNumber(-0.1);
+        expect(m.compare(n)).toBeGreaterThan(0);
+        expect(n.compare(m)).toBeLessThan(0);
+    });
+
     it('_bits', () => {
         expect(BigNumber._bits(x.buf)).toEqual(28);
         expect(BigNumber._bits(y.buf)).toEqual(25);
@@ -19,14 +56,34 @@ describe("BigNumber", () => {
         expect(z.pow(100).toString()).toEqual('3908159226644263804999031401171725431461087496776926875423560766727572828178020472468735088565358978829422924946463847097314608220783732337498195134473572407563280205328431942081687768030120101317625997911897199995308305771925736410023670852430702056877879753851638013044235365599146000953953383262566929396417476533734506104953600012805562404676611542669211593430219422481464883188408491777656235622684245564257038837084495134683657870321549384957678919458518870369024019769958568359153762154010195920273756120933503453636967290762090426608890909296371106680787184700702900099025328733240685739617820762346500908126280797710899814125631818796560981573151110010157543474959203482243571897977942361873966119494223228209885671245526592766473196770837574894124883264178191532069361028309984062722860315144643327234142930548545903652571181428257050008735606606893081965560800194209744533232797496404638869410142379325409020915543909421964076321019164010043094817000525023718326613656633518818606587141389930734964732059761177414009803187302013649892205903307186248479461293297304403259387848189868561790022372813096347072312506892982089179789739351051277312536951538702457742629846359360370659426358241589681752648900940434498838790273486711364312672330477117631570034623763184858276377455766685515788734263822094629036132385347915913794599375619922401592456364957100274739695090582713399650276155441874410573693892270213004106137600000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000');
     });
 
-    it('mod Small Number', () => {
+    it('mod int32', () => {
         expect(x.mod(20)).toEqual(x % 20);
         expect(z.mod(156083999)).toEqual(11054277);
         expect(z.mod(30998789)).toEqual(7498285);
     });
 
+    it('mod BigNumber', () => {
+        const a = new BigNumber('41418456048005639864974238890271849696605172030151526454492446');
+        const b = new BigNumber('63986497423889027184969660517203015152645449244');
+
+        expect(a.mod(b).toString()).toEqual('6589218484640224298734570429280357277479265278');
+    });
+
     it('add', () => {
         expect(x.add(y).toString()).toEqual((156083999 + 30998789).toString());
+
+        const a = new BigNumber(1.8);
+        const b = new BigNumber(2.9);
+        expect(a.add(b).toString()).toEqual('4.7');
+
+        const c = new BigNumber(5);
+        const d = new BigNumber(1);
+        const e = new BigNumber(-5);
+        const f = new BigNumber(-1);
+        expect(c.add(d).toString()).toEqual((5 + 1).toString());
+        expect(c.add(f).toString()).toEqual((5 + -1).toString());
+        expect(e.add(d).toString()).toEqual((-5 + 1).toString());
+        expect(e.add(f).toString()).toEqual((-5 + -1).toString());
     });
 
     it('sub', () => {
@@ -36,9 +93,22 @@ describe("BigNumber", () => {
 
         expect(x.sub(y).toString()).toEqual((156083999 - 30998789).toString());
 
+        const c = new BigNumber(5);
+        const d = new BigNumber(1);
+        const e = new BigNumber(-5);
+        const f = new BigNumber(-1);
+        expect(c.sub(d).toString()).toEqual('4'); // 5 - 1
+        expect(c.sub(f).toString()).toEqual('6'); // 5 - -1
+        expect(e.sub(d).toString()).toEqual('-6'); // -5 - 1
+        expect(e.sub(f).toString()).toEqual('-4'); // -5 - -1
+        expect(d.sub(c).toString()).toEqual('-4'); // 1 - 5
+        expect(d.sub(e).toString()).toEqual('6'); // 1 - -5
+        expect(f.sub(c).toString()).toEqual('-6'); // -1 - 5
+        expect(f.sub(e).toString()).toEqual('4'); // -1 - -5
+
         const a1 = new BigNumber('41418456048005639864974238890271849696605172030151526454492446');
         const b1 = new BigNumber('484975157177710342494716926626447514974484083994735770500857856');
-        expect(a1.sub(b1).toString()).toEqual('443556701129704702629742687736175665277878911964584244046365410');
+        expect(a1.sub(b1).toString()).toEqual('-443556701129704702629742687736175665277878911964584244046365410');
     });
 
     it('mul', () => {
@@ -157,7 +227,7 @@ describe("BigNumber", () => {
         expect(a4.toString()).toEqual('10147668814050865');
     });
 
-    it('divMod Small Number', () => {
+    it('divMod int32', () => {
         const bg1 = new BigNumber(300);
         const bg2 = new BigNumber('1248163264128256512');
 
@@ -170,15 +240,15 @@ describe("BigNumber", () => {
 
         const divMod1 = bg2.divMod(123);
         expect(divMod1.toString()).toEqual('10147668814050865');
-        expect(divMod1.R.toString()).toEqual('117');
+        expect(divMod1.remainder.toString()).toEqual('117');
 
         const divMod2 = bg2.divMod(2);
         expect(divMod2.toString()).toEqual('624081632064128256');
-        expect(divMod2.R.toString()).toEqual('0');
+        expect(divMod2.remainder.toString()).toEqual('0');
 
         const divMod3 = bg2.divMod(NumberUtils.UINT32_MAX);
         expect(divMod3.toString()).toEqual('290610656');
-        expect(divMod3.R.toString()).toEqual('1029760992');
+        expect(divMod3.remainder.toString()).toEqual('1029760992');
     });
 
     it('divMod BigNumber', () => {
@@ -193,12 +263,38 @@ describe("BigNumber", () => {
         const a3 = new BigNumber('124816326412825651');
         const b3 = new BigNumber('10147668814050865');
         expect(a3.divMod(b3).toString()).toEqual('12');
-        expect(a3.divMod(b3).R.toString()).toEqual('3044300644215271');
+        expect(a3.divMod(b3).remainder.toString()).toEqual('3044300644215271');
 
         const a4 = new BigNumber('1248163264128256512');
         const b4 = new BigNumber('10147668814050865');
         expect(a4.divMod(b4).toString()).toEqual('123');
-        expect(a4.divMod(b4).R.toString()).toEqual('117');
+        expect(a4.divMod(b4).remainder.toString()).toEqual('117');
+    });
+
+    it('div BigNumber', () => {
+        const a = new BigNumber(1);
+        const b = new BigNumber(5);
+        const c = a.div(b);
+
+        expect(c.toString()).toEqual('0.2');
+    });
+
+    it('float & negative', () => {
+        const a = new BigNumber(0.1);
+        const b = new BigNumber(0.9);
+        expect(a.sub(b).toString()).toEqual((0.1 - 0.9).toString());
+
+        const c = new BigNumber(7.0);
+        const d = new BigNumber(6.9);
+        expect(c.sub(d).toString()).toEqual((7.0 - 6.9).toString());
+
+        const e = new BigNumber(7.1);
+        const f = new BigNumber(7.9);
+        expect(e.sub(f).toString()).toEqual((7.1 - 7.9).toString());
+
+        const g = new BigNumber(-7.1);
+        const h = new BigNumber(7.9);
+        expect(g.sub(h).toString()).toEqual((-7.1 - 7.9).toString());
     });
 });
 
