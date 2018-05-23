@@ -46,9 +46,9 @@ describe("BigNumber", () => {
         expect(n.compare(m)).toBeLessThan(0);
     });
 
-    it('_bits', () => {
-        expect(BigNumber._bits(x.buf)).toEqual(28);
-        expect(BigNumber._bits(y.buf)).toEqual(25);
+    it('bitLength', () => {
+        expect(x.bitLength).toEqual(28);
+        expect(y.bitLength).toEqual(25);
     });
 
     it('pow', () => {
@@ -115,6 +115,33 @@ describe("BigNumber", () => {
         expect(x.mul(y).toString()).toEqual((156083999 * 30998789).toString());
 
         expect(z.mul(z).toString()).toEqual('340282366920940248517905132160000000000');
+    });
+
+    it('fromByteArray', () => {
+        const hex = '012dcd000000000000000000000000000000000000000000000000';
+        const arr = Uint8Array.from(hex.match(/.{2}/g) || [], byte => parseInt(byte, 16));
+        const bn = BigNumber.fromByteArray(arr);
+        expect(bn.hex).toEqual('12dcd000000000000000000000000000000000000000000000000');
+
+        const hex1 = '0696f4a7b94b94b94b94b94b94b94b94b94b94b94b94b94b';
+        const arr1 = Uint8Array.from(hex1.match(/.{2}/g) || [], byte => parseInt(byte, 16));
+        const bn1 = BigNumber.fromByteArray(arr1);
+        expect(bn1.hex).toEqual('696f4a7b94b94b94b94b94b94b94b94b94b94b94b94b94b');
+
+        const hex2 = '1806a4c3';
+        const arr2 = Uint8Array.from(hex2.match(/.{2}/g) || [], byte => parseInt(byte, 16));
+        const bn2 = BigNumber.fromByteArray(arr2);
+        expect(bn2.hex).toEqual('1806a4c3');
+
+        const hex3 = '1806a4c3df';
+        const arr3 = Uint8Array.from(hex3.match(/.{2}/g) || [], byte => parseInt(byte, 16));
+        const bn3 = BigNumber.fromByteArray(arr3);
+        expect(bn3.hex).toEqual('1806a4c3df');
+
+        const hex4 = '1806a4c3df12';
+        const arr4 = Uint8Array.from(hex4.match(/.{2}/g) || [], byte => parseInt(byte, 16));
+        const bn4 = BigNumber.fromByteArray(arr4);
+        expect(bn4.hex).toEqual('1806a4c3df12');
     });
 
     it('fromHex', () => {

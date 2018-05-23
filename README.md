@@ -76,7 +76,11 @@ setenforce Permissive
 cd /minato/client
 npm run-script build
 ```
-* Test client (localhost)
+* Test case
+```
+npm run-script test-browser
+```
+* Test web client
 ```
 npm run-script browser
 ``` 

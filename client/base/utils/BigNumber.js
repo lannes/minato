@@ -1,5 +1,5 @@
 /**
- * Version: 0.1.1
+ * Version: 0.2.0
  * Create By: dongnh@vtc.vn
  */
 
@@ -93,8 +93,8 @@ class BigNumber {
     }
 
     toString() {
-        const buf2 = BigNumber._decompress(this._buf);
-        const buf = BigNumber._toBase(buf2, 2, 1e6);
+        const binaryBuf = BigNumber._decompress(this._buf);
+        const buf = BigNumber._toBase(binaryBuf, 2, 1e6);
 
         let s = buf[buf.length - 1].toString();
 
@@ -150,10 +150,10 @@ class BigNumber {
      * @return {Number} result
      */
     compare(obj) {
-        if (this._sign === 1 && obj.sign === -1)
+        if (this._sign > obj.sign)
             return 1;
 
-        if (this._sign === -1 && obj.sign === 1)
+        if (this._sign < obj.sign)
             return -1;
 
         let result = BigNumber._compare(this._buf, obj.buf);
@@ -207,10 +207,8 @@ class BigNumber {
     }
 
     abs() {
-        let result = new BigNumber(this._buf);
+        let result = BigNumber.clone(this);
         result._sign = 1;
-        result._float = this._float;
-        result._remainder = this._remainder;
         return result;
     }
 
@@ -221,30 +219,53 @@ class BigNumber {
         return b;
     }
 
-    static fromHex(s) {
+    static _fromByteArray(arr) {
+        const r = arr.length % 3;
+
+        let buf = [];
+        for (let i = arr.length - 1; i >= 2 + r; i -= 3) {
+            buf.push(arr[i - 2] << 16 | arr[i - 1] << 8 | arr[i]);
+        }
+
+        if (r === 2)
+            buf.push(arr[0] << 8 | arr[1]);
+        if (r === 1)
+            buf.push(arr[0]);
+
+        return buf;
+    }
+
+    static fromByteArray(arr) {
+        if (!(arr instanceof Uint8Array))
+            throw Error('Not implemented');
+
+        const buf = BigNumber._fromByteArray(arr);        
+        return new BigNumber(buf);
+    }
+
+    static fromHex(hex) {
         let sign = 1;
         let pos = 0;
 
-        if (s[0] === '-') {
+        if (hex[0] === '-') {
             pos++;
             sign = -1;
         }
 
-        if (s.length < 3 + pos)
+        if (hex.length < 3 + pos)
             throw Error('Malformed length');
 
-        if (s[pos] !== '0' || s[pos + 1] !== 'x')
+        if (hex[pos] !== '0' || hex[pos + 1] !== 'x')
             throw Error('Malformed format');
 
         pos += 2;
-        while (s[pos] === '0')
+        while (hex[pos] === '0')
             pos++;
 
         let binaryBuf = [];
-        for (let i = s.length - 1; i >= pos; i--) {
-            const bin = BigNumber.HEX_BIN[s[i]];
-            for (let j = bin.length - 1; j >= 0; j--)
-                binaryBuf.push(bin[j]);
+        for (let i = hex.length - 1; i >= pos; i--) {
+            for (let j = 3; j >= 0; j--)
+                binaryBuf.push(BigNumber.HEX_BIN[hex[i]][j]);
         }
 
         const buf = BigNumber._compress(binaryBuf);
@@ -254,8 +275,8 @@ class BigNumber {
         return result;
     }
 
-    get bits() {
-        return BigNumber._bits(this._buf);
+    get bitLength() {
+        return BigNumber._bitLength(this._buf);
     }
 
     /**
@@ -263,7 +284,7 @@ class BigNumber {
      * @param {Array<Number>} buf a compressed buffer
      * @return {Number} number of bits
      */
-    static _bits(buf) {
+    static _bitLength(buf) {
         let count = 0;
         let n = buf[buf.length - 1];
 
@@ -328,33 +349,25 @@ class BigNumber {
 
         let result = [];
         let i = 0;
-        for (; i < buf.length - 1; i++) {
+        while (i < buf.length) {
             let n = buf[i];
-            let bin = [];
+            let count = 0;
+
             while (n > 0) {
-                bin.push(n & 1);
+                result.push(n & 1);
                 n = n >> 1;
+                count++;
             }
 
-            for (let j = 0; j < bin.length; j++)
-                result.push(bin[j]);
+            i++;
+            if (i === buf.length)
+                break;
 
-            let c = 0;
-            while (c < BigNumber.EXPONENT - bin.length) {
+            while (count < BigNumber.EXPONENT) {
                 result.push(0);
-                c++;
+                count++;
             }
         }
-
-        let n = buf[i];
-        let bin = [];
-        while (n > 0) {
-            bin.push(n & 1);
-            n = n >> 1;
-        }
-
-        for (let j = 0; j < bin.length; j++)
-            result.push(bin[j]);
 
         return result;
     }
@@ -525,7 +538,7 @@ class BigNumber {
         }
 
         let sign = 1;
-        if (this._sign * bn.sign === -1) {
+        if (this._sign + bn.sign === 0) {
             let A = this;
             let B = bn;
 
@@ -596,7 +609,7 @@ class BigNumber {
 
         const sign = this.compare(bn) >= 0 ? 1 : -1;
 
-        if (this._sign * bn.sign === -1) {
+        if (this._sign + bn.sign === 0) {
             let buf = BigNumber._add(this._buf, bn.buf, this._base);
             let float = this._float + bn.float;
 
@@ -887,7 +900,7 @@ class BigNumber {
         if (!(d instanceof BigNumber))
             D = new BigNumber(d);
 
-        if (!d.isInteger)
+        if (!D.isInteger)
             throw Error('Not implemented');
 
         const qr = BigNumber._div(this._buf, D.buf);
@@ -910,10 +923,8 @@ class BigNumber {
 
         let result = [];
 
-        let count = 0;
-        while (count < q) {
+        while (result.length < q) {
             result.push(0);
-            count++;
         }
 
         if (r > 0) {
@@ -1045,9 +1056,8 @@ BigNumber.HEX_BIN = {
 }
 
 BigNumber.FACTOR = 2;
-BigNumber.EXPONENT = 25; // 2^25 * 2^25 < MAX_SAFE_INTEGER
+BigNumber.EXPONENT = 24; // 2^24 * 2^24 < MAX_SAFE_INTEGER
 BigNumber.BASE = Math.pow(BigNumber.FACTOR, BigNumber.EXPONENT);
 BigNumber.STEP = 53;
 BigNumber.ZERO = new BigNumber(0);
 BigNumber.ONE = new BigNumber(1);
-

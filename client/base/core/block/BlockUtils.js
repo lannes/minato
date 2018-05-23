@@ -1,4 +1,4 @@
-const TARGET_TIMESPAN = 1209600;
+const TARGET_TIMESPAN = 2016 * 10 * 60;
 
 class BlockUtils {
 
@@ -16,72 +16,60 @@ class BlockUtils {
     }
 
     /**
-     * Get target from bits
+     * @param {Uint8Array} hash
+     * @param {BigNumber} target
+     * @return {boolean}
+     */
+    static isProofOfWork2(hash, target) {
+        const hashTarget = BigNumber._fromByteArray(hash);
+        return BigNumber._compare(hashTarget, target.buf) <= 0;
+    }
+
+    static hashToTarget(hash) {
+        return BigNumber.fromArray(hash);
+    }
+
+    /**
+     * Get target from bits: (bits & 0x007fffff) * 2 ** (8 * ((bits >> 24) - 3))
      * @param {Number} nBits integer 32 bits
      * @return {BigNumber} target 
      */
     static getTargetFromBits(nBits) {
-        const shift = nBits >> 24;
-        const value = new BigNumber(nBits & 0x007fffff);
-        return value.shiftLeft(8 * (shift - 3));
+        return new BigNumber(nBits & 0x007fffff).shiftLeft(8 * ((nBits >> 24) - 3));
     }
 
     /**
      * Get bits from target
-     * @param {BigNumber} target 
+     * @param {BigNumber} target
      * @return {Number} a integer 32 bits
      */
     static getBitsFromTarget(target) {
-        const bitLength = target.bits + 1;
-        const size = Math.floor((bitLength + 7) / 8);
-        const value = target.shiftRight(8 * (size - 3));
-        return value.xor(size << 24);
+        const size = (target.bitLength + 8) >> 3;
+        const bn = target.shiftRight(8 * (size - 3));
+        return parseInt(bn.toString()) | (size << 24);
     }
 
-    static getDifficultyFromBits(bits) {
-        //difficulty_one_target = 0x00ffff * 2 ** (8 * (0x1d - 3))
-        const difficulty_one_target = BigNumber.fromHex('0x00ffff').shiftLeft(8 * (0x1d - 3));
-        const target = BlockUtils.getTargetFromBits(bits);
-        const calculated_difficulty = difficulty_one_target.div(target);
-        return calculated_difficulty;
+    /**
+     * Get difficulty from bits
+     * @param {Number} nBits a integer 32 bits
+     * @return {BigNumber} difficulty
+     */
+    static getDifficultyFromBits(nBits) {
+        const oneTarget = BlockUtils.getTargetFromBits(0x1d00ffff);
+        const target = BlockUtils.getTargetFromBits(nBits);
+        return oneTarget.div(target);
     }
 
     /**
      * Change target 
      * @param {Number} prevBits 
-     * @param {Number} startingTimeSecs 
-     * @param {Number} prevTimeSecs 
+     * @param {Number} startingTimestamp 
+     * @param {Number} prevTimestamp 
      * @return {BigNumber} a new target
      */
-    static changeTarget(prevBits, startingTimeSecs, prevTimeSecs) {
-        const oldTarget = BlockUtils.getTargetFromBits(prevBits);
-        const timeSpanSeconds = prevTimeSecs - startingTimeSecs;
-        let newTarget = oldTarget;
-        newTarget = newTarget.mul(timeSpanSeconds);
-        newTarget = newTarget.divMod(TARGET_TIMESPAN);
-        return newTarget;
+    static getNextTarget(prevBits, startingTimestamp, prevTimestamp) {
+        const seconds = prevTimestamp - startingTimestamp;
+        const target = BlockUtils.getTargetFromBits(prevBits);
+        return target.mul(seconds).divMod(TARGET_TIMESPAN);
     }
 }
-
-/*
-const bits = 486594666;
-const difficulty = 1.18;
-const calculated_difficulty = BlockUtils.getDifficultyFromBits(bits);
-const allowed_error = 0.01;
-
-const block_difficulty = new BigNumber(difficulty);
-const sub = calculated_difficulty.sub(block_difficulty);
-console.log(`${block_difficulty.toString()} ${calculated_difficulty.toString()} ${sub.toString()}`);
-*/
-
-const bits = 453062093;
-const difficulty = 55589.52;
-const calculated_difficulty = BlockUtils.getDifficultyFromBits(bits);
-const allowed_error = 0.01;
-
-const block_difficulty = new BigNumber(difficulty);
-const sub = calculated_difficulty.sub(block_difficulty);
-console.log(`${block_difficulty.toString()} ${calculated_difficulty.toString()} ${sub.toString()}`);
-
-
-

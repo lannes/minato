@@ -1,31 +1,4 @@
 describe("BlockUtils", () => {
-
-    it('target', () => {
-        const bits = 453062093;
-
-        const hex_bits = bits.toString(16);
-        expect(hex_bits).toEqual('1b012dcd');
-
-        const shift_int = parseInt('1b', 16);
-        expect(shift_int).toEqual(27);
-
-        const value_int = BigNumber.fromHex('0x012dcd');
-        expect(value_int.toString()).toEqual('77261');
-
-        const shift = bits >> 24;
-        expect(shift).toEqual(shift_int);
-
-        const value = new BigNumber(bits & 0x007fffff);
-        expect(value.toString()).toEqual('77261');
-
-        //target = value * 2 ** (8 * (shift - 3))
-        const target1 = value.mul((new BigNumber(2)).pow(8 * (shift - 3)));
-        expect(target1.hex).toEqual('12dcd000000000000000000000000000000000000000000000000');
-
-        const target = value.shiftLeft(8 * (shift - 3));
-        expect(target.hex).toEqual('12dcd000000000000000000000000000000000000000000000000');
-    });
-
     it('getTargetFromBits', () => {
         const bits0 = 453062093;
         const target0 = BlockUtils.getTargetFromBits(bits0);
@@ -34,13 +7,17 @@ describe("BlockUtils", () => {
         const bits1 = 403088579;
         const target1 = BlockUtils.getTargetFromBits(bits1);
         expect(target1.hex).toEqual('6a4c3000000000000000000000000000000000000000000');
+
+
+        const bits2 = 0x04923456;
+        const target2 = BlockUtils.getTargetFromBits(bits2);
     });
 
     it('getBitsFromTarget', () => {
         const target = BigNumber.fromHex('0x6a4c3000000000000000000000000000000000000000000');
         const bits = BlockUtils.getBitsFromTarget(target);
-        expect(bits.toString()).toEqual('403088579');
-        expect(bits.hex).toEqual('1806a4c3');
+        expect(bits).toEqual(403088579);
+        expect(bits.toString(16)).toEqual('1806a4c3');
     });
 
     it('getDifficultyFromBits Block 0', () => {
@@ -50,7 +27,7 @@ describe("BlockUtils", () => {
         const allowed_error = 0.01;
 
         const block_difficulty = new BigNumber(difficulty);
-        const sub = calculated_difficulty.sub(block_difficulty);
+        const sub = calculated_difficulty.sub(block_difficulty).abs();
         expect(sub.compare(new BigNumber(allowed_error))).toBeLessThanOrEqual(0);
     });
 
@@ -61,7 +38,7 @@ describe("BlockUtils", () => {
         const allowed_error = 0.01;
 
         const block_difficulty = new BigNumber(difficulty);
-        const sub = calculated_difficulty.sub(block_difficulty);
+        const sub = calculated_difficulty.sub(block_difficulty).abs();
         expect(sub.compare(new BigNumber(allowed_error))).toBeLessThanOrEqual(0);
     });
 
@@ -72,7 +49,7 @@ describe("BlockUtils", () => {
         const allowed_error = 0.01;
 
         const block_difficulty = new BigNumber(difficulty);
-        const sub = calculated_difficulty.sub(block_difficulty);
+        const sub = calculated_difficulty.sub(block_difficulty).abs();
         expect(sub.compare(new BigNumber(allowed_error))).toBeLessThanOrEqual(0);
     });
 
@@ -83,11 +60,14 @@ describe("BlockUtils", () => {
         const allowed_error = 0.01;
 
         const block_difficulty = new BigNumber(difficulty);
-        const sub = calculated_difficulty.sub(block_difficulty);
+        const sub = calculated_difficulty.sub(block_difficulty).abs();
         expect(sub.compare(new BigNumber(allowed_error))).toBeLessThanOrEqual(0);
+
+        // average network hash rate was D * 2**48 / 0xffff / 600 <=> D * 2**32 / 600
+        // time = difficulty * 2**32 / hashrate
     });
 
-    it('changeTarget', () => {
+    it('getNextTarget', () => {
         // starting_block is the initial block on this 2016 block runtime #403200
         const starting_block_timestamp = '2016-03-18T09:07:48';
         const starting_block_time_seconds = new Date(starting_block_timestamp).getTime() / 1000;
@@ -97,7 +77,7 @@ describe("BlockUtils", () => {
         const prev_block_timestamp = '2016-04-01T06:24:09';
         const prev_block_time_seconds = new Date(prev_block_timestamp).getTime() / 1000;
 
-        const calculated_new_target = BlockUtils.changeTarget(prev_block_bits, starting_block_time_seconds, prev_block_time_seconds);
+        const calculated_new_target = BlockUtils.getNextTarget(prev_block_bits, starting_block_time_seconds, prev_block_time_seconds);
         const calculated_new_bits = BlockUtils.getBitsFromTarget(calculated_new_target);
 
         // new_block is the first block of the next block #405216
@@ -111,7 +91,7 @@ describe("BlockUtils", () => {
         expect(new_target.hex).toEqual('696f4000000000000000000000000000000000000000000');
 
         // Calculated new bits
-        expect(calculated_new_bits.hex).toEqual('180696f4');
+        expect(calculated_new_bits.toString(16)).toEqual('180696f4');
 
         // New bits from block
         expect(new_bits.toString(16)).toEqual('180696f4');
@@ -140,5 +120,4 @@ describe("BlockUtils", () => {
 
         expect(target.sub(block_hash).toString()).toEqual('443556701129704702629742687736175665277878911964584244046365410');
     });
-
 });
