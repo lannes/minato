@@ -5,7 +5,6 @@
 
 class BigNumber {
     constructor(bn) {
-        this._base = BigNumber.BASE;
         this._remainder = 0;
         this._float = .0;
         this._sign = 1;
@@ -21,7 +20,7 @@ class BigNumber {
             }
 
             if (Number.isInteger(bn)) {
-                const buf = BigNumber._base10IntToBaseBN(bn, 2);
+                const buf = BigNumber._base10IntToBase2(bn);
                 this._buf = BigNumber._compress(buf);
                 return;
             }
@@ -29,7 +28,7 @@ class BigNumber {
             const n = bn - bn % 1;
             const float = bn - n;
 
-            const buf = BigNumber._base10IntToBaseBN(n, 2);
+            const buf = BigNumber._base10IntToBase2(n);
             this._buf = BigNumber._compress(buf);
             this._float = float;
 
@@ -94,17 +93,35 @@ class BigNumber {
 
     toString() {
         const binaryBuf = BigNumber._decompress(this._buf);
-        const buf = BigNumber._toBase(binaryBuf, 2, 1e6);
+        let buf = [0];
 
-        let s = buf[buf.length - 1].toString();
-
-        for (let i = buf.length - 2; i >= 0; i--) {
-            let n = buf[i].toString();
-            while (n.length < 6) {
-                n = '0' + n;
+        for (let i = binaryBuf.length - 1; i >= 0; i--) {
+            let carry = binaryBuf[i];
+            for (let j = 0; j < buf.length; j++) {
+                const sum = buf[j] + carry;
+                buf[j] = sum % 10;
+                carry = Math.floor(sum / 10);
+                if (carry === 0)
+                    break;
             }
+            if (carry > 0)
+                buf.push(carry);
 
-            s += n;
+            if (i === 0)
+                break;
+            carry = 0;
+            for (let j = 0; j < buf.length; j++) {
+                const product = buf[j] * 2 + carry;
+                buf[j] = product % 10;
+                carry = Math.floor(product / 10);
+            }
+            if (carry > 0)
+                buf.push(carry);
+        }
+
+        let s = '';
+        for (let i = buf.length - 1; i >= 0; i--) {
+            s += buf[i].toString();
         }
 
         if (this._float > 0)
@@ -160,7 +177,7 @@ class BigNumber {
         if (result === 0) {
             if (this._float > obj.float)
                 result = 1;
-            if (this._float < obj.float)
+            else if (this._float < obj.float)
                 result = - 1;
         }
 
@@ -219,6 +236,12 @@ class BigNumber {
         return b;
     }
 
+    toByteArray() {
+        let arr = new Uint8Array();
+
+        return arr;
+    }
+
     static _fromByteArray(arr) {
         const r = arr.length % 3;
 
@@ -239,7 +262,7 @@ class BigNumber {
         if (!(arr instanceof Uint8Array))
             throw Error('Not implemented');
 
-        const buf = BigNumber._fromByteArray(arr);        
+        const buf = BigNumber._fromByteArray(arr);
         return new BigNumber(buf);
     }
 
@@ -308,7 +331,7 @@ class BigNumber {
         if (buf.length === 0)
             throw Error('Malformed length');
 
-        if (buf.length === 1 && buf[0] === 0)
+        if (BigNumber._isZero(buf))
             return [0];
 
         let result = [];
@@ -344,7 +367,7 @@ class BigNumber {
         if (buf.length === 0)
             throw Error('Malformed length');
 
-        if (buf.length === 1 && buf[0] === 0)
+        if (BigNumber._isZero(buf))
             return [0];
 
         let result = [];
@@ -355,7 +378,7 @@ class BigNumber {
 
             while (n > 0) {
                 result.push(n & 1);
-                n = n >> 1;
+                n >>= 1;
                 count++;
             }
 
@@ -378,7 +401,7 @@ class BigNumber {
         let i = this._buf.length - 1;
 
         while (n < d && i >= 0) {
-            n = n * this._base + this._buf[i--];
+            n = (n * BigNumber.BASE) + this._buf[i--];
         }
 
         if (i < 0) {
@@ -391,7 +414,7 @@ class BigNumber {
             if (i < 0)
                 break;
 
-            n = (n % d) * this._base + this._buf[i--];
+            n = ((n % d) * BigNumber.BASE) + this._buf[i--];
         }
 
         return { Q: Q.reverse(), R: n % d };
@@ -445,39 +468,20 @@ class BigNumber {
     /**
      * Convert a number from decimal to another base
      * @param {Number} n decimal number
-     * @param {Number} base 
      * @return {Array<Number>} a buffer not compress
      */
-    static _base10IntToBaseBN(n, base) {
+    static _base10IntToBase2(n) {
         if (n === 0)
             return [0];
 
         let buf = [];
 
         while (n > 0) {
-            buf.push(n % base);
-            n = Math.floor(n / base);
+            buf.push(n % 2);
+            n = Math.floor(n / 2);
         }
 
         return buf;
-    }
-
-    /**
-     * Convert a buf from source base to target base 
-     * @param {Array<Number>} buf buffer of BigNumber
-     * @param {Number} baseS source base
-     * @param {Number} baseT target base
-     * @return {Array<Number>} a compress buffer
-    */
-    static _toBase(buf, baseS, baseT) {
-        let result = [0];
-
-        for (let i = buf.length - 1; i >= 1; i--) {
-            result = BigNumber._add(result, [buf[i]], baseT);
-            result = BigNumber._mul(result, [baseS], baseT);
-        }
-
-        return BigNumber._add(result, [buf[0]], baseT);
     }
 
     /**
@@ -551,10 +555,10 @@ class BigNumber {
                 B = this;
             }
 
-            let buf = BigNumber._sub(A._buf, B._buf, this._base);
+            let buf = BigNumber._sub(A._buf, B._buf, BigNumber.BASE);
             let float = A._float - B._float;
             if (float < 0) {
-                buf = BigNumber._sub(buf, [1], this._base);
+                buf = BigNumber._sub(buf, [1], BigNumber.BASE);
                 float = 1 + float;
             }
 
@@ -568,11 +572,11 @@ class BigNumber {
             sign = -1;
         }
 
-        let buf = BigNumber._add(this._buf, bn.buf, this._base);
+        let buf = BigNumber._add(this._buf, bn.buf);
         let float = this._float + bn.float;
 
         if (float >= 1) {
-            buf = BigNumber._add(buf, [1], this._base);
+            buf = BigNumber._add(buf, [1]);
             float = float - 1;
         }
 
@@ -582,7 +586,7 @@ class BigNumber {
         return result;
     }
 
-    static _add(aBuf, bBuf, base) {
+    static _add(aBuf, bBuf) {
         let buf = [];
         let carry = 0;
         const length = Math.max(aBuf.length, bBuf.length);
@@ -590,8 +594,10 @@ class BigNumber {
         let i = 0;
         while (i < length || carry > 0) {
             const sum = (aBuf[i] || 0) + (bBuf[i] || 0) + carry;
-            carry = Math.floor(sum / base);
-            buf[i] = sum % base;
+            carry = Math.floor(sum / BigNumber.BASE);
+            //carry = sum >>> BigNumber.EXPONENT;
+            buf[i] = sum % BigNumber.BASE;
+            //buf[i] = sum & (BigNumber.BASE - 1);
             i++;
         }
 
@@ -610,11 +616,11 @@ class BigNumber {
         const sign = this.compare(bn) >= 0 ? 1 : -1;
 
         if (this._sign + bn.sign === 0) {
-            let buf = BigNumber._add(this._buf, bn.buf, this._base);
+            let buf = BigNumber._add(this._buf, bn.buf);
             let float = this._float + bn.float;
 
             if (float >= 1) {
-                buf = BigNumber._add(buf, [1], this._base);
+                buf = BigNumber._add(buf, [1]);
                 float = float - 1;
             }
 
@@ -632,10 +638,10 @@ class BigNumber {
             B = this;
         }
 
-        let buf = BigNumber._sub(A._buf, B._buf, this._base);
+        let buf = BigNumber._sub(A._buf, B._buf, BigNumber.BASE);
         let float = A._float - B._float;
         if (float < 0) {
-            buf = BigNumber._sub(buf, [1], this._base);
+            buf = BigNumber._sub(buf, [1], BigNumber.BASE);
             float = 1 + float;
         }
 
@@ -692,13 +698,13 @@ class BigNumber {
             return BigNumber.ZERO;
         }
 
-        const buf = BigNumber._mul(this._buf, bn.buf, this._base);
+        const buf = BigNumber._mul(this._buf, bn.buf);
         let result = new BigNumber(buf);
         result._sign = this._sign * bn.sign;
         return result;
     }
 
-    static _mul(aBuf, bBuf, base) {
+    static _mul(aBuf, bBuf) {
         let buf = [];
 
         for (let i = 0; i < aBuf.length + bBuf.length; i++)
@@ -708,8 +714,10 @@ class BigNumber {
             let carry = 0;
             for (let ia = 0; ia < aBuf.length; ia++) {
                 buf[ia + ib] += carry + (aBuf[ia] * bBuf[ib]);
-                carry = Math.floor(buf[ia + ib] / base);
-                buf[ia + ib] = buf[ia + ib] % base;
+                carry = Math.floor(buf[ia + ib] / BigNumber.BASE);
+                //carry = buf[ia + ib] >> BigNumber.EXPONENT;
+                buf[ia + ib] %= BigNumber.BASE;
+                //buf[ia + ib] &= (BigNumber.BASE - 1);
             }
 
             buf[ib + aBuf.length] += carry;
@@ -733,7 +741,7 @@ class BigNumber {
         let result = 0;
 
         for (let i = this._buf.length - 1; i >= 0; i--) {
-            result = (result * this._base + this._buf[i]) % n;
+            result = (result * BigNumber.BASE + this._buf[i]) % n;
         }
 
         return result;
@@ -780,7 +788,7 @@ class BigNumber {
             return bn;
         }
 
-        return Error('Malformed type');
+        throw Error('Malformed type');
     }
 
     /**
@@ -846,9 +854,8 @@ class BigNumber {
 
         const qr = BigNumber._divMod(N, D);
 
-        if (BigNumber._compare(qr.R, [0]) === 0) {
-            return qr;
-        }
+        if (BigNumber._isZero(qr.R))
+            return { Q: qr.Q, F: 0 };
 
         let Q = [];
         let R = null;
@@ -1032,6 +1039,23 @@ class BigNumber {
         }
 
         return result;
+    }
+
+    toSmall() {
+        if (BigNumber._compare(this._buf, [0, 0, 31]) > 0)
+            throw Error('Value too large');
+
+        let r = 0;
+        for (let i = this._buf.length - 1; i > 0; i--) {
+            r = (this._buf[i] + r) * BigNumber.BASE;
+        }
+        r += this._buf[0];
+
+        r += this._float;
+        if (this._sign > 0)
+            return r;
+
+        return -r;
     }
 }
 

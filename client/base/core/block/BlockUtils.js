@@ -46,7 +46,7 @@ class BlockUtils {
     static getBitsFromTarget(target) {
         const size = (target.bitLength + 8) >> 3;
         const bn = target.shiftRight(8 * (size - 3));
-        return parseInt(bn.toString()) | (size << 24);
+        return bn.toSmall() | (size << 24);
     }
 
     /**

@@ -323,5 +323,19 @@ describe("BigNumber", () => {
         const h = new BigNumber(7.9);
         expect(g.sub(h).toString()).toEqual((-7.1 - 7.9).toString());
     });
+
+    it('toSmall', () => {
+        const a = new BigNumber([2 ** 24 - 1, 2 ** 24 - 1]);
+        expect(a.toSmall()).toEqual(281474976710655);
+
+        const b = new BigNumber([0, 0, 1]);
+        expect(b.toSmall()).toEqual(281474976710656);
+
+        const c = new BigNumber([0, 0, 31]);
+        expect(c.toSmall()).toEqual(8725724278030336);
+
+        const d = new BigNumber([0, 0, 32]);
+        expect(() => d.toSmall()).toThrow(new Error('Value too large'));
+    });
 });
 
