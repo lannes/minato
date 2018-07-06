@@ -21,8 +21,8 @@ class BlockUtils {
      * @return {boolean}
      */
     static isProofOfWork2(hash, target) {
-        const hashTarget = BigNumber._fromByteArray(hash);
-        return BigNumber._compare(hashTarget, target.buf) <= 0;
+        const hashBuf = BigNumber._fromByteArray(hash);
+        return BigNumber._compare(hashBuf, target.buf) <= 0;
     }
 
     static hashToTarget(hash) {

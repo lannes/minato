@@ -41,7 +41,7 @@ class BigNumber {
                 bn = bn.substr(1);
             }
 
-            const buf = BigNumber._baseStringToBaseBN(bn, 10, 2);
+            const buf = BigNumber._base10StringToBase2(bn);
             this._buf = BigNumber._compress(buf);
             return;
         }
@@ -96,25 +96,18 @@ class BigNumber {
         let buf = [0];
 
         for (let i = binaryBuf.length - 1; i >= 0; i--) {
-            let carry = binaryBuf[i];
-            for (let j = 0; j < buf.length; j++) {
-                const sum = buf[j] + carry;
-                buf[j] = sum % 10;
-                carry = Math.floor(sum / 10);
-                if (carry === 0)
-                    break;
-            }
-            if (carry > 0)
-                buf.push(carry);
+            buf[0] += binaryBuf[i];
 
             if (i === 0)
                 break;
-            carry = 0;
+
+            let carry = 0;
             for (let j = 0; j < buf.length; j++) {
                 const product = buf[j] * 2 + carry;
                 buf[j] = product % 10;
                 carry = Math.floor(product / 10);
             }
+
             if (carry > 0)
                 buf.push(carry);
         }
@@ -421,13 +414,12 @@ class BigNumber {
     }
 
     static _divBaseString(s, d, base) {
-        let b = base || 10;
         let Q = '';
         let n = 0;
         let i = 0;
 
         while (n < d && i < s.length) {
-            n = n * b + BigNumber.LOOKUP_CHARS[s[i++]];
+            n = n * base + BigNumber.LOOKUP_CHARS[s[i++]];
         }
 
         if (i === s.length) {
@@ -440,7 +432,7 @@ class BigNumber {
             if (i > s.length - 1)
                 break;
 
-            n = (n % d) * b + BigNumber.LOOKUP_CHARS[s[i++]];
+            n = (n % d) * base + BigNumber.LOOKUP_CHARS[s[i++]];
         }
 
         return { Q: Q, R: n % d };
@@ -449,15 +441,13 @@ class BigNumber {
     /**
      * Convert a string from source base to target base
      * @param {String} s string
-     * @param {Number} baseS source base
-     * @param {Number} baseT target base
      * @return {Array<Number>} a buffer not compress
      */
-    static _baseStringToBaseBN(s, baseS, baseT) {
+    static _base10StringToBase2(s) {
         let buf = [];
 
         do {
-            const r = BigNumber._divBaseString(s, baseT, baseS);
+            const r = BigNumber._divBaseString(s, 2, 10);
             buf.push(r.R);
             s = r.Q;
         } while (s !== '0');
@@ -595,7 +585,7 @@ class BigNumber {
         while (i < length || carry > 0) {
             const sum = (aBuf[i] || 0) + (bBuf[i] || 0) + carry;
             carry = Math.floor(sum / BigNumber.BASE);
-            //carry = sum >>> BigNumber.EXPONENT;
+            //carry = sum >> BigNumber.EXPONENT;
             buf[i] = sum % BigNumber.BASE;
             //buf[i] = sum & (BigNumber.BASE - 1);
             i++;
@@ -788,7 +778,7 @@ class BigNumber {
             return bn;
         }
 
-        throw Error('Malformed type');
+        throw Error('Not implemented');
     }
 
     /**
@@ -886,7 +876,7 @@ class BigNumber {
         }
 
         let float = 0;
-        for (let i = Q.length - 1; i >= 1; i--) {
+        for (let i = Q.length - 1; i > 0; i--) {
             float = (float + Q[i]) / 2;
         }
 
@@ -1018,6 +1008,9 @@ class BigNumber {
     }
 
     pow(exponent) {
+        if (!Number.isInteger(exponent))
+            throw Error('Not implemented');
+
         if (exponent === 0)
             return BigNumber.ONE;
 
@@ -1035,7 +1028,7 @@ class BigNumber {
             }
 
             base = base.mul(base);
-            exponent = exponent >> 1;
+            exponent >>= 1;
         }
 
         return result;
